@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+
+# Builds
+dist/
+build/
+.next/
+.expo/
+*.tsbuildinfo
+
+# Env / Secrets
+.env
+.env.*
+!.env.example
+
+# Paperless lokale Daten
+infra/paperless/data/
+infra/paperless/media/
+infra/paperless/consume/
+infra/paperless/export/
+infra/paperless/pgdata/
+
+# Echte Dokumente nie committen
+samples/**/*.pdf
+samples/**/*.jpg
+samples/**/*.png
+samples/**/*.eml
+!samples/**/example-*
+
+# OS / Editor
+.DS_Store
+.idea/
+*.log
