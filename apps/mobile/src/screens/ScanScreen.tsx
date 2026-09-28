@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { useTranslation } from "react-i18next";
 import { colors } from "@papaerless/ui/src/tokens";
 import { buildPdfFromImages } from "../lib/pdf";
 import { uploadQueue } from "../lib/uploadQueue";
@@ -17,6 +18,7 @@ interface RawCapture {
 }
 
 export function ScanScreen({ onUploaded }: { onUploaded: () => void }) {
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [pages, setPages] = useState<CapturedPage[]>([]);
@@ -72,9 +74,9 @@ export function ScanScreen({ onUploaded }: { onUploaded: () => void }) {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.hint}>Kamera-Zugriff wird für den Dokumenten-Scan benötigt.</Text>
+        <Text style={styles.hint}>{t("scanScreen.cameraPermissionHint")}</Text>
         <TouchableOpacity style={styles.primaryButton} onPress={requestPermission}>
-          <Text style={styles.primaryButtonText}>Zugriff erlauben</Text>
+          <Text style={styles.primaryButtonText}>{t("scanScreen.grantAccess")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -126,7 +128,7 @@ export function ScanScreen({ onUploaded }: { onUploaded: () => void }) {
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.captureButton} onPress={handleCapture}>
-          <Text style={styles.primaryButtonText}>Seite scannen</Text>
+          <Text style={styles.primaryButtonText}>{t("scanScreen.capturePage")}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -135,7 +137,9 @@ export function ScanScreen({ onUploaded }: { onUploaded: () => void }) {
           disabled={pages.length === 0 || isBuilding}
         >
           <Text style={styles.primaryButtonText}>
-            {isBuilding ? "Erstellt PDF…" : `Fertig (${pages.length} Seite${pages.length === 1 ? "" : "n"})`}
+            {isBuilding
+              ? t("scanScreen.building")
+              : t("scanScreen.finish", { count: pages.length, suffix: pages.length === 1 ? "" : "n" })}
           </Text>
         </TouchableOpacity>
       </View>

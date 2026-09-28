@@ -1,5 +1,6 @@
 export * from "./tokens";
 export * from "./Button";
+export * from "./Combobox";
 export * from "./TagChip";
 export * from "./ConfidenceBadge";
 export * from "./Card";

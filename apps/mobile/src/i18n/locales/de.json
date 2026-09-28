@@ -1,0 +1,59 @@
+{
+  "app": {
+    "tabs": {
+      "scan": "Scannen",
+      "queue": "Warteschlange",
+      "confirm": "Bestätigen",
+      "reminders": "Erinnerungen"
+    }
+  },
+  "scanScreen": {
+    "cameraPermissionHint": "Kamera-Zugriff wird für den Dokumenten-Scan benötigt.",
+    "grantAccess": "Zugriff erlauben",
+    "capturePage": "Seite scannen",
+    "building": "Erstellt PDF…",
+    "finish": "Fertig ({{count}} Seite{{suffix}})"
+  },
+  "cropScreen": {
+    "title": "Zuschnitt anpassen",
+    "discard": "Verwerfen",
+    "cropping": "Schneidet zu…",
+    "apply": "Übernehmen"
+  },
+  "confirmScreen": {
+    "disabledHint": "KI-Erkennung ist deaktiviert (optional). Ohne Vorschläge gibt es hier nichts schnell zu bestätigen – Dokumente lassen sich trotzdem ganz normal in Paperless bearbeiten.",
+    "empty": "Keine offenen Vorschläge.",
+    "documentHeading": "Dokument #{{id}}",
+    "confidence": {
+      "high": "sicher",
+      "medium": "eher unsicher",
+      "low": "unsicher"
+    },
+    "accept": "Übernehmen",
+    "reject": "Verwerfen"
+  },
+  "queueScreen": {
+    "status": {
+      "uploading": "Lädt hoch…",
+      "processing": "Wird von Paperless verarbeitet…",
+      "needs_review": "Prüfung nötig",
+      "done": "Fertig",
+      "failed": "Fehlgeschlagen"
+    },
+    "empty": "Keine Uploads in der Warteschlange.",
+    "retryFailed": "Fehlgeschlagene erneut versuchen",
+    "remove": "Entfernen"
+  },
+  "remindersScreen": {
+    "kind": {
+      "due_date": "Fälligkeit",
+      "cancellation_deadline": "Kündigungsfrist"
+    },
+    "loadFailed": "Laden fehlgeschlagen",
+    "retry": "Erneut versuchen",
+    "empty": "Keine Erinnerungen. Im Web unter „Dokumente\" lässt sich am Dokument eine Erinnerung anlegen (z.B. für Vertragskündigungen oder Zahlungsfristen).",
+    "due": "fällig",
+    "overdue": "überfällig",
+    "done": "Erledigt"
+  }
+}

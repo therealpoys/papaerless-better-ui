@@ -1,8 +1,10 @@
 import type {
+  BulkEditAction,
   Correspondent,
   DocumentSearchParams,
   DocumentType,
   MetadataSuggestion,
+  PaginatedDocuments,
   PaperlessDocument,
   Reminder,
   Tag,
@@ -35,6 +37,10 @@ function toSearchString(params: DocumentSearchParams): string {
   if (params.documentType) search.set("documentType", String(params.documentType));
   if (params.dateFrom) search.set("dateFrom", params.dateFrom);
   if (params.dateTo) search.set("dateTo", params.dateTo);
+  if (params.sort) search.set("sort", params.sort);
+  if (params.sortOrder) search.set("sortOrder", params.sortOrder);
+  if (params.page) search.set("page", String(params.page));
+  if (params.pageSize) search.set("pageSize", String(params.pageSize));
   for (const tagId of params.tags ?? []) search.append("tags", String(tagId));
   return search.toString();
 }
@@ -42,10 +48,17 @@ function toSearchString(params: DocumentSearchParams): string {
 export const api = {
   listDocuments: (params: DocumentSearchParams = {}) => {
     const qs = toSearchString(params);
-    return request<PaperlessDocument[]>(`/api/documents${qs ? `?${qs}` : ""}`);
+    return request<PaginatedDocuments>(`/api/documents${qs ? `?${qs}` : ""}`);
   },
 
   getDocument: (id: number) => request<PaperlessDocument>(`/api/documents/${id}`),
+
+  bulkEditDocuments: (documentIds: number[], action: BulkEditAction) =>
+    request<void>("/api/documents/bulk-edit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documentIds, action }),
+    }),
 
   updateDocument: (
     id: number,
@@ -81,6 +94,25 @@ export const api = {
   listTags: () => request<Tag[]>("/api/tags"),
   listCorrespondents: () => request<Correspondent[]>("/api/correspondents"),
   listDocumentTypes: () => request<DocumentType[]>("/api/document-types"),
+
+  createTag: (name: string) =>
+    request<Tag>("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  createCorrespondent: (name: string) =>
+    request<Correspondent>("/api/correspondents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
+  createDocumentType: (name: string) =>
+    request<DocumentType>("/api/document-types", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
 
   // Optional – nur nutzbar, wenn AI_PROVIDER/AI_API_KEY im Backend gesetzt sind
   aiStatus: () => request<{ enabled: boolean }>("/api/ai/status"),

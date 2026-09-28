@@ -1,7 +1,9 @@
 import type {
+  BulkEditAction,
   Correspondent,
   DocumentSearchParams,
   DocumentType,
+  PaginatedDocuments,
   PaperlessDocument,
   Tag,
 } from "@papaerless/shared-types";
@@ -59,9 +61,12 @@ export class PaperlessClient {
     return (await res.json()) as T;
   }
 
-  async listDocuments(params: DocumentSearchParams = {}): Promise<PaperlessDocument[]> {
+  async listDocuments(params: DocumentSearchParams = {}): Promise<PaginatedDocuments> {
+    const pageSize = params.pageSize ?? 25;
+    const page = params.page ?? 1;
     const search = new URLSearchParams();
-    search.set("page_size", String(params.pageSize ?? 25));
+    search.set("page_size", String(pageSize));
+    search.set("page", String(page));
     if (params.query) search.set("query", params.query);
     if (params.correspondent) search.set("correspondent__id", String(params.correspondent));
     if (params.documentType) search.set("document_type__id", String(params.documentType));
@@ -70,11 +75,16 @@ export class PaperlessClient {
     for (const tagId of params.tags ?? []) {
       search.append("tags__id__in", String(tagId));
     }
+    if (params.sort) {
+      const defaultOrder = params.sort === "title" ? "asc" : "desc";
+      const prefix = (params.sortOrder ?? defaultOrder) === "desc" ? "-" : "";
+      search.set("ordering", `${prefix}${params.sort}`);
+    }
 
     const data = await this.request<PaginatedResponse<RawDocument>>(
       `/api/documents/?${search.toString()}`,
     );
-    return data.results.map(toDocument);
+    return { results: data.results.map(toDocument), count: data.count, page, pageSize };
   }
 
   async getDocument(id: number): Promise<PaperlessDocument> {
@@ -127,6 +137,26 @@ export class PaperlessClient {
     if (!res.ok) {
       throw new Error(`Löschen fehlgeschlagen (${res.status}): ${await res.text()}`);
     }
+  }
+
+  // Nutzt Paperless' `POST /api/documents/bulk_edit/` statt N Einzel-Requests – gegen die
+  // lokale Instanz (3.2.1) live gegengeprüft für add_tag/remove_tag/modify_tags/
+  // set_correspondent/set_document_type/delete, jeweils inkl. `parameters`-Shape unten.
+  async bulkEditDocuments(documentIds: number[], action: BulkEditAction): Promise<void> {
+    let parameters: Record<string, unknown> = {};
+    if (action.method === "add_tag" || action.method === "remove_tag") {
+      parameters = { tag: action.tag };
+    } else if (action.method === "set_correspondent") {
+      parameters = { correspondent: action.correspondent };
+    } else if (action.method === "set_document_type") {
+      parameters = { document_type: action.documentType };
+    }
+
+    await this.request<{ result: string }>(`/api/documents/bulk_edit/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documents: documentIds, method: action.method, parameters }),
+    });
   }
 
   async downloadDocument(id: number): Promise<{ buffer: ArrayBuffer; contentType: string; fileName: string }> {

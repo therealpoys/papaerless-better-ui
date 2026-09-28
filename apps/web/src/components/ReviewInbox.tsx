@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { Button, Card, ConfidenceBadge, EmptyState, ErrorState, Field } from "@papaerless/ui";
 import { api } from "../lib/api";
@@ -10,6 +11,7 @@ function SuggestionCard({
   suggestion: MetadataSuggestion;
   onDone: () => void;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(suggestion.title ?? "");
   const [correspondent, setCorrespondent] = useState(suggestion.correspondent ?? "");
   const [documentType, setDocumentType] = useState(suggestion.documentType ?? "");
@@ -33,7 +35,7 @@ function SuggestionCard({
       });
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Übernehmen fehlgeschlagen");
+      setError(err instanceof Error ? err.message : t("reviewInbox.applyFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -45,7 +47,7 @@ function SuggestionCard({
       await api.dismissSuggestion(suggestion.documentId);
       onDone();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Verwerfen fehlgeschlagen");
+      setError(err instanceof Error ? err.message : t("reviewInbox.dismissFailed"));
       setIsSaving(false);
     }
   }
@@ -53,40 +55,47 @@ function SuggestionCard({
   return (
     <Card className="suggestion-card">
       <div className="suggestion-card__header">
-        <span>Dokument #{suggestion.documentId}</span>
-        <ConfidenceBadge confidence={suggestion.confidence} />
+        <span>{t("reviewInbox.documentHeading", { id: suggestion.documentId })}</span>
+        <ConfidenceBadge
+          confidence={suggestion.confidence}
+          levelLabels={{
+            high: t("reviewInbox.confidence.high"),
+            medium: t("reviewInbox.confidence.medium"),
+            low: t("reviewInbox.confidence.low"),
+          }}
+        />
       </div>
 
-      <Field label="Titel">
+      <Field label={t("reviewInbox.titleLabel")}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
 
-      <Field label="Korrespondent">
+      <Field label={t("reviewInbox.correspondentLabel")}>
         <input value={correspondent} onChange={(e) => setCorrespondent(e.target.value)} />
       </Field>
 
-      <Field label="Dokumenttyp">
+      <Field label={t("reviewInbox.documentTypeLabel")}>
         <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} />
       </Field>
 
-      <Field label="Tags (kommagetrennt)">
+      <Field label={t("reviewInbox.tagsLabel")}>
         <input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
       </Field>
 
       {(suggestion.date || suggestion.amount) && (
         <p className="suggestion-card__meta">
-          {suggestion.date && `Datum: ${suggestion.date}`}
+          {suggestion.date && t("reviewInbox.dateMeta", { date: suggestion.date })}
           {suggestion.date && suggestion.amount && " · "}
-          {suggestion.amount && `Betrag: ${suggestion.amount.toFixed(2)} €`}
+          {suggestion.amount && t("reviewInbox.amountMeta", { amount: suggestion.amount.toFixed(2) })}
         </p>
       )}
 
       <div className="suggestion-card__actions">
         <Button onClick={handleApply} disabled={isSaving}>
-          Übernehmen
+          {t("reviewInbox.apply")}
         </Button>
         <Button variant="secondary" onClick={handleDismiss} disabled={isSaving}>
-          Verwerfen
+          {t("reviewInbox.dismiss")}
         </Button>
       </div>
 
@@ -96,6 +105,7 @@ function SuggestionCard({
 }
 
 export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<MetadataSuggestion[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -109,25 +119,21 @@ export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
   if (!aiEnabled) {
     return (
       <EmptyState
-        title="KI-Erkennung ist deaktiviert"
+        title={t("reviewInbox.disabled.title")}
         description={
-          <>
-            Zum Aktivieren <code>AI_PROVIDER</code> und <code>AI_API_KEY</code> im Backend setzen
-            (siehe <code>.env.example</code>). Dieses Feature ist optional – Paperless funktioniert
-            ohne es genauso gut.
-          </>
+          <Trans i18nKey="reviewInbox.disabled.description" components={[<code key="0" />, <code key="1" />, <code key="2" />]} />
         }
       />
     );
   }
 
-  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (error) return <ErrorState message={error} onRetry={reload} retryLabel={t("common.retry")} />;
 
   if (suggestions.length === 0) {
     return (
       <EmptyState
-        title="Keine offenen Vorschläge"
-        description="Öffne ein Dokument und klicke auf „KI-Vorschlag anfragen“."
+        title={t("reviewInbox.empty.title")}
+        description={t("reviewInbox.empty.description")}
       />
     );
   }

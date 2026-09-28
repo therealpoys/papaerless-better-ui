@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   Correspondent,
   DocumentSearchParams,
   DocumentType,
-  PaperlessDocument,
+  PaginatedDocuments,
   Tag,
 } from "@papaerless/shared-types";
 import { EmptyState, ErrorState } from "@papaerless/ui";
@@ -19,18 +20,37 @@ import { RemindersPanel } from "./components/RemindersPanel";
 type Tab = "documents" | "inbox" | "reminders";
 
 export default function App() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("documents");
-  const [documents, setDocuments] = useState<PaperlessDocument[]>([]);
+  const [documentsResult, setDocumentsResult] = useState<PaginatedDocuments>({
+    results: [],
+    count: 0,
+    page: 1,
+    pageSize: 25,
+  });
   const [tags, setTags] = useState<Tag[]>([]);
   const [correspondents, setCorrespondents] = useState<Correspondent[]>([]);
   const [documentTypes, setDocumentTypes] = useState<DocumentType[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [filters, setFilters] = useState<DocumentSearchParams>({});
+  const [page, setPage] = useState(1);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const reloadDocuments = useCallback(() => {
-    api.listDocuments(filters).then(setDocuments).catch((err) => setError(err.message));
+    api.listDocuments({ ...filters, page }).then(setDocumentsResult).catch((err) => setError(err.message));
+  }, [filters, page]);
+
+  const reloadMetadata = useCallback(() => {
+    api.listTags().then(setTags).catch((err) => setError(err.message));
+    api.listCorrespondents().then(setCorrespondents).catch((err) => setError(err.message));
+    api.listDocumentTypes().then(setDocumentTypes).catch((err) => setError(err.message));
+  }, []);
+
+  // Filteränderung soll immer auf Seite 1 zurückspringen, sonst landet man leicht auf
+  // einer Seite, die es für die neuen Filter gar nicht mehr gibt.
+  useEffect(() => {
+    setPage(1);
   }, [filters]);
 
   useEffect(() => {
@@ -38,25 +58,23 @@ export default function App() {
   }, [reloadDocuments]);
 
   useEffect(() => {
-    api.listTags().then(setTags).catch((err) => setError(err.message));
-    api.listCorrespondents().then(setCorrespondents).catch((err) => setError(err.message));
-    api.listDocumentTypes().then(setDocumentTypes).catch((err) => setError(err.message));
+    reloadMetadata();
     api.aiStatus().then((s) => setAiEnabled(s.enabled)).catch(() => setAiEnabled(false));
     registerWebPush().catch((err) => console.warn("Web Push nicht verfügbar:", err));
-  }, []);
+  }, [reloadMetadata]);
 
   return (
     <div className="app">
       <header className="app__header">
         <h1>Paperless Better UI</h1>
-        <nav className="app__tabs" aria-label="Bereiche">
+        <nav className="app__tabs" aria-label={t("app.regionsAriaLabel")}>
           <button
             type="button"
             className={tab === "documents" ? "app__tab--active" : ""}
             aria-current={tab === "documents" ? "page" : undefined}
             onClick={() => setTab("documents")}
           >
-            Dokumente
+            {t("app.tabs.documents")}
           </button>
           <button
             type="button"
@@ -64,7 +82,7 @@ export default function App() {
             aria-current={tab === "inbox" ? "page" : undefined}
             onClick={() => setTab("inbox")}
           >
-            Review-Inbox {aiEnabled ? "" : "(deaktiviert)"}
+            {t("app.tabs.inbox")} {aiEnabled ? "" : t("app.tabs.inboxDisabledSuffix")}
           </button>
           <button
             type="button"
@@ -72,12 +90,12 @@ export default function App() {
             aria-current={tab === "reminders" ? "page" : undefined}
             onClick={() => setTab("reminders")}
           >
-            Erinnerungen
+            {t("app.tabs.reminders")}
           </button>
         </nav>
       </header>
 
-      {error && <ErrorState message={error} onRetry={reloadDocuments} />}
+      {error && <ErrorState message={error} onRetry={reloadDocuments} retryLabel={t("common.retry")} />}
 
       {tab === "documents" && (
         <div className="app__body">
@@ -91,10 +109,22 @@ export default function App() {
               documentTypes={documentTypes}
             />
             <DocumentList
-              documents={documents}
+              documents={documentsResult.results}
               correspondents={correspondents}
+              documentTypes={documentTypes}
+              tags={tags}
               selectedId={selectedId}
               onSelect={setSelectedId}
+              query={filters.query}
+              page={documentsResult.page}
+              pageCount={Math.max(1, Math.ceil(documentsResult.count / documentsResult.pageSize))}
+              onPageChange={setPage}
+              onBulkActionDone={(deletedIds) => {
+                if (selectedId !== null && deletedIds?.includes(selectedId)) {
+                  setSelectedId(null);
+                }
+                reloadDocuments();
+              }}
             />
           </aside>
 
@@ -111,11 +141,12 @@ export default function App() {
                   setSelectedId(null);
                   reloadDocuments();
                 }}
+                onMetadataChanged={reloadMetadata}
               />
             ) : (
               <EmptyState
-                title="Kein Dokument ausgewählt"
-                description="Wähle links ein Dokument aus, oder lade eine neue Datei hoch."
+                title={t("app.noDocumentSelected.title")}
+                description={t("app.noDocumentSelected.description")}
               />
             )}
           </main>

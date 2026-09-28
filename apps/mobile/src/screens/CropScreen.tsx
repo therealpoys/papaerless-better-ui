@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import * as ImageManipulator from "expo-image-manipulator";
+import { useTranslation } from "react-i18next";
 import { colors } from "@papaerless/ui/src/tokens";
 
 interface CropScreenProps {
@@ -28,6 +29,7 @@ const MIN_CROP = 40;
  * zusätzliche Crop-Library gebaut (nur React Native Core + expo-image-manipulator).
  */
 export function CropScreen({ uri, imageWidth, imageHeight, onDone, onCancel }: CropScreenProps) {
+  const { t } = useTranslation();
   const screenWidth = Dimensions.get("window").width - 32;
   const maxHeight = Dimensions.get("window").height * 0.65;
 
@@ -106,7 +108,7 @@ export function CropScreen({ uri, imageWidth, imageHeight, onDone, onCancel }: C
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Zuschnitt anpassen</Text>
+      <Text style={styles.title}>{t("cropScreen.title")}</Text>
       <View style={[styles.imageBox, { width: displayWidth, height: displayHeight }]}>
         <Image
           source={{ uri }}
@@ -140,11 +142,11 @@ export function CropScreen({ uri, imageWidth, imageHeight, onDone, onCancel }: C
 
       <View style={styles.actions}>
         <TouchableOpacity style={styles.secondaryButton} onPress={onCancel}>
-          <Text style={styles.secondaryButtonText}>Verwerfen</Text>
+          <Text style={styles.secondaryButtonText}>{t("cropScreen.discard")}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.primaryButton} onPress={handleApply} disabled={isCropping}>
           <Text style={styles.primaryButtonText}>
-            {isCropping ? "Schneidet zu…" : "Übernehmen"}
+            {isCropping ? t("cropScreen.cropping") : t("cropScreen.apply")}
           </Text>
         </TouchableOpacity>
       </View>

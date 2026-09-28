@@ -10,17 +10,15 @@
 - [x] Upload im Web
 - [x] Dokumentliste + Detail
 - [x] Suche & Filter (Tags, Korrespondent, Zeitraum)
-- [ ] Korrespondent, Dokumenttyp und Tags im Dokument-Detail neu **anlegen** können, nicht nur aus
-      bestehender Liste auswählen (aktuell nur `<select>`/Chips über vorhandene Werte). Suche &
-      Filter danach entsprechend erweitern.
-      - `paperless-client` hat `createTag`/`createCorrespondent`/`createDocumentType` schon
-        (`packages/paperless-client/src/index.ts:140-162`), wird bisher aber nur intern vom
-        KI-Classifier genutzt (`services/api/src/routes/ai.ts`)
-      - `services/api/src/routes/metadata.ts` hat bisher nur GET-Routen – POST-Routen ergänzen
-      - Web-UI: Korrespondent/Dokumenttyp von `<select>` auf Combobox mit "Neu anlegen …" umstellen,
-        Tags analog zum bestehenden Tag-Picker um ein Eingabefeld erweitern
-      - Nach dem Anlegen `listTags`/`listCorrespondents`/`listDocumentTypes` in `App.tsx` neu laden,
-        damit der neue Wert sofort im Suchfilter auswählbar ist
+- [x] Korrespondent, Dokumenttyp und Tags im Dokument-Detail neu **anlegen** können, nicht nur aus
+      bestehender Liste auswählen. `services/api/src/routes/metadata.ts` hat jetzt POST-Routen für
+      `/tags`, `/correspondents`, `/document-types` (nutzen die schon vorhandenen
+      `paperless-client`-Methoden). Neue `Combobox`-Komponente in `packages/ui` (Freitext-Suche +
+      "„…“ neu anlegen") ersetzt die `<select>`-Felder für Korrespondent/Dokumenttyp in
+      `DocumentDetail.tsx`; der Tag-Picker hat ein Eingabefeld für neue Tags erhalten. Nach dem
+      Anlegen ruft `App.tsx` (`reloadMetadata`) `listTags`/`listCorrespondents`/`listDocumentTypes`
+      neu ab, sodass neue Werte sofort in `SearchFilter` auswählbar sind – per E2E-Test (Playwright)
+      gegen den lokalen Dev-Server verifiziert.
 
 ## Phase 2 – Mobile App
 - [x] Kamera-Scan mit Zuschnitt, Mehrseiten → PDF
@@ -107,3 +105,78 @@ den Alltagseinsatz blockiert.
       `services/ai-classifier/tests` enthalten nur `.gitkeep`, es gibt noch keinen Testrunner im
       Projekt (kein vitest/jest in den `package.json`). Eigene Aufgabe: erst Testtooling
       einführen, dann Tests nachziehen.
+
+## Phase 7 – Suche & Discovery
+`apps/web/src/components/SearchFilter.tsx` deckt Volltext, Korrespondent/Dokumenttyp (als
+`<select>`), Datumsbereich und Tag-Toggle-Chips ab, aber Bedienung und Feedback sind noch
+rudimentär. Ziel: Filtern fühlt sich schnell, transparent und modern an – näher an Facetten-Suche
+als an einem HTML-Formular.
+- [ ] **Aktive Filter als Chips sichtbar machen** – aktuell nur ein einzelner "Filter
+      zurücksetzen"-Link (`SearchFilter.tsx`, `hasActiveFilters`); einzelne Filter (Tag,
+      Korrespondent, Zeitraum, Suchbegriff) sollen als eigene, einzeln entfernbare Chips über der
+      Trefferliste erscheinen.
+- [ ] **Live-Suche mit Debounce** – `value.query` triggert aktuell bei jedem Tastendruck direkt
+      `onChange`; stattdessen serverseitige Suche erst nach kurzer Pause (z. B. 300 ms) auslösen,
+      inkl. sichtbarem Lade-/Pending-Zustand während des Debounce.
+- [ ] **Kombobox statt `<select>` für Korrespondent/Dokumenttyp** – die neue
+      `packages/ui/src/Combobox.tsx` (bisher für "neu anlegen" in `DocumentDetail.tsx` genutzt) als
+      Filterelement in `SearchFilter.tsx` einsetzen, inkl. Freitext-Tippen und ggf.
+      Mehrfachauswahl statt der bisherigen einzelnen `<select>`-Dropdowns.
+- [ ] **Sortierung der Trefferliste** – Datum (neu/alt), Relevanz (bei Volltextsuche), Titel
+      (A–Z); Auswahl muss sich mit aktiven Filtern kombinieren lassen.
+- [ ] **Datums-Presets** – Schnellauswahl ("Letzte 7 Tage", "Letzter Monat", "Dieses Jahr") über
+      den bestehenden Von/Bis-Datumsfeldern, statt jedes Mal manuell zu tippen.
+- [ ] **Trefferzahl pro Filter/Facette anzeigen** – z. B. Anzahl Dokumente je Tag/Korrespondent/
+      Dokumenttyp neben der jeweiligen Option, damit erkennbar ist, ob ein Filter überhaupt etwas
+      liefert, bevor man klickt.
+- [ ] **Gespeicherte/zuletzt genutzte Suchen** – häufige Filterkombinationen benennen und wieder
+      aufrufen können (lokal oder pro Nutzer im Backend), plus Kurzliste der zuletzt genutzten
+      Suchen.
+- [ ] **Tastatur-Bedienbarkeit der Filterleiste** – Pfeiltasten/Tab-Reihenfolge durch Tag-Chips und
+      neue Kombobox-Vorschläge, sichtbarer Fokus (siehe bereits vorhandene `:focus-visible`-Regeln
+      aus Phase 5) auch für neu hinzukommende Filter-Chips und Presets.
+
+## Phase 8 – Skalierung & Komfort im Alltag
+Weitere Ziele über die Suche hinaus, die für produktive Nutzung mit wachsender Dokumentmenge
+sinnvoll sind.
+- [x] **Volltext-Highlighting der Treffer** – Suchbegriff wird in Titel und einem ~120 Zeichen
+      langen Content-Ausschnitt der Dokumentliste hervorgehoben (`<mark>`, eigener
+      `document-list__highlight`-Stil auf Basis des vorhandenen Warn-Farbtokens), der Ausschnitt
+      erscheint nur, wenn die Suche tatsächlich im Inhalt trifft (`DocumentList.tsx`).
+- [x] **Bulk-Aktionen auf der Dokumentliste** – Checkboxen pro Dokument + "Alle auswählen" in
+      `DocumentList.tsx`, Toolbar für Tag hinzufügen/entfernen, Korrespondent setzen,
+      Dokumenttyp setzen, Löschen (mit Bestätigung). Nutzt den echten Paperless-Bulk-Endpoint
+      `POST /api/documents/bulk_edit/` (gegen die lokale Paperless-ngx-3.2.1-Instanz verifiziert,
+      alle sechs Methoden getestet) statt N einzelner Calls – neue `bulkEditDocuments()` in
+      `packages/paperless-client`, `BulkEditAction`-Union in `shared-types`, Route
+      `POST /api/documents/bulk-edit` im Gateway.
+- [x] **Performance bei großen Dokumentmengen** – echte Pagination statt Virtualisierung (passt
+      zum bestehenden REST-Schema, keine neue Abhängigkeit nötig). `PaperlessClient.listDocuments`
+      gibt jetzt `{ results, count, page, pageSize }` zurück statt die Paperless-Pagination-Metadaten
+      zu verwerfen; `page`-Query-Param durchgereicht bis zum Gateway; `DocumentList.tsx` zeigt eine
+      Zurück/Weiter-Leiste, `App.tsx` setzt die Seite bei Filteränderung zurück. Breaking Change im
+      Rückgabetyp von `listDocuments`, alle drei Aufrufstellen mit angepasst.
+- [x] **Export-/Backup-Strategie für eigene Zusatzdaten** – ADR
+      [0003](decisions/0003-backup-export-strategy.md): Hauptweg bleibt das normale
+      Host-Backup (tar/rsync/Snapshot) von `services/api/data/`, dafür kein eigener Code nötig.
+      Zusätzlich neuer `GET /api/backup/export`-Endpoint (`routes/backup.ts`) für einen JSON-Snapshot
+      (KI-Vorschläge + Erinnerungen) ohne Host-Zugriff, z. B. vor einem Update. Bewusst nicht gebaut:
+      eigener Backup-Dienst, Versionshistorie, Verschlüsselung, API-Restore (Restore bleibt manuell
+      über die Store-Dateien) – unverhältnismäßig für diese Datenmenge.
+- [x] **Benachrichtigung bei neuen KI-Vorschlägen** – Push direkt beim erstmaligen Berechnen/Cachen
+      eines Vorschlags in `routes/ai.ts` (`aiStore.set(...)` hat genau eine Aufrufstelle, dort immer
+      ein neuer Vorschlag), nicht als periodischer Check wie bei Erinnerungen – ein Vorschlag hat
+      anders als eine Erinnerung keinen mehrdeutigen "noch fällig"-Zustand zum erneuten Prüfen.
+      Nutzt das vorhandene `broadcastPush` (Web Push + Expo Push, Phase 4) unverändert, Push läuft
+      fire-and-forget und blockiert die Suggestion-Response nicht.
+- [x] **Mehrsprachigkeit der Oberfläche** – i18next/react-i18next in `apps/web` und `apps/mobile`
+      (einzige Ausnahme in Phase 8 mit neuer Abhängigkeit), je App ein `src/i18n/` mit
+      synchronem Init und `locales/de.json`, nach Komponente/Screen gruppiert. Bestehender
+      deutscher Text wurde 1:1 (keine Umformulierung) aus ~142 Stellen (web) bzw. ~37 (mobile) in
+      die Locale-Dateien verschoben; eine zweite Sprache ist später nur eine weitere JSON-Datei +
+      ein Eintrag in `resources`, kein Umbau nötig. Hartcodierte Texte in `packages/ui`
+      (`Combobox`, `ConfidenceBadge`, `ErrorState`, `UploadProgress`) haben optionale
+      Label-Props mit dem bisherigen Deutsch als Default bekommen, damit das Paket selbst ohne
+      i18next-Abhängigkeit bleibt. Bewusst nicht angefasst: `console.warn`/Error-Strings (keine
+      UI-Copy), `toLocaleDateString("de-DE")`-Datumsformatierung (eigenes Thema, offener
+      Follow-up) und rein dekorative Zeichen (`—`, `·`, `€` etc.).

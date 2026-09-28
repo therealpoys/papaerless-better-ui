@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type {
   Correspondent,
   DocumentType,
@@ -6,7 +7,7 @@ import type {
   ReminderKind,
   Tag,
 } from "@papaerless/shared-types";
-import { Button, ErrorState, Field, TagChip } from "@papaerless/ui";
+import { Button, Combobox, ErrorState, Field, TagChip } from "@papaerless/ui";
 import { api } from "../lib/api";
 
 interface DocumentDetailProps {
@@ -17,14 +18,15 @@ interface DocumentDetailProps {
   aiEnabled: boolean;
   onSaved: () => void;
   onDeleted: () => void;
+  onMetadataChanged: () => void;
 }
 
-const REMINDER_KIND_LABEL: Record<ReminderKind, string> = {
-  due_date: "Fälligkeit",
-  cancellation_deadline: "Kündigungsfrist",
-};
-
 function ReminderForm({ documentId }: { documentId: number }) {
+  const { t } = useTranslation();
+  const REMINDER_KIND_LABEL: Record<ReminderKind, string> = {
+    due_date: t("documentDetail.reminderKind.due_date"),
+    cancellation_deadline: t("documentDetail.reminderKind.cancellation_deadline"),
+  };
   const [kind, setKind] = useState<ReminderKind>("due_date");
   const [dueDate, setDueDate] = useState("");
   const [note, setNote] = useState("");
@@ -44,12 +46,12 @@ function ReminderForm({ documentId }: { documentId: number }) {
 
   return (
     <div className="ui-field">
-      <span className="ui-field__label">Erinnerung anlegen</span>
+      <span className="ui-field__label">{t("documentDetail.reminderForm.label")}</span>
       <div className="reminder-form">
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as ReminderKind)}
-          aria-label="Art der Erinnerung"
+          aria-label={t("documentDetail.reminderForm.kindAriaLabel")}
         >
           {Object.entries(REMINDER_KIND_LABEL).map(([value, label]) => (
             <option key={value} value={value}>
@@ -61,21 +63,27 @@ function ReminderForm({ documentId }: { documentId: number }) {
           type="date"
           value={dueDate}
           onChange={(e) => setDueDate(e.target.value)}
-          aria-label="Fälligkeitsdatum"
+          aria-label={t("documentDetail.reminderForm.dueDateAriaLabel")}
         />
         <input
           type="text"
-          placeholder="Notiz (optional)"
-          aria-label="Notiz (optional)"
+          placeholder={t("documentDetail.reminderForm.notePlaceholder")}
+          aria-label={t("documentDetail.reminderForm.noteAriaLabel")}
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
         <Button variant="secondary" onClick={handleCreate} disabled={!dueDate || status === "saving"}>
-          Anlegen
+          {t("documentDetail.reminderForm.create")}
         </Button>
       </div>
-      {status === "done" && <p className="hint">Erinnerung angelegt.</p>}
-      {status === "error" && <ErrorState message="Anlegen fehlgeschlagen." onRetry={handleCreate} />}
+      {status === "done" && <p className="hint">{t("documentDetail.reminderForm.created")}</p>}
+      {status === "error" && (
+        <ErrorState
+          message={t("documentDetail.reminderForm.createFailed")}
+          onRetry={handleCreate}
+          retryLabel={t("common.retry")}
+        />
+      )}
     </div>
   );
 }
@@ -88,12 +96,16 @@ export function DocumentDetail({
   aiEnabled,
   onSaved,
   onDeleted,
+  onMetadataChanged,
 }: DocumentDetailProps) {
+  const { t } = useTranslation();
   const [doc, setDoc] = useState<PaperlessDocument | null>(null);
   const [title, setTitle] = useState("");
   const [correspondent, setCorrespondent] = useState<number | null>(null);
   const [documentType, setDocumentType] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [newTagName, setNewTagName] = useState("");
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -115,7 +127,7 @@ export function DocumentDetail({
         setDocumentType(loaded.documentType);
         setSelectedTags(loaded.tags);
       })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : "Laden fehlgeschlagen"));
+      .catch((err) => setLoadError(err instanceof Error ? err.message : t("documentDetail.loadFailed")));
   }
 
   useEffect(load, [documentId]);
@@ -132,7 +144,7 @@ export function DocumentDetail({
       });
       onSaved();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
+      setSaveError(err instanceof Error ? err.message : t("documentDetail.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -149,7 +161,7 @@ export function DocumentDetail({
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "Download fehlgeschlagen");
+      setSaveError(err instanceof Error ? err.message : t("documentDetail.downloadFailed"));
     } finally {
       setIsDownloading(false);
     }
@@ -158,7 +170,7 @@ export function DocumentDetail({
   async function handleDelete() {
     if (!doc) return;
     const confirmed = window.confirm(
-      `"${doc.title || "Dokument"}" wirklich unwiderruflich aus Paperless löschen?`,
+      t("documentDetail.confirmDelete", { title: doc.title || t("documentDetail.untitledFallback") }),
     );
     if (!confirmed) return;
 
@@ -168,7 +180,7 @@ export function DocumentDetail({
       await api.deleteDocument(documentId);
       onDeleted();
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : "Löschen fehlgeschlagen");
+      setDeleteError(err instanceof Error ? err.message : t("documentDetail.deleteFailed"));
       setIsDeleting(false);
     }
   }
@@ -177,6 +189,22 @@ export function DocumentDetail({
     setSelectedTags((current) =>
       current.includes(id) ? current.filter((t) => t !== id) : [...current, id],
     );
+  }
+
+  async function handleCreateTag() {
+    const name = newTagName.trim();
+    if (!name) return;
+    setIsCreatingTag(true);
+    try {
+      const created = await api.createTag(name);
+      setSelectedTags((current) => [...current, created.id]);
+      setNewTagName("");
+      onMetadataChanged();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : t("documentDetail.createTagFailed"));
+    } finally {
+      setIsCreatingTag(false);
+    }
   }
 
   async function handleRequestSuggestion() {
@@ -189,45 +217,59 @@ export function DocumentDetail({
     }
   }
 
-  if (loadError) return <ErrorState message={loadError} onRetry={load} />;
-  if (!doc) return <p aria-live="polite">Lädt…</p>;
+  if (loadError) return <ErrorState message={loadError} onRetry={load} retryLabel={t("common.retry")} />;
+  if (!doc) return <p aria-live="polite">{t("documentDetail.loading")}</p>;
 
   return (
     <div className="document-detail">
-      <Field label="Titel">
+      <Field label={t("documentDetail.titleLabel")}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
 
-      <Field label="Korrespondent">
-        <select
-          value={correspondent ?? ""}
-          onChange={(e) => setCorrespondent(e.target.value ? Number(e.target.value) : null)}
-        >
-          <option value="">—</option>
-          {correspondents.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+      <Field label={t("documentDetail.correspondentLabel")}>
+        <Combobox
+          aria-label={t("documentDetail.correspondentAriaLabel")}
+          options={correspondents}
+          value={correspondent}
+          onChange={setCorrespondent}
+          emptyLabel={t("documentDetail.correspondentEmptyLabel")}
+          removeSelectionLabel={t("common.combobox.removeSelection")}
+          creatingLabel={t("common.combobox.creating")}
+          createOptionLabel={(name) => t("common.combobox.createOption", { name })}
+          typeToCreateHint={t("common.combobox.typeToCreate")}
+          noResultsHint={t("common.combobox.noResults")}
+          createFailedLabel={t("common.combobox.createFailed")}
+          onCreate={async (name) => {
+            const created = await api.createCorrespondent(name);
+            onMetadataChanged();
+            return created;
+          }}
+        />
       </Field>
 
-      <Field label="Dokumenttyp">
-        <select
-          value={documentType ?? ""}
-          onChange={(e) => setDocumentType(e.target.value ? Number(e.target.value) : null)}
-        >
-          <option value="">—</option>
-          {documentTypes.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select>
+      <Field label={t("documentDetail.documentTypeLabel")}>
+        <Combobox
+          aria-label={t("documentDetail.documentTypeAriaLabel")}
+          options={documentTypes}
+          value={documentType}
+          onChange={setDocumentType}
+          emptyLabel={t("documentDetail.documentTypeEmptyLabel")}
+          removeSelectionLabel={t("common.combobox.removeSelection")}
+          creatingLabel={t("common.combobox.creating")}
+          createOptionLabel={(name) => t("common.combobox.createOption", { name })}
+          typeToCreateHint={t("common.combobox.typeToCreate")}
+          noResultsHint={t("common.combobox.noResults")}
+          createFailedLabel={t("common.combobox.createFailed")}
+          onCreate={async (name) => {
+            const created = await api.createDocumentType(name);
+            onMetadataChanged();
+            return created;
+          }}
+        />
       </Field>
 
       <div className="ui-field">
-        <span className="ui-field__label">Tags</span>
+        <span className="ui-field__label">{t("documentDetail.tagsLabel")}</span>
         <div className="tag-picker">
           {tags.map((tag) => (
             <TagChip key={tag.id} active={selectedTags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>
@@ -235,44 +277,71 @@ export function DocumentDetail({
             </TagChip>
           ))}
         </div>
+        <div className="tag-picker__new">
+          <input
+            type="text"
+            placeholder={t("documentDetail.newTagPlaceholder")}
+            aria-label={t("documentDetail.newTagAriaLabel")}
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleCreateTag();
+              }
+            }}
+          />
+          <Button
+            variant="secondary"
+            onClick={handleCreateTag}
+            disabled={!newTagName.trim() || isCreatingTag}
+          >
+            {isCreatingTag ? t("documentDetail.creatingTag") : t("documentDetail.createTag")}
+          </Button>
+        </div>
+        <span className="ui-field__hint">{t("documentDetail.newTagHint")}</span>
       </div>
 
       <div className="ui-field">
-        <span className="ui-field__label">Inhalt (OCR)</span>
-        <p className="document-detail__content">{doc.content || "(kein Text erkannt)"}</p>
+        <span className="ui-field__label">{t("documentDetail.contentLabel")}</span>
+        <p className="document-detail__content">{doc.content || t("documentDetail.noContent")}</p>
       </div>
 
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Speichert…" : "Speichern"}
+          {isSaving ? t("documentDetail.saving") : t("documentDetail.save")}
         </Button>
         <Button variant="secondary" onClick={handleDownload} disabled={isDownloading}>
-          {isDownloading ? "Lädt…" : "Original herunterladen"}
+          {isDownloading ? t("documentDetail.downloading") : t("documentDetail.download")}
         </Button>
         <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
-          {isDeleting ? "Löscht…" : "Löschen"}
+          {isDeleting ? t("documentDetail.deleting") : t("documentDetail.delete")}
         </Button>
       </div>
-      {saveError && <ErrorState message={saveError} onRetry={handleSave} />}
-      {deleteError && <ErrorState message={deleteError} onRetry={handleDelete} />}
+      {saveError && <ErrorState message={saveError} onRetry={handleSave} retryLabel={t("common.retry")} />}
+      {deleteError && <ErrorState message={deleteError} onRetry={handleDelete} retryLabel={t("common.retry")} />}
 
       <ReminderForm documentId={documentId} />
 
       {aiEnabled && (
         <div className="ui-field">
-          <span className="ui-field__label">KI-Erkennung (optional)</span>
+          <span className="ui-field__label">{t("documentDetail.ai.label")}</span>
           <Button
             variant="secondary"
             onClick={handleRequestSuggestion}
             disabled={suggestionStatus === "loading"}
           >
-            {suggestionStatus === "loading" ? "Fragt an…" : "KI-Vorschlag anfragen"}
+            {suggestionStatus === "loading" ? t("documentDetail.ai.requesting") : t("documentDetail.ai.request")}
           </Button>
           {suggestionStatus === "done" && (
-            <p className="hint">Vorschlag liegt in der Review-Inbox bereit.</p>
+            <p className="hint">{t("documentDetail.ai.requested")}</p>
           )}
           {suggestionStatus === "error" && (
-            <ErrorState message="Anfrage fehlgeschlagen." onRetry={handleRequestSuggestion} />
+            <ErrorState
+              message={t("documentDetail.ai.requestFailed")}
+              onRetry={handleRequestSuggestion}
+              retryLabel={t("common.retry")}
+            />
           )}
         </div>
       )}

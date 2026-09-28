@@ -46,6 +46,9 @@ export interface UploadJob {
   error?: string;
 }
 
+export type DocumentSortField = "created" | "title";
+export type SortOrder = "asc" | "desc";
+
 export interface DocumentSearchParams {
   query?: string;
   tags?: number[];
@@ -54,7 +57,29 @@ export interface DocumentSearchParams {
   dateFrom?: string;
   dateTo?: string;
   pageSize?: number;
+  /** 1-basiert, wie Paperless' `page`-Query-Param. Weglassen = Seite 1. */
+  page?: number;
+  /** Sortierfeld; Paperless-Default (neueste zuerst) greift, wenn weggelassen. */
+  sort?: DocumentSortField;
+  sortOrder?: SortOrder;
 }
+
+export interface PaginatedDocuments {
+  results: PaperlessDocument[];
+  count: number;
+  page: number;
+  pageSize: number;
+}
+
+/** Deckt die von Paperless' `POST /api/documents/bulk_edit/` unterstützten Methoden ab,
+ * die wir in der UI anbieten (siehe packages/paperless-client für die Übersetzung in den
+ * `{documents, method, parameters}`-Body). */
+export type BulkEditAction =
+  | { method: "add_tag"; tag: number }
+  | { method: "remove_tag"; tag: number }
+  | { method: "set_correspondent"; correspondent: number | null }
+  | { method: "set_document_type"; documentType: number | null }
+  | { method: "delete" };
 
 export type ReminderKind = "due_date" | "cancellation_deadline";
 

@@ -3,6 +3,7 @@ import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { aiEnabled, classifier } from "../ai.js";
 import { aiStore } from "../ai-store.js";
 import { paperless } from "../paperless.js";
+import { broadcastPush } from "../push-sender.js";
 
 async function resolveId(
   name: string | undefined,
@@ -54,6 +55,14 @@ export async function aiRoutes(app: FastifyInstance) {
     });
 
     await aiStore.set(suggestion);
+
+    // Push darf die Antwort nicht blockieren/kippen, falls z.B. ein Abo abgelaufen ist
+    broadcastPush({
+      title: "Neuer KI-Vorschlag",
+      body: `${doc.title}: KI-Vorschlag verfügbar`,
+      data: { documentId },
+    }).catch((err) => console.error("Push für KI-Vorschlag fehlgeschlagen:", err));
+
     return suggestion;
   });
 

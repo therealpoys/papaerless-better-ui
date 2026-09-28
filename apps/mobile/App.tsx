@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { useTranslation } from "react-i18next";
+import "./src/i18n";
 import { ScanScreen } from "./src/screens/ScanScreen";
 import { QueueScreen } from "./src/screens/QueueScreen";
 import { ConfirmScreen } from "./src/screens/ConfirmScreen";
@@ -9,14 +11,14 @@ import { registerExpoPush } from "./src/lib/push";
 
 type Tab = "scan" | "queue" | "confirm" | "reminders";
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: "scan", label: "Scannen" },
-  { key: "queue", label: "Warteschlange" },
-  { key: "confirm", label: "Bestätigen" },
-  { key: "reminders", label: "Erinnerungen" },
-];
-
 export default function App() {
+  const { t } = useTranslation();
+  const TABS: { key: Tab; label: string }[] = [
+    { key: "scan", label: t("app.tabs.scan") },
+    { key: "queue", label: t("app.tabs.queue") },
+    { key: "confirm", label: t("app.tabs.confirm") },
+    { key: "reminders", label: t("app.tabs.reminders") },
+  ];
   const [tab, setTab] = useState<Tab>("scan");
 
   useEffect(() => {

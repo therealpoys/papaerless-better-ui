@@ -5,27 +5,45 @@ export async function documentRoutes(app: FastifyInstance) {
   app.get("/documents", async (request) => {
     const query = request.query as {
       pageSize?: string;
+      page?: string;
       query?: string;
       tags?: string | string[];
       correspondent?: string;
       documentType?: string;
       dateFrom?: string;
       dateTo?: string;
+      sort?: string;
+      sortOrder?: string;
     };
 
     const tags = query.tags
       ? (Array.isArray(query.tags) ? query.tags : [query.tags]).map(Number)
       : undefined;
 
+    const sort = query.sort === "title" || query.sort === "created" ? query.sort : undefined;
+    const sortOrder = query.sortOrder === "asc" || query.sortOrder === "desc" ? query.sortOrder : undefined;
+
     return paperless.listDocuments({
       pageSize: query.pageSize ? Number(query.pageSize) : undefined,
+      page: query.page ? Number(query.page) : undefined,
       query: query.query,
       tags,
       correspondent: query.correspondent ? Number(query.correspondent) : undefined,
       documentType: query.documentType ? Number(query.documentType) : undefined,
       dateFrom: query.dateFrom,
       dateTo: query.dateTo,
+      sort,
+      sortOrder,
     });
+  });
+
+  app.post("/documents/bulk-edit", async (request, reply) => {
+    const { documentIds, action } = request.body as {
+      documentIds: number[];
+      action: Parameters<typeof paperless.bulkEditDocuments>[1];
+    };
+    await paperless.bulkEditDocuments(documentIds, action);
+    return reply.code(204).send();
   });
 
   app.get("/documents/:id", async (request) => {

@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { Reminder } from "@papaerless/shared-types";
 import { colors } from "@papaerless/ui/src/tokens";
 import { api } from "../lib/api";
-
-const KIND_LABEL: Record<Reminder["kind"], string> = {
-  due_date: "Fälligkeit",
-  cancellation_deadline: "Kündigungsfrist",
-};
 
 /**
  * Nur Ansicht + Erledigt-Markieren: Erinnerungen werden bisher nur im Web
@@ -15,6 +11,11 @@ const KIND_LABEL: Record<Reminder["kind"], string> = {
  * hat, von wo aus man das tun könnte.
  */
 export function RemindersScreen() {
+  const { t } = useTranslation();
+  const KIND_LABEL: Record<Reminder["kind"], string> = {
+    due_date: t("remindersScreen.kind.due_date"),
+    cancellation_deadline: t("remindersScreen.kind.cancellation_deadline"),
+  };
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +26,11 @@ export function RemindersScreen() {
       setReminders(await api.listReminders());
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Laden fehlgeschlagen");
+      setError(err instanceof Error ? err.message : t("remindersScreen.loadFailed"));
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     reload();
@@ -45,7 +46,7 @@ export function RemindersScreen() {
       <View style={styles.container}>
         <Text style={styles.empty}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={reload}>
-          <Text style={styles.retryText}>Erneut versuchen</Text>
+          <Text style={styles.retryText}>{t("remindersScreen.retry")}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -56,12 +57,7 @@ export function RemindersScreen() {
       style={styles.container}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={reload} />}
     >
-      {reminders.length === 0 && (
-        <Text style={styles.empty}>
-          Keine Erinnerungen. Im Web unter „Dokumente" lässt sich am Dokument eine Erinnerung
-          anlegen (z.B. für Vertragskündigungen oder Zahlungsfristen).
-        </Text>
-      )}
+      {reminders.length === 0 && <Text style={styles.empty}>{t("remindersScreen.empty")}</Text>}
 
       {reminders.map((r) => {
         const isOverdue = new Date(r.dueDate) < new Date();
@@ -69,12 +65,12 @@ export function RemindersScreen() {
           <View key={r.id} style={[styles.card, isOverdue && styles.cardOverdue]}>
             <Text style={styles.title}>{r.documentTitle}</Text>
             <Text style={styles.meta}>
-              {KIND_LABEL[r.kind]} · fällig {new Date(r.dueDate).toLocaleDateString("de-DE")}
-              {isOverdue ? " · überfällig" : ""}
+              {KIND_LABEL[r.kind]} · {t("remindersScreen.due")} {new Date(r.dueDate).toLocaleDateString("de-DE")}
+              {isOverdue ? ` · ${t("remindersScreen.overdue")}` : ""}
               {r.note ? ` · ${r.note}` : ""}
             </Text>
             <TouchableOpacity style={styles.doneButton} onPress={() => handleDismiss(r.id)}>
-              <Text style={styles.doneText}>Erledigt</Text>
+              <Text style={styles.doneText}>{t("remindersScreen.done")}</Text>
             </TouchableOpacity>
           </View>
         );

@@ -1,16 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { colors, confidenceLevel } from "@papaerless/ui/src/tokens";
 import { api } from "../lib/api";
 
-const CONFIDENCE_LABEL: Record<ReturnType<typeof confidenceLevel>, string> = {
-  high: "sicher",
-  medium: "eher unsicher",
-  low: "unsicher",
-};
-
 export function ConfirmScreen() {
+  const { t } = useTranslation();
+  const CONFIDENCE_LABEL: Record<ReturnType<typeof confidenceLevel>, string> = {
+    high: t("confirmScreen.confidence.high"),
+    medium: t("confirmScreen.confidence.medium"),
+    low: t("confirmScreen.confidence.low"),
+  };
   const [aiEnabled, setAiEnabled] = useState(false);
   const [suggestions, setSuggestions] = useState<MetadataSuggestion[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -47,10 +48,7 @@ export function ConfirmScreen() {
   if (!aiEnabled) {
     return (
       <View style={styles.container}>
-        <Text style={styles.empty}>
-          KI-Erkennung ist deaktiviert (optional). Ohne Vorschläge gibt es hier nichts schnell zu
-          bestätigen – Dokumente lassen sich trotzdem ganz normal in Paperless bearbeiten.
-        </Text>
+        <Text style={styles.empty}>{t("confirmScreen.disabledHint")}</Text>
       </View>
     );
   }
@@ -60,11 +58,13 @@ export function ConfirmScreen() {
       style={styles.container}
       refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={reload} />}
     >
-      {suggestions.length === 0 && <Text style={styles.empty}>Keine offenen Vorschläge.</Text>}
+      {suggestions.length === 0 && <Text style={styles.empty}>{t("confirmScreen.empty")}</Text>}
 
       {suggestions.map((suggestion) => (
         <View key={suggestion.documentId} style={styles.card}>
-          <Text style={styles.title}>{suggestion.title ?? `Dokument #${suggestion.documentId}`}</Text>
+          <Text style={styles.title}>
+            {suggestion.title ?? t("confirmScreen.documentHeading", { id: suggestion.documentId })}
+          </Text>
           {suggestion.correspondent && <Text style={styles.meta}>{suggestion.correspondent}</Text>}
           {suggestion.tags && suggestion.tags.length > 0 && (
             <Text style={styles.meta}>{suggestion.tags.join(" · ")}</Text>
@@ -81,10 +81,10 @@ export function ConfirmScreen() {
 
           <View style={styles.row}>
             <TouchableOpacity style={styles.acceptButton} onPress={() => handleAccept(suggestion)}>
-              <Text style={styles.acceptText}>Übernehmen</Text>
+              <Text style={styles.acceptText}>{t("confirmScreen.accept")}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.rejectButton} onPress={() => handleReject(suggestion)}>
-              <Text style={styles.rejectText}>Verwerfen</Text>
+              <Text style={styles.rejectText}>{t("confirmScreen.reject")}</Text>
             </TouchableOpacity>
           </View>
         </View>

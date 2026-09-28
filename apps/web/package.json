@@ -12,8 +12,10 @@
   "dependencies": {
     "@papaerless/shared-types": "workspace:*",
     "@papaerless/ui": "workspace:*",
+    "i18next": "^26.4.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-i18next": "^17.0.15"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",

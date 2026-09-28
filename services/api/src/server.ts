@@ -6,6 +6,7 @@ import { registerAuth } from "./auth.js";
 import { env } from "./env.js";
 import { startRemindersNotifier } from "./reminders-notifier.js";
 import { aiRoutes } from "./routes/ai.js";
+import { backupRoutes } from "./routes/backup.js";
 import { documentRoutes } from "./routes/documents.js";
 import { metadataRoutes } from "./routes/metadata.js";
 import { pushRoutes } from "./routes/push.js";
@@ -27,6 +28,7 @@ await app.register(metadataRoutes, { prefix: "/api" });
 await app.register(aiRoutes, { prefix: "/api" });
 await app.register(reminderRoutes, { prefix: "/api" });
 await app.register(pushRoutes, { prefix: "/api" });
+await app.register(backupRoutes, { prefix: "/api" });
 
 startRemindersNotifier();
 

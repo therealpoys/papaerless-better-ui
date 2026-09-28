@@ -1,0 +1,196 @@
+{
+  "common": {
+    "retry": "Erneut versuchen",
+    "combobox": {
+      "removeSelection": "Auswahl entfernen",
+      "creating": "Legt an…",
+      "createOption": "„{{name}}“ neu anlegen",
+      "typeToCreate": "Tippen, um einen neuen Eintrag anzulegen",
+      "noResults": "Keine Treffer",
+      "createFailed": "Anlegen fehlgeschlagen"
+    }
+  },
+  "app": {
+    "regionsAriaLabel": "Bereiche",
+    "tabs": {
+      "documents": "Dokumente",
+      "inbox": "Review-Inbox",
+      "inboxDisabledSuffix": "(deaktiviert)",
+      "reminders": "Erinnerungen"
+    },
+    "noDocumentSelected": {
+      "title": "Kein Dokument ausgewählt",
+      "description": "Wähle links ein Dokument aus, oder lade eine neue Datei hoch."
+    }
+  },
+  "documentList": {
+    "selectAllAriaLabel": "Alle auf dieser Seite auswählen",
+    "selectAll": "Alle auswählen",
+    "selectedCount": "{{count}} ausgewählt",
+    "bulkActions": {
+      "tagAriaLabel": "Tag für Bulk-Aktion",
+      "chooseTag": "Tag wählen…",
+      "addTag": "+ Tag",
+      "removeTag": "− Tag",
+      "correspondentAriaLabel": "Korrespondent für Bulk-Aktion",
+      "chooseCorrespondent": "Korrespondent wählen…",
+      "documentTypeAriaLabel": "Dokumenttyp für Bulk-Aktion",
+      "chooseDocumentType": "Dokumenttyp wählen…",
+      "set": "Setzen",
+      "deleting": "…",
+      "delete": "Löschen",
+      "confirmDelete": "{{count}} Dokument(e) wirklich unwiderruflich aus Paperless löschen?",
+      "actionFailed": "Aktion fehlgeschlagen"
+    },
+    "empty": {
+      "title": "Noch keine Dokumente",
+      "description": "Lade links eine Datei hoch – Foto, PDF oder Scan."
+    },
+    "selectDocumentAriaLabel": "{{title}} auswählen",
+    "untitledFallback": "Dokument",
+    "noTitle": "(ohne Titel)",
+    "pagination": {
+      "back": "← Zurück",
+      "label": "Seite {{page}} von {{pageCount}}",
+      "next": "Weiter →"
+    }
+  },
+  "documentDetail": {
+    "reminderKind": {
+      "due_date": "Fälligkeit",
+      "cancellation_deadline": "Kündigungsfrist"
+    },
+    "reminderForm": {
+      "label": "Erinnerung anlegen",
+      "kindAriaLabel": "Art der Erinnerung",
+      "dueDateAriaLabel": "Fälligkeitsdatum",
+      "notePlaceholder": "Notiz (optional)",
+      "noteAriaLabel": "Notiz (optional)",
+      "create": "Anlegen",
+      "created": "Erinnerung angelegt.",
+      "createFailed": "Anlegen fehlgeschlagen."
+    },
+    "titleLabel": "Titel",
+    "correspondentLabel": "Korrespondent",
+    "correspondentAriaLabel": "Korrespondent",
+    "correspondentEmptyLabel": "Korrespondent wählen oder neu anlegen",
+    "documentTypeLabel": "Dokumenttyp",
+    "documentTypeAriaLabel": "Dokumenttyp",
+    "documentTypeEmptyLabel": "Dokumenttyp wählen oder neu anlegen",
+    "tagsLabel": "Tags",
+    "newTagPlaceholder": "Neuen Tag eingeben und mit Enter anlegen…",
+    "newTagAriaLabel": "Neuen Tag anlegen",
+    "creatingTag": "Legt an…",
+    "createTag": "Anlegen",
+    "newTagHint": "Passender Tag nicht dabei? Einfach oben eintippen.",
+    "contentLabel": "Inhalt (OCR)",
+    "noContent": "(kein Text erkannt)",
+    "saving": "Speichert…",
+    "save": "Speichern",
+    "downloading": "Lädt…",
+    "download": "Original herunterladen",
+    "deleting": "Löscht…",
+    "delete": "Löschen",
+    "confirmDelete": "\"{{title}}\" wirklich unwiderruflich aus Paperless löschen?",
+    "untitledFallback": "Dokument",
+    "loading": "Lädt…",
+    "loadFailed": "Laden fehlgeschlagen",
+    "saveFailed": "Speichern fehlgeschlagen",
+    "downloadFailed": "Download fehlgeschlagen",
+    "deleteFailed": "Löschen fehlgeschlagen",
+    "createTagFailed": "Tag anlegen fehlgeschlagen",
+    "ai": {
+      "label": "KI-Erkennung (optional)",
+      "requesting": "Fragt an…",
+      "request": "KI-Vorschlag anfragen",
+      "requested": "Vorschlag liegt in der Review-Inbox bereit.",
+      "requestFailed": "Anfrage fehlgeschlagen."
+    }
+  },
+  "searchFilter": {
+    "sortOptions": {
+      "default": "Neueste zuerst (Standard)",
+      "createdDesc": "Datum: neueste zuerst",
+      "createdAsc": "Datum: älteste zuerst",
+      "titleAsc": "Titel: A–Z",
+      "titleDesc": "Titel: Z–A"
+    },
+    "queryPlaceholder": "Suche im Volltext…",
+    "queryAriaLabel": "Suche im Volltext",
+    "correspondentLabel": "Korrespondent",
+    "correspondentHint": " – tippen zum Filtern",
+    "correspondentAriaLabel": "Korrespondent filtern",
+    "correspondentEmptyLabel": "Alle Korrespondenten",
+    "documentTypeLabel": "Dokumenttyp",
+    "documentTypeHint": " – tippen zum Filtern",
+    "documentTypeAriaLabel": "Dokumenttyp filtern",
+    "documentTypeEmptyLabel": "Alle Typen",
+    "sortLabel": "Sortierung",
+    "sortAriaLabel": "Sortierung",
+    "activeFilters": {
+      "ariaLabel": "Aktive Filter",
+      "query": "Suche: „{{query}}“",
+      "correspondent": "Korrespondent: {{name}}",
+      "documentType": "Typ: {{name}}",
+      "from": "Von: {{date}}",
+      "to": "Bis: {{date}}",
+      "tag": "Tag: {{name}}",
+      "remove": " entfernen"
+    },
+    "advanced": {
+      "summary": "Erweiterte Filter",
+      "from": "Von",
+      "to": "Bis"
+    },
+    "resetAll": "Alle Filter zurücksetzen"
+  },
+  "reviewInbox": {
+    "documentHeading": "Dokument #{{id}}",
+    "titleLabel": "Titel",
+    "correspondentLabel": "Korrespondent",
+    "documentTypeLabel": "Dokumenttyp",
+    "tagsLabel": "Tags (kommagetrennt)",
+    "dateMeta": "Datum: {{date}}",
+    "amountMeta": "Betrag: {{amount}} €",
+    "apply": "Übernehmen",
+    "dismiss": "Verwerfen",
+    "applyFailed": "Übernehmen fehlgeschlagen",
+    "dismissFailed": "Verwerfen fehlgeschlagen",
+    "confidence": {
+      "high": "sicher",
+      "medium": "eher unsicher",
+      "low": "unsicher"
+    },
+    "disabled": {
+      "title": "KI-Erkennung ist deaktiviert",
+      "description": "Zum Aktivieren <1>AI_PROVIDER</1> und <2>AI_API_KEY</2> im Backend setzen (siehe <3>.env.example</3>). Dieses Feature ist optional – Paperless funktioniert ohne es genauso gut."
+    },
+    "empty": {
+      "title": "Keine offenen Vorschläge",
+      "description": "Öffne ein Dokument und klicke auf „KI-Vorschlag anfragen“."
+    }
+  },
+  "remindersPanel": {
+    "kind": {
+      "due_date": "Fälligkeit",
+      "cancellation_deadline": "Kündigungsfrist"
+    },
+    "empty": {
+      "title": "Keine Erinnerungen",
+      "description": "Lege im Dokument-Detail eine Erinnerung an (z.B. für Vertragskündigungen oder Zahlungsfristen)."
+    },
+    "due": "fällig",
+    "overdue": "überfällig",
+    "done": "Erledigt"
+  },
+  "uploadZone": {
+    "dropAreaAriaLabel": "Datei hochladen: hierher ziehen oder klicken zum Auswählen",
+    "dropAreaLabel": "Datei hierher ziehen oder klicken zum Auswählen",
+    "uploadFailed": "Upload fehlgeschlagen",
+    "progress": {
+      "uploading": "Hochladen",
+      "processing": "OCR läuft",
+      "done": "Fertig"
+    }
+  }
+}

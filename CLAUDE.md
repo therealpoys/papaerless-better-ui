@@ -13,6 +13,11 @@ Foto/Mail → Upload → Paperless OCR → KI schlägt Metadaten vor → User be
 - Keine echten privaten Dokumente in `samples/`.
 - Offene Architektur-Entscheidungen stehen in `docs/decisions/` – bei Festlegung dort ein ADR ergänzen.
 
+## Arbeitsweise mit Claude Code
+- Bei größeren oder mehrteiligen Aufträgen: Aufgabe in unabhängige Teilaufgaben zerlegen und dafür mehrere Subagents parallel (in einer Nachricht, `run_in_background`) starten, statt alles seriell selbst abzuarbeiten.
+- Teilaufgaben, die an denselben Dateien arbeiten könnten, bekommen `isolation: "worktree"`, damit sich die Subagents nicht gegenseitig überschreiben; die Ergebnisse werden danach zusammengeführt.
+- Bei kleinen, klar abgegrenzten Einzelaufgaben (eine Datei, ein Bugfix) ist die Aufteilung in Subagents nicht nötig – hier normal direkt arbeiten.
+
 ## Tech-Stack
 Noch offen, siehe [docs/decisions/0001-tech-stack.md](docs/decisions/0001-tech-stack.md).
 

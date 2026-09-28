@@ -1,23 +1,24 @@
 import { useSyncExternalStore } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useTranslation } from "react-i18next";
 import { colors } from "@papaerless/ui/src/tokens";
 import { uploadQueue } from "../lib/uploadQueue";
 
-const STATUS_LABEL: Record<string, string> = {
-  uploading: "Lädt hoch…",
-  processing: "Wird von Paperless verarbeitet…",
-  needs_review: "Prüfung nötig",
-  done: "Fertig",
-  failed: "Fehlgeschlagen",
-};
-
 export function QueueScreen() {
+  const { t } = useTranslation();
+  const STATUS_LABEL: Record<string, string> = {
+    uploading: t("queueScreen.status.uploading"),
+    processing: t("queueScreen.status.processing"),
+    needs_review: t("queueScreen.status.needs_review"),
+    done: t("queueScreen.status.done"),
+    failed: t("queueScreen.status.failed"),
+  };
   const jobs = useSyncExternalStore(uploadQueue.subscribe, uploadQueue.getSnapshot);
 
   if (jobs.length === 0) {
     return (
       <View style={styles.container}>
-        <Text style={styles.empty}>Keine Uploads in der Warteschlange.</Text>
+        <Text style={styles.empty}>{t("queueScreen.empty")}</Text>
       </View>
     );
   }
@@ -25,7 +26,7 @@ export function QueueScreen() {
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.retryAll} onPress={() => uploadQueue.retryFailed()}>
-        <Text style={styles.retryAllText}>Fehlgeschlagene erneut versuchen</Text>
+        <Text style={styles.retryAllText}>{t("queueScreen.retryFailed")}</Text>
       </TouchableOpacity>
 
       <FlatList
@@ -43,7 +44,7 @@ export function QueueScreen() {
               </Text>
             </View>
             <TouchableOpacity onPress={() => uploadQueue.remove(item.id)}>
-              <Text style={styles.remove}>Entfernen</Text>
+              <Text style={styles.remove}>{t("queueScreen.remove")}</Text>
             </TouchableOpacity>
           </View>
         )}

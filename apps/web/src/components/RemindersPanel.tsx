@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Reminder } from "@papaerless/shared-types";
 import { Button, EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
 
-const KIND_LABEL: Record<Reminder["kind"], string> = {
-  due_date: "Fälligkeit",
-  cancellation_deadline: "Kündigungsfrist",
-};
-
 export function RemindersPanel() {
+  const { t } = useTranslation();
+  const KIND_LABEL: Record<Reminder["kind"], string> = {
+    due_date: t("remindersPanel.kind.due_date"),
+    cancellation_deadline: t("remindersPanel.kind.cancellation_deadline"),
+  };
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,13 +25,13 @@ export function RemindersPanel() {
     reload();
   }
 
-  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (error) return <ErrorState message={error} onRetry={reload} retryLabel={t("common.retry")} />;
 
   if (reminders.length === 0) {
     return (
       <EmptyState
-        title="Keine Erinnerungen"
-        description="Lege im Dokument-Detail eine Erinnerung an (z.B. für Vertragskündigungen oder Zahlungsfristen)."
+        title={t("remindersPanel.empty.title")}
+        description={t("remindersPanel.empty.description")}
       />
     );
   }
@@ -44,13 +45,13 @@ export function RemindersPanel() {
             <div>
               <strong>{r.documentTitle}</strong>
               <div className="reminder-list__meta">
-                {KIND_LABEL[r.kind]} · fällig {new Date(r.dueDate).toLocaleDateString("de-DE")}
-                {isOverdue && " · überfällig"}
+                {KIND_LABEL[r.kind]} · {t("remindersPanel.due")} {new Date(r.dueDate).toLocaleDateString("de-DE")}
+                {isOverdue && ` · ${t("remindersPanel.overdue")}`}
                 {r.note && ` · ${r.note}`}
               </div>
             </div>
             <Button variant="secondary" onClick={() => handleDismiss(r.id)}>
-              Erledigt
+              {t("remindersPanel.done")}
             </Button>
           </li>
         );

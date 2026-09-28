@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ErrorState, UploadProgress, type UploadStage } from "@papaerless/ui";
 import { api } from "../lib/api";
 
@@ -12,6 +13,7 @@ interface UploadZoneProps {
 const PROCESSING_HINT_MS = 3000;
 
 export function UploadZone({ onUploaded }: UploadZoneProps) {
+  const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [stage, setStage] = useState<UploadStage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
         setTimeout(() => setStage(null), 1500);
       }, PROCESSING_HINT_MS);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload fehlgeschlagen");
+      setError(err instanceof Error ? err.message : t("uploadZone.uploadFailed"));
       setStage(null);
     }
   }
@@ -61,7 +63,7 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
       }}
       role="button"
       tabIndex={0}
-      aria-label="Datei hochladen: hierher ziehen oder klicken zum Auswählen"
+      aria-label={t("uploadZone.dropAreaAriaLabel")}
     >
       <input
         ref={inputRef}
@@ -72,12 +74,19 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
         onChange={(e) => handleFiles(e.target.files)}
       />
       {stage ? (
-        <UploadProgress stage={stage} />
+        <UploadProgress
+          stage={stage}
+          labels={{
+            uploading: t("uploadZone.progress.uploading"),
+            processing: t("uploadZone.progress.processing"),
+            done: t("uploadZone.progress.done"),
+          }}
+        />
       ) : (
-        <p>Datei hierher ziehen oder klicken zum Auswählen</p>
+        <p>{t("uploadZone.dropAreaLabel")}</p>
       )}
       {error && (
-        <ErrorState message={error} onRetry={() => handleFiles(lastFiles)} />
+        <ErrorState message={error} onRetry={() => handleFiles(lastFiles)} retryLabel={t("common.retry")} />
       )}
     </div>
   );
