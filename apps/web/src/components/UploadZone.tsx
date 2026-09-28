@@ -1,29 +1,41 @@
 import { useRef, useState } from "react";
+import { ErrorState, UploadProgress, type UploadStage } from "@papaerless/ui";
 import { api } from "../lib/api";
 
 interface UploadZoneProps {
   onUploaded: () => void;
 }
 
+/** OCR läuft asynchron in Paperless – wir wissen nicht, wann es fertig ist, geben aber
+ * eine grobe Schätzung als "wird verarbeitet"-Phase aus, statt den Fortschritt einfach
+ * verschwinden zu lassen (siehe Roadmap "Upload-Flow: Fortschritt sichtbar machen"). */
+const PROCESSING_HINT_MS = 3000;
+
 export function UploadZone({ onUploaded }: UploadZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [stage, setStage] = useState<UploadStage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastFiles, setLastFiles] = useState<FileList | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    setIsUploading(true);
+    setLastFiles(files);
+    setStage("uploading");
     setError(null);
     try {
       for (const file of Array.from(files)) {
         await api.uploadDocument(file);
       }
-      onUploaded();
+      setStage("processing");
+      setTimeout(() => {
+        setStage("done");
+        onUploaded();
+        setTimeout(() => setStage(null), 1500);
+      }, PROCESSING_HINT_MS);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload fehlgeschlagen");
-    } finally {
-      setIsUploading(false);
+      setStage(null);
     }
   }
 
@@ -41,6 +53,15 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
         handleFiles(e.dataTransfer.files);
       }}
       onClick={() => inputRef.current?.click()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label="Datei hochladen: hierher ziehen oder klicken zum Auswählen"
     >
       <input
         ref={inputRef}
@@ -50,12 +71,14 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
         hidden
         onChange={(e) => handleFiles(e.target.files)}
       />
-      {isUploading ? (
-        <p>Lade hoch…</p>
+      {stage ? (
+        <UploadProgress stage={stage} />
       ) : (
         <p>Datei hierher ziehen oder klicken zum Auswählen</p>
       )}
-      {error && <p className="error">{error}</p>}
+      {error && (
+        <ErrorState message={error} onRetry={() => handleFiles(lastFiles)} />
+      )}
     </div>
   );
 }

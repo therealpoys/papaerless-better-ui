@@ -6,6 +6,7 @@ import type {
   PaperlessDocument,
   Tag,
 } from "@papaerless/shared-types";
+import { EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "./lib/api";
 import { registerWebPush } from "./lib/push";
 import { DocumentList } from "./components/DocumentList";
@@ -48,10 +49,11 @@ export default function App() {
     <div className="app">
       <header className="app__header">
         <h1>Paperless Better UI</h1>
-        <nav className="app__tabs">
+        <nav className="app__tabs" aria-label="Bereiche">
           <button
             type="button"
             className={tab === "documents" ? "app__tab--active" : ""}
+            aria-current={tab === "documents" ? "page" : undefined}
             onClick={() => setTab("documents")}
           >
             Dokumente
@@ -59,6 +61,7 @@ export default function App() {
           <button
             type="button"
             className={tab === "inbox" ? "app__tab--active" : ""}
+            aria-current={tab === "inbox" ? "page" : undefined}
             onClick={() => setTab("inbox")}
           >
             Review-Inbox {aiEnabled ? "" : "(deaktiviert)"}
@@ -66,6 +69,7 @@ export default function App() {
           <button
             type="button"
             className={tab === "reminders" ? "app__tab--active" : ""}
+            aria-current={tab === "reminders" ? "page" : undefined}
             onClick={() => setTab("reminders")}
           >
             Erinnerungen
@@ -73,17 +77,12 @@ export default function App() {
         </nav>
       </header>
 
-      {error && <p className="error">{error}</p>}
+      {error && <ErrorState message={error} onRetry={reloadDocuments} />}
 
       {tab === "documents" && (
         <div className="app__body">
           <aside className="app__sidebar">
-            <UploadZone
-              onUploaded={() => {
-                // Paperless braucht kurz zum OCR/Consume-Vorgang
-                setTimeout(reloadDocuments, 3000);
-              }}
-            />
+            <UploadZone onUploaded={reloadDocuments} />
             <SearchFilter
               value={filters}
               onChange={setFilters}
@@ -108,9 +107,16 @@ export default function App() {
                 tags={tags}
                 aiEnabled={aiEnabled}
                 onSaved={reloadDocuments}
+                onDeleted={() => {
+                  setSelectedId(null);
+                  reloadDocuments();
+                }}
               />
             ) : (
-              <p className="empty-state">Wähle links ein Dokument aus.</p>
+              <EmptyState
+                title="Kein Dokument ausgewählt"
+                description="Wähle links ein Dokument aus, oder lade eine neue Datei hoch."
+              />
             )}
           </main>
         </div>

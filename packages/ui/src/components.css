@@ -1,0 +1,176 @@
+/* Baut auf tokens.css auf – hier nur Komponenten, keine App-Layout-Styles. */
+
+.ui-button {
+  font-size: var(--font-size-md);
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.ui-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ui-button--primary {
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.ui-button--secondary {
+  background: var(--color-surface);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.ui-button--link {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  padding: 0;
+}
+
+.ui-button--danger {
+  background: var(--color-surface);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.ui-tag-chip {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: var(--radius-pill);
+  padding: 0.25rem 0.7rem;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.ui-tag-chip--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+.ui-confidence {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  padding: 0.15rem 0.6rem;
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ui-confidence--high {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.ui-confidence--medium {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.ui-confidence--low {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.ui-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+}
+
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+}
+
+.ui-field__label {
+  font-weight: 500;
+}
+
+.ui-field__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.ui-field input,
+.ui-field select,
+.ui-field textarea {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.ui-empty-state {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+  padding: var(--space-xl);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.ui-empty-state__title {
+  margin: 0;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.ui-empty-state__description {
+  margin: 0;
+  max-width: 32rem;
+}
+
+.ui-error-state {
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  padding: var(--space-lg);
+  background: var(--color-danger-bg);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+.ui-error-state__message {
+  margin: 0;
+}
+
+.ui-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.ui-progress__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-border);
+}
+
+.ui-progress__dot--active {
+  background: var(--color-accent);
+}
+
+.ui-progress__dot--done {
+  background: var(--color-success);
+}

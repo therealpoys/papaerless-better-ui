@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@papaerless/shared-types": "workspace:*",
+    "@papaerless/ui": "workspace:*",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo": "~51.0.0",
     "expo-camera": "~15.0.0",

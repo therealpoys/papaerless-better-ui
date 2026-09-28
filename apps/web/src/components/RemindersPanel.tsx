@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Reminder } from "@papaerless/shared-types";
+import { Button, EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
 
 const KIND_LABEL: Record<Reminder["kind"], string> = {
@@ -12,6 +13,7 @@ export function RemindersPanel() {
   const [error, setError] = useState<string | null>(null);
 
   function reload() {
+    setError(null);
     api.listReminders().then(setReminders).catch((err) => setError(err.message));
   }
 
@@ -22,14 +24,14 @@ export function RemindersPanel() {
     reload();
   }
 
-  if (error) return <p className="error">{error}</p>;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
 
   if (reminders.length === 0) {
     return (
-      <p className="empty-state">
-        Keine Erinnerungen. Lege im Dokument-Detail eine Erinnerung an (z.B. für
-        Vertragskündigungen oder Zahlungsfristen).
-      </p>
+      <EmptyState
+        title="Keine Erinnerungen"
+        description="Lege im Dokument-Detail eine Erinnerung an (z.B. für Vertragskündigungen oder Zahlungsfristen)."
+      />
     );
   }
 
@@ -43,12 +45,13 @@ export function RemindersPanel() {
               <strong>{r.documentTitle}</strong>
               <div className="reminder-list__meta">
                 {KIND_LABEL[r.kind]} · fällig {new Date(r.dueDate).toLocaleDateString("de-DE")}
+                {isOverdue && " · überfällig"}
                 {r.note && ` · ${r.note}`}
               </div>
             </div>
-            <button type="button" className="secondary" onClick={() => handleDismiss(r.id)}>
+            <Button variant="secondary" onClick={() => handleDismiss(r.id)}>
               Erledigt
-            </button>
+            </Button>
           </li>
         );
       })}

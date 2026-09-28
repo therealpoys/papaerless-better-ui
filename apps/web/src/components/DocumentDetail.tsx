@@ -6,6 +6,7 @@ import type {
   ReminderKind,
   Tag,
 } from "@papaerless/shared-types";
+import { Button, ErrorState, Field, TagChip } from "@papaerless/ui";
 import { api } from "../lib/api";
 
 interface DocumentDetailProps {
@@ -15,6 +16,7 @@ interface DocumentDetailProps {
   tags: Tag[];
   aiEnabled: boolean;
   onSaved: () => void;
+  onDeleted: () => void;
 }
 
 const REMINDER_KIND_LABEL: Record<ReminderKind, string> = {
@@ -41,29 +43,39 @@ function ReminderForm({ documentId }: { documentId: number }) {
   }
 
   return (
-    <div className="field">
-      <span>Erinnerung anlegen</span>
+    <div className="ui-field">
+      <span className="ui-field__label">Erinnerung anlegen</span>
       <div className="reminder-form">
-        <select value={kind} onChange={(e) => setKind(e.target.value as ReminderKind)}>
+        <select
+          value={kind}
+          onChange={(e) => setKind(e.target.value as ReminderKind)}
+          aria-label="Art der Erinnerung"
+        >
           {Object.entries(REMINDER_KIND_LABEL).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
           ))}
         </select>
-        <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+        <input
+          type="date"
+          value={dueDate}
+          onChange={(e) => setDueDate(e.target.value)}
+          aria-label="Fälligkeitsdatum"
+        />
         <input
           type="text"
           placeholder="Notiz (optional)"
+          aria-label="Notiz (optional)"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
-        <button type="button" className="secondary" onClick={handleCreate} disabled={!dueDate || status === "saving"}>
+        <Button variant="secondary" onClick={handleCreate} disabled={!dueDate || status === "saving"}>
           Anlegen
-        </button>
+        </Button>
       </div>
       {status === "done" && <p className="hint">Erinnerung angelegt.</p>}
-      {status === "error" && <p className="error">Anlegen fehlgeschlagen.</p>}
+      {status === "error" && <ErrorState message="Anlegen fehlgeschlagen." onRetry={handleCreate} />}
     </div>
   );
 }
@@ -75,6 +87,7 @@ export function DocumentDetail({
   tags,
   aiEnabled,
   onSaved,
+  onDeleted,
 }: DocumentDetailProps) {
   const [doc, setDoc] = useState<PaperlessDocument | null>(null);
   const [title, setTitle] = useState("");
@@ -82,12 +95,16 @@ export function DocumentDetail({
   const [documentType, setDocumentType] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [suggestionStatus, setSuggestionStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
-  useEffect(() => {
+  function load() {
     setDoc(null);
-    setError(null);
+    setLoadError(null);
     setSuggestionStatus("idle");
     api
       .getDocument(documentId)
@@ -98,12 +115,14 @@ export function DocumentDetail({
         setDocumentType(loaded.documentType);
         setSelectedTags(loaded.tags);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Laden fehlgeschlagen"));
-  }, [documentId]);
+      .catch((err) => setLoadError(err instanceof Error ? err.message : "Laden fehlgeschlagen"));
+  }
+
+  useEffect(load, [documentId]);
 
   async function handleSave() {
     setIsSaving(true);
-    setError(null);
+    setSaveError(null);
     try {
       await api.updateDocument(documentId, {
         title,
@@ -113,9 +132,44 @@ export function DocumentDetail({
       });
       onSaved();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
+      setSaveError(err instanceof Error ? err.message : "Speichern fehlgeschlagen");
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleDownload() {
+    setIsDownloading(true);
+    try {
+      const { blob, fileName } = await api.downloadDocument(documentId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Download fehlgeschlagen");
+    } finally {
+      setIsDownloading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!doc) return;
+    const confirmed = window.confirm(
+      `"${doc.title || "Dokument"}" wirklich unwiderruflich aus Paperless löschen?`,
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      await api.deleteDocument(documentId);
+      onDeleted();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Löschen fehlgeschlagen");
+      setIsDeleting(false);
     }
   }
 
@@ -135,18 +189,16 @@ export function DocumentDetail({
     }
   }
 
-  if (error) return <p className="error">{error}</p>;
-  if (!doc) return <p>Lädt…</p>;
+  if (loadError) return <ErrorState message={loadError} onRetry={load} />;
+  if (!doc) return <p aria-live="polite">Lädt…</p>;
 
   return (
     <div className="document-detail">
-      <label className="field">
-        <span>Titel</span>
+      <Field label="Titel">
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </label>
+      </Field>
 
-      <label className="field">
-        <span>Korrespondent</span>
+      <Field label="Korrespondent">
         <select
           value={correspondent ?? ""}
           onChange={(e) => setCorrespondent(e.target.value ? Number(e.target.value) : null)}
@@ -158,10 +210,9 @@ export function DocumentDetail({
             </option>
           ))}
         </select>
-      </label>
+      </Field>
 
-      <label className="field">
-        <span>Dokumenttyp</span>
+      <Field label="Dokumenttyp">
         <select
           value={documentType ?? ""}
           onChange={(e) => setDocumentType(e.target.value ? Number(e.target.value) : null)}
@@ -173,51 +224,56 @@ export function DocumentDetail({
             </option>
           ))}
         </select>
-      </label>
+      </Field>
 
-      <div className="field">
-        <span>Tags</span>
+      <div className="ui-field">
+        <span className="ui-field__label">Tags</span>
         <div className="tag-picker">
           {tags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              className={`tag-chip ${selectedTags.includes(tag.id) ? "tag-chip--active" : ""}`}
-              onClick={() => toggleTag(tag.id)}
-            >
+            <TagChip key={tag.id} active={selectedTags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>
               {tag.name}
-            </button>
+            </TagChip>
           ))}
         </div>
       </div>
 
-      <div className="field">
-        <span>Inhalt (OCR)</span>
+      <div className="ui-field">
+        <span className="ui-field__label">Inhalt (OCR)</span>
         <p className="document-detail__content">{doc.content || "(kein Text erkannt)"}</p>
       </div>
 
-      <button type="button" onClick={handleSave} disabled={isSaving}>
-        {isSaving ? "Speichert…" : "Speichern"}
-      </button>
-      {error && <p className="error">{error}</p>}
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Speichert…" : "Speichern"}
+        </Button>
+        <Button variant="secondary" onClick={handleDownload} disabled={isDownloading}>
+          {isDownloading ? "Lädt…" : "Original herunterladen"}
+        </Button>
+        <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
+          {isDeleting ? "Löscht…" : "Löschen"}
+        </Button>
+      </div>
+      {saveError && <ErrorState message={saveError} onRetry={handleSave} />}
+      {deleteError && <ErrorState message={deleteError} onRetry={handleDelete} />}
 
       <ReminderForm documentId={documentId} />
 
       {aiEnabled && (
-        <div className="field">
-          <span>KI-Erkennung (optional)</span>
-          <button
-            type="button"
-            className="secondary"
+        <div className="ui-field">
+          <span className="ui-field__label">KI-Erkennung (optional)</span>
+          <Button
+            variant="secondary"
             onClick={handleRequestSuggestion}
             disabled={suggestionStatus === "loading"}
           >
             {suggestionStatus === "loading" ? "Fragt an…" : "KI-Vorschlag anfragen"}
-          </button>
+          </Button>
           {suggestionStatus === "done" && (
             <p className="hint">Vorschlag liegt in der Review-Inbox bereit.</p>
           )}
-          {suggestionStatus === "error" && <p className="error">Anfrage fehlgeschlagen.</p>}
+          {suggestionStatus === "error" && (
+            <ErrorState message="Anfrage fehlgeschlagen." onRetry={handleRequestSuggestion} />
+          )}
         </div>
       )}
     </div>

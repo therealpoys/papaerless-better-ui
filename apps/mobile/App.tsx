@@ -4,14 +4,16 @@ import { StatusBar } from "expo-status-bar";
 import { ScanScreen } from "./src/screens/ScanScreen";
 import { QueueScreen } from "./src/screens/QueueScreen";
 import { ConfirmScreen } from "./src/screens/ConfirmScreen";
+import { RemindersScreen } from "./src/screens/RemindersScreen";
 import { registerExpoPush } from "./src/lib/push";
 
-type Tab = "scan" | "queue" | "confirm";
+type Tab = "scan" | "queue" | "confirm" | "reminders";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "scan", label: "Scannen" },
   { key: "queue", label: "Warteschlange" },
   { key: "confirm", label: "Bestätigen" },
+  { key: "reminders", label: "Erinnerungen" },
 ];
 
 export default function App() {
@@ -29,6 +31,7 @@ export default function App() {
         {tab === "scan" && <ScanScreen onUploaded={() => setTab("queue")} />}
         {tab === "queue" && <QueueScreen />}
         {tab === "confirm" && <ConfirmScreen />}
+        {tab === "reminders" && <RemindersScreen />}
       </View>
 
       <View style={styles.tabBar}>

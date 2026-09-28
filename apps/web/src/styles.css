@@ -1,10 +1,7 @@
-:root {
-  color-scheme: light dark;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --border: #d9d9d9;
-  --accent: #2563eb;
-  --bg-muted: #f5f5f5;
-}
+/* Tokens (Farben, Spacing, Radius, Dark Mode) kommen aus @papaerless/ui/tokens.css,
+   Komponenten-Styles (Button, TagChip, ConfidenceBadge, Card, EmptyState, ErrorState,
+   Field) aus @papaerless/ui/components.css – beide werden in main.tsx vor dieser Datei
+   importiert. Hier steht nur noch App-Layout, das sich (noch) nicht lohnt zu teilen. */
 
 * {
   box-sizing: border-box;
@@ -12,6 +9,9 @@
 
 body {
   margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .app {
@@ -22,7 +22,7 @@ body {
 
 .app__header {
   padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,7 +31,7 @@ body {
 }
 
 .app__header h1 {
-  font-size: 1.1rem;
+  font-size: var(--font-size-lg);
   margin: 0;
 }
 
@@ -41,25 +41,25 @@ body {
 }
 
 .app__tabs button {
-  border: 1px solid var(--border);
-  background: white;
-  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-pill);
   padding: 0.35rem 0.9rem;
-  font-size: 0.82rem;
+  font-size: var(--font-size-sm);
   cursor: pointer;
-  color: #444;
 }
 
 .app__tabs button.app__tab--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
 }
 
 .app__main--full {
   flex: 1;
   overflow-y: auto;
-  padding: 1.5rem;
+  padding: var(--space-xl);
 }
 
 .app__body {
@@ -69,32 +69,46 @@ body {
   overflow: hidden;
 }
 
+@media (max-width: 720px) {
+  .app__body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    overflow-y: auto;
+  }
+
+  .app__sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    max-height: 60vh;
+  }
+}
+
 .app__sidebar {
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
 }
 
 .app__main {
-  padding: 1.5rem;
+  padding: var(--space-xl);
   overflow-y: auto;
 }
 
 .upload-zone {
-  margin: 1rem;
-  padding: 1.5rem 1rem;
-  border: 2px dashed var(--border);
-  border-radius: 8px;
+  margin: var(--space-lg);
+  padding: var(--space-xl) var(--space-lg);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
   text-align: center;
   cursor: pointer;
-  color: #666;
-  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
 }
 
 .upload-zone--active {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .document-list {
@@ -104,8 +118,15 @@ body {
 }
 
 .document-list__item {
+  width: 100%;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
   padding: 0.6rem 1rem;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--color-border);
+  border-left: 3px solid transparent;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -113,55 +134,40 @@ body {
 }
 
 .document-list__item:hover {
-  background: var(--bg-muted);
+  background: var(--color-bg-muted);
 }
 
 .document-list__item--active {
-  background: var(--bg-muted);
-  border-left: 3px solid var(--accent);
+  background: var(--color-bg-muted);
+  border-left-color: var(--color-accent);
 }
 
 .document-list__title {
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: var(--font-size-md);
 }
 
 .document-list__meta {
-  font-size: 0.78rem;
-  color: #777;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .document-detail {
   max-width: 560px;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.85rem;
-}
-
-.field input,
-.field select {
-  padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.9rem;
+  gap: var(--space-lg);
 }
 
 .document-detail__content {
   max-height: 220px;
   overflow-y: auto;
   white-space: pre-wrap;
-  background: var(--bg-muted);
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  color: #444;
+  background: var(--color-bg-muted);
+  padding: var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .tag-picker {
@@ -170,42 +176,11 @@ body {
   gap: 0.4rem;
 }
 
-.tag-chip {
-  border: 1px solid var(--border);
-  background: white;
-  border-radius: 999px;
-  padding: 0.25rem 0.7rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.tag-chip--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
-}
-
-button[type="button"] {
-  align-self: flex-start;
-  padding: 0.5rem 1.2rem;
-  background: var(--accent);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-button[type="button"]:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
 .search-filter {
-  margin: 0 1rem 1rem;
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  margin: 0 var(--space-lg) var(--space-lg);
+  padding: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
@@ -213,9 +188,11 @@ button[type="button"]:disabled {
 
 .search-filter__query {
   padding: 0.45rem 0.6rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .search-filter__row {
@@ -227,9 +204,11 @@ button[type="button"]:disabled {
 .search-filter__row input {
   flex: 1;
   padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .search-filter__date {
@@ -237,52 +216,34 @@ button[type="button"]:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.search-filter__reset {
-  align-self: flex-start;
-  background: none;
-  border: none;
-  color: var(--accent);
-  font-size: 0.78rem;
-  cursor: pointer;
-  padding: 0;
-}
-
-button.secondary {
-  background: white;
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }
 
 .hint {
-  color: #2e7d32;
-  font-size: 0.8rem;
+  color: var(--color-success);
+  font-size: var(--font-size-sm);
 }
 
 .suggestion-card {
   max-width: 560px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: var(--space-lg);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-md);
 }
 
 .suggestion-card__header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  font-size: 0.8rem;
-  color: #666;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
 }
 
 .suggestion-card__meta {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -300,9 +261,11 @@ button.secondary {
 .reminder-form select,
 .reminder-form input {
   padding: 0.4rem 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 0.82rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 .reminder-list {
@@ -319,29 +282,18 @@ button.secondary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  gap: var(--space-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
   padding: 0.7rem 1rem;
-  font-size: 0.85rem;
+  font-size: var(--font-size-md);
 }
 
 .reminder-list__item--overdue {
-  border-color: #c0392b;
+  border-color: var(--color-danger);
 }
 
 .reminder-list__meta {
-  font-size: 0.78rem;
-  color: #777;
-}
-
-.empty-state {
-  color: #888;
-  font-size: 0.9rem;
-  padding: 1rem;
-}
-
-.error {
-  color: #c0392b;
-  font-size: 0.85rem;
-  padding: 0 1rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
 }

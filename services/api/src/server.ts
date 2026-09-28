@@ -2,6 +2,7 @@ import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import Fastify from "fastify";
 import { aiEnabled } from "./ai.js";
+import { registerAuth } from "./auth.js";
 import { env } from "./env.js";
 import { startRemindersNotifier } from "./reminders-notifier.js";
 import { aiRoutes } from "./routes/ai.js";
@@ -12,8 +13,12 @@ import { reminderRoutes } from "./routes/reminders.js";
 
 const app = Fastify({ logger: true });
 
-await app.register(cors, { origin: true });
+// exposedHeaders: Content-Disposition muss für den Browser lesbar sein, sonst
+// fällt der Original-Dateiname beim Download auf den Platzhalter zurück (fetch()
+// blendet sonst alle Nicht-Standard-Response-Header vor JS aus).
+await app.register(cors, { origin: true, exposedHeaders: ["Content-Disposition"] });
 await app.register(multipart);
+await registerAuth(app);
 
 app.get("/health", async () => ({ status: "ok", aiEnabled }));
 

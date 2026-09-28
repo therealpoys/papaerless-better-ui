@@ -1,24 +1,31 @@
 import type { MetadataSuggestion } from "@papaerless/shared-types";
+import { readJsonFile, writeJsonFile } from "./json-store.js";
 
-/**
- * Vorschläge leben nur im Speicher von services/api (siehe ADR 0001, "DB für
- * Vorschläge"). Bei einem Neustart des Backends gehen unbestätigte Vorschläge
- * verloren – das ist für die Review-Inbox akzeptabel, da sie jederzeit neu
- * angefordert werden können.
- */
-const suggestions = new Map<number, MetadataSuggestion>();
+const FILE = "ai-suggestions.json";
+
+async function load(): Promise<MetadataSuggestion[]> {
+  return readJsonFile<MetadataSuggestion[]>(FILE, []);
+}
 
 export const aiStore = {
-  set(suggestion: MetadataSuggestion) {
-    suggestions.set(suggestion.documentId, suggestion);
+  async set(suggestion: MetadataSuggestion): Promise<void> {
+    const suggestions = await load();
+    const next = suggestions.filter((s) => s.documentId !== suggestion.documentId);
+    next.push(suggestion);
+    await writeJsonFile(FILE, next);
   },
-  get(documentId: number) {
-    return suggestions.get(documentId);
+
+  async get(documentId: number): Promise<MetadataSuggestion | undefined> {
+    const suggestions = await load();
+    return suggestions.find((s) => s.documentId === documentId);
   },
-  delete(documentId: number) {
-    suggestions.delete(documentId);
+
+  async delete(documentId: number): Promise<void> {
+    const suggestions = await load();
+    await writeJsonFile(FILE, suggestions.filter((s) => s.documentId !== documentId));
   },
-  list() {
-    return Array.from(suggestions.values());
+
+  async list(): Promise<MetadataSuggestion[]> {
+    return load();
   },
 };

@@ -9,12 +9,22 @@ import type {
 } from "@papaerless/shared-types";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+const API_TOKEN = import.meta.env.VITE_API_TOKEN as string | undefined;
+
+function withAuth(init?: RequestInit): RequestInit {
+  if (!API_TOKEN) return init ?? {};
+  return {
+    ...init,
+    headers: { ...init?.headers, Authorization: `Bearer ${API_TOKEN}` },
+  };
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, init);
+  const res = await fetch(`${API_URL}${path}`, withAuth(init));
   if (!res.ok) {
     throw new Error(`API-Fehler ${res.status} bei ${path}: ${await res.text()}`);
   }
+  if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
 }
 
@@ -54,6 +64,18 @@ export const api = {
       method: "POST",
       body: form,
     });
+  },
+
+  deleteDocument: (id: number) => request<void>(`/api/documents/${id}`, { method: "DELETE" }),
+
+  downloadDocument: async (id: number): Promise<{ blob: Blob; fileName: string }> => {
+    const res = await fetch(`${API_URL}/api/documents/${id}/download`, withAuth());
+    if (!res.ok) {
+      throw new Error(`Download fehlgeschlagen (${res.status}): ${await res.text()}`);
+    }
+    const disposition = res.headers.get("content-disposition") ?? "";
+    const match = /filename="?([^";]+)"?/i.exec(disposition);
+    return { blob: await res.blob(), fileName: match ? match[1] : `dokument-${id}` };
   },
 
   listTags: () => request<Tag[]>("/api/tags"),

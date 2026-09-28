@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { colors } from "@papaerless/ui/src/tokens";
 import { buildPdfFromImages } from "../lib/pdf";
 import { uploadQueue } from "../lib/uploadQueue";
 import { CropScreen } from "./CropScreen";
@@ -39,6 +40,16 @@ export function ScanScreen({ onUploaded }: { onUploaded: () => void }) {
     } finally {
       setIsBuilding(false);
     }
+  }
+
+  function movePage(index: number, direction: -1 | 1) {
+    setPages((current) => {
+      const target = index + direction;
+      if (target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
   }
 
   if (pendingRaw) {
@@ -80,11 +91,35 @@ export function ScanScreen({ onUploaded }: { onUploaded: () => void }) {
           keyExtractor={(item, index) => `${item.uri}-${index}`}
           style={styles.thumbnailRow}
           renderItem={({ item, index }) => (
-            <TouchableOpacity
-              onPress={() => setPages((current) => current.filter((_, i) => i !== index))}
-            >
+            <View style={styles.thumbnailWrap}>
               <Image source={{ uri: item.uri }} style={styles.thumbnail} />
-            </TouchableOpacity>
+              <Text style={styles.thumbnailPage}>{index + 1}</Text>
+              <View style={styles.thumbnailActions}>
+                <TouchableOpacity
+                  disabled={index === 0}
+                  onPress={() => movePage(index, -1)}
+                  style={[styles.thumbnailActionButton, index === 0 && styles.thumbnailActionDisabled]}
+                >
+                  <Text style={styles.thumbnailActionText}>◀</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setPages((current) => current.filter((_, i) => i !== index))}
+                  style={styles.thumbnailActionButton}
+                >
+                  <Text style={styles.thumbnailActionText}>✕</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={index === pages.length - 1}
+                  onPress={() => movePage(index, 1)}
+                  style={[
+                    styles.thumbnailActionButton,
+                    index === pages.length - 1 && styles.thumbnailActionDisabled,
+                  ]}
+                >
+                  <Text style={styles.thumbnailActionText}>▶</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
         />
       )}
@@ -113,7 +148,27 @@ const styles = StyleSheet.create({
   camera: { flex: 1 },
   hint: { color: "#fff", textAlign: "center", margin: 24 },
   thumbnailRow: { position: "absolute", bottom: 100, left: 0, right: 0, padding: 8 },
-  thumbnail: { width: 56, height: 72, borderRadius: 6, marginRight: 8, borderWidth: 2, borderColor: "#fff" },
+  thumbnailWrap: { marginRight: 10, alignItems: "center" },
+  thumbnail: { width: 56, height: 72, borderRadius: 6, borderWidth: 2, borderColor: "#fff" },
+  thumbnailPage: {
+    position: "absolute",
+    top: 2,
+    left: 4,
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "700",
+    textShadowColor: "#000",
+    textShadowRadius: 2,
+  },
+  thumbnailActions: { flexDirection: "row", gap: 4, marginTop: 4 },
+  thumbnailActionButton: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderRadius: 4,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+  },
+  thumbnailActionDisabled: { opacity: 0.3 },
+  thumbnailActionText: { color: "#fff", fontSize: 11 },
   actions: {
     position: "absolute",
     bottom: 24,
@@ -129,7 +184,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 999,
   },
-  primaryButton: { backgroundColor: "#2563eb", paddingVertical: 14, paddingHorizontal: 20, borderRadius: 999 },
+  primaryButton: { backgroundColor: colors.light.accent, paddingVertical: 14, paddingHorizontal: 20, borderRadius: 999 },
   primaryButtonText: { color: "#111", fontWeight: "600" },
   disabledButton: { opacity: 0.4 },
 });

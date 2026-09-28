@@ -118,6 +118,34 @@ export class PaperlessClient {
     return (await res.json()) as string;
   }
 
+  async deleteDocument(id: number): Promise<void> {
+    const res = await fetch(`${this.config.baseUrl}/api/documents/${id}/`, {
+      method: "DELETE",
+      headers: { Authorization: `Token ${this.config.apiToken}` },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Löschen fehlgeschlagen (${res.status}): ${await res.text()}`);
+    }
+  }
+
+  async downloadDocument(id: number): Promise<{ buffer: ArrayBuffer; contentType: string; fileName: string }> {
+    const res = await fetch(`${this.config.baseUrl}/api/documents/${id}/download/`, {
+      headers: { Authorization: `Token ${this.config.apiToken}` },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Download fehlgeschlagen (${res.status}): ${await res.text()}`);
+    }
+
+    const contentType = res.headers.get("content-type") ?? "application/octet-stream";
+    const disposition = res.headers.get("content-disposition") ?? "";
+    const match = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(disposition);
+    const fileName = match ? decodeURIComponent(match[1]) : `dokument-${id}`;
+
+    return { buffer: await res.arrayBuffer(), contentType, fileName };
+  }
+
   async listTags(): Promise<Tag[]> {
     const data = await this.request<PaginatedResponse<Tag>>(`/api/tags/?page_size=100`);
     return data.results;

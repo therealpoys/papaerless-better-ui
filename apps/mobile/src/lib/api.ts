@@ -1,9 +1,18 @@
-import type { MetadataSuggestion, PaperlessDocument } from "@papaerless/shared-types";
+import type { MetadataSuggestion, PaperlessDocument, Reminder } from "@papaerless/shared-types";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001";
+const API_TOKEN = process.env.EXPO_PUBLIC_API_TOKEN;
+
+function withAuth(init?: RequestInit): RequestInit {
+  if (!API_TOKEN) return init ?? {};
+  return {
+    ...init,
+    headers: { ...init?.headers, Authorization: `Bearer ${API_TOKEN}` },
+  };
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, init);
+  const res = await fetch(`${API_URL}${path}`, withAuth(init));
   if (!res.ok) {
     throw new Error(`API-Fehler ${res.status} bei ${path}: ${await res.text()}`);
   }
@@ -20,10 +29,10 @@ export const api = {
       type: "application/pdf",
     } as unknown as Blob);
 
-    const res = await fetch(`${API_URL}/api/documents/upload`, {
+    const res = await fetch(`${API_URL}/api/documents/upload`, withAuth({
       method: "POST",
       body: form,
-    });
+    }));
     if (!res.ok) {
       throw new Error(`Upload fehlgeschlagen (${res.status}): ${await res.text()}`);
     }
@@ -49,4 +58,8 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ kind: "expo", token }),
     }),
+
+  listReminders: () => request<Reminder[]>("/api/reminders"),
+  dismissReminder: (id: string) =>
+    request<void>(`/api/reminders/${id}/dismiss`, { method: "POST" }),
 };

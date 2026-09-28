@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import * as ImageManipulator from "expo-image-manipulator";
+import { colors } from "@papaerless/ui/src/tokens";
 
 interface CropScreenProps {
   uri: string;
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   cropRect: {
     position: "absolute",
     borderWidth: 2,
-    borderColor: "#2563eb",
+    borderColor: colors.light.accent,
     backgroundColor: "rgba(37,99,235,0.15)",
   },
   handle: {
@@ -170,12 +171,12 @@ const styles = StyleSheet.create({
     width: HANDLE_SIZE,
     height: HANDLE_SIZE,
     borderRadius: HANDLE_SIZE / 2,
-    backgroundColor: "#2563eb",
+    backgroundColor: colors.light.accent,
     borderWidth: 2,
     borderColor: "#fff",
   },
   actions: { flexDirection: "row", gap: 12, marginTop: 20 },
-  primaryButton: { backgroundColor: "#2563eb", paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
+  primaryButton: { backgroundColor: colors.light.accent, paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8 },
   primaryButtonText: { color: "#fff", fontWeight: "600" },
   secondaryButton: {
     paddingVertical: 10,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
+import { Button, Card, ConfidenceBadge, EmptyState, ErrorState, Field } from "@papaerless/ui";
 import { api } from "../lib/api";
 
 function SuggestionCard({
@@ -50,33 +51,27 @@ function SuggestionCard({
   }
 
   return (
-    <div className="suggestion-card">
+    <Card className="suggestion-card">
       <div className="suggestion-card__header">
         <span>Dokument #{suggestion.documentId}</span>
-        <span className="suggestion-card__confidence">
-          Konfidenz: {Math.round(suggestion.confidence * 100)}%
-        </span>
+        <ConfidenceBadge confidence={suggestion.confidence} />
       </div>
 
-      <label className="field">
-        <span>Titel</span>
+      <Field label="Titel">
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </label>
+      </Field>
 
-      <label className="field">
-        <span>Korrespondent</span>
+      <Field label="Korrespondent">
         <input value={correspondent} onChange={(e) => setCorrespondent(e.target.value)} />
-      </label>
+      </Field>
 
-      <label className="field">
-        <span>Dokumenttyp</span>
+      <Field label="Dokumenttyp">
         <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} />
-      </label>
+      </Field>
 
-      <label className="field">
-        <span>Tags (kommagetrennt)</span>
+      <Field label="Tags (kommagetrennt)">
         <input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
-      </label>
+      </Field>
 
       {(suggestion.date || suggestion.amount) && (
         <p className="suggestion-card__meta">
@@ -87,16 +82,16 @@ function SuggestionCard({
       )}
 
       <div className="suggestion-card__actions">
-        <button type="button" onClick={handleApply} disabled={isSaving}>
+        <Button onClick={handleApply} disabled={isSaving}>
           Übernehmen
-        </button>
-        <button type="button" className="secondary" onClick={handleDismiss} disabled={isSaving}>
+        </Button>
+        <Button variant="secondary" onClick={handleDismiss} disabled={isSaving}>
           Verwerfen
-        </button>
+        </Button>
       </div>
 
-      {error && <p className="error">{error}</p>}
-    </div>
+      {error && <ErrorState message={error} />}
+    </Card>
   );
 }
 
@@ -105,6 +100,7 @@ export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
   const [error, setError] = useState<string | null>(null);
 
   function reload() {
+    setError(null);
     api.listSuggestions().then(setSuggestions).catch((err) => setError(err.message));
   }
 
@@ -112,21 +108,27 @@ export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
 
   if (!aiEnabled) {
     return (
-      <p className="empty-state">
-        KI-Erkennung ist deaktiviert. Zum Aktivieren <code>AI_PROVIDER</code> und{" "}
-        <code>AI_API_KEY</code> im Backend setzen (siehe <code>.env.example</code>). Dieses
-        Feature ist optional – Paperless funktioniert ohne es genauso gut.
-      </p>
+      <EmptyState
+        title="KI-Erkennung ist deaktiviert"
+        description={
+          <>
+            Zum Aktivieren <code>AI_PROVIDER</code> und <code>AI_API_KEY</code> im Backend setzen
+            (siehe <code>.env.example</code>). Dieses Feature ist optional – Paperless funktioniert
+            ohne es genauso gut.
+          </>
+        }
+      />
     );
   }
 
-  if (error) return <p className="error">{error}</p>;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
 
   if (suggestions.length === 0) {
     return (
-      <p className="empty-state">
-        Keine offenen Vorschläge. Öffne ein Dokument und klicke auf „KI-Vorschlag anfragen“.
-      </p>
+      <EmptyState
+        title="Keine offenen Vorschläge"
+        description="Öffne ein Dokument und klicke auf „KI-Vorschlag anfragen“."
+      />
     );
   }
 

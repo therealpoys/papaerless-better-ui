@@ -1,4 +1,5 @@
 import type { Correspondent, DocumentSearchParams, DocumentType, Tag } from "@papaerless/shared-types";
+import { Button, TagChip } from "@papaerless/ui";
 
 interface SearchFilterProps {
   value: DocumentSearchParams;
@@ -30,6 +31,7 @@ export function SearchFilter({
         className="search-filter__query"
         type="search"
         placeholder="Suche im Volltext…"
+        aria-label="Suche im Volltext"
         value={value.query ?? ""}
         onChange={(e) => onChange({ ...value, query: e.target.value || undefined })}
       />
@@ -37,6 +39,7 @@ export function SearchFilter({
       <div className="search-filter__row">
         <select
           value={value.correspondent ?? ""}
+          aria-label="Korrespondent filtern"
           onChange={(e) =>
             onChange({ ...value, correspondent: e.target.value ? Number(e.target.value) : undefined })
           }
@@ -51,6 +54,7 @@ export function SearchFilter({
 
         <select
           value={value.documentType ?? ""}
+          aria-label="Dokumenttyp filtern"
           onChange={(e) =>
             onChange({ ...value, documentType: e.target.value ? Number(e.target.value) : undefined })
           }
@@ -86,22 +90,17 @@ export function SearchFilter({
       {tags.length > 0 && (
         <div className="tag-picker">
           {tags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              className={`tag-chip ${value.tags?.includes(tag.id) ? "tag-chip--active" : ""}`}
-              onClick={() => toggleTag(tag.id)}
-            >
+            <TagChip key={tag.id} active={value.tags?.includes(tag.id)} onClick={() => toggleTag(tag.id)}>
               {tag.name}
-            </button>
+            </TagChip>
           ))}
         </div>
       )}
 
       {hasActiveFilters && (
-        <button type="button" className="search-filter__reset" onClick={() => onChange({})}>
+        <Button variant="link" onClick={() => onChange({})}>
           Filter zurücksetzen
-        </button>
+        </Button>
       )}
     </div>
   );

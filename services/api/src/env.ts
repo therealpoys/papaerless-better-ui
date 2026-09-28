@@ -18,6 +18,11 @@ export const env = {
   paperlessUrl: required("PAPERLESS_URL"),
   paperlessApiToken: required("PAPERLESS_API_TOKEN"),
 
+  // Optional, aber dringend empfohlen sobald das Backend nicht mehr nur auf localhost läuft:
+  // gemeinsames Bearer-Token, das apps/web und apps/mobile mitschicken müssen.
+  // Ohne gesetzten Wert bleibt das Gateway offen (nur für lokale Entwicklung gedacht).
+  apiAuthToken: process.env.API_AUTH_TOKEN || undefined,
+
   // Optional – KI-Erkennung ist nur aktiv, wenn AI_PROVIDER gesetzt ist
   aiProvider: process.env.AI_PROVIDER || undefined,
   aiApiKey: process.env.AI_API_KEY || undefined,

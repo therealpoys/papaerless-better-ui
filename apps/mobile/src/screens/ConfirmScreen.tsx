@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
+import { colors, confidenceLevel } from "@papaerless/ui/src/tokens";
 import { api } from "../lib/api";
+
+const CONFIDENCE_LABEL: Record<ReturnType<typeof confidenceLevel>, string> = {
+  high: "sicher",
+  medium: "eher unsicher",
+  low: "unsicher",
+};
 
 export function ConfirmScreen() {
   const [aiEnabled, setAiEnabled] = useState(false);
@@ -62,8 +69,14 @@ export function ConfirmScreen() {
           {suggestion.tags && suggestion.tags.length > 0 && (
             <Text style={styles.meta}>{suggestion.tags.join(" · ")}</Text>
           )}
-          <Text style={styles.confidence}>
-            Konfidenz: {Math.round(suggestion.confidence * 100)}%
+          <Text
+            style={[
+              styles.confidence,
+              styles[`confidence_${confidenceLevel(suggestion.confidence)}` as const],
+            ]}
+          >
+            {CONFIDENCE_LABEL[confidenceLevel(suggestion.confidence)]} ·{" "}
+            {Math.round(suggestion.confidence * 100)}%
           </Text>
 
           <View style={styles.row}>
@@ -92,9 +105,27 @@ const styles = StyleSheet.create({
   },
   title: { fontWeight: "700", fontSize: 15 },
   meta: { color: "#555", marginTop: 4 },
-  confidence: { color: "#888", fontSize: 12, marginTop: 6 },
+  confidence: {
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 6,
+    alignSelf: "flex-start",
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  confidence_high: { color: colors.light.success, backgroundColor: colors.light.successBg },
+  confidence_medium: { color: colors.light.warning, backgroundColor: colors.light.warningBg },
+  confidence_low: { color: colors.light.danger, backgroundColor: colors.light.dangerBg },
   row: { flexDirection: "row", gap: 10, marginTop: 12 },
-  acceptButton: { flex: 1, backgroundColor: "#2563eb", borderRadius: 8, paddingVertical: 12, alignItems: "center" },
+  acceptButton: {
+    flex: 1,
+    backgroundColor: colors.light.accent,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
   acceptText: { color: "#fff", fontWeight: "600" },
   rejectButton: {
     flex: 1,
@@ -102,7 +133,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#c0392b",
+    borderColor: colors.light.danger,
   },
-  rejectText: { color: "#c0392b", fontWeight: "600" },
+  rejectText: { color: colors.light.danger, fontWeight: "600" },
 });

@@ -1,0 +1,68 @@
+/**
+ * CSS-Abbild der Werte aus tokens.ts. Light ist die Default-Palette auf :root,
+ * Dark greift automatisch über prefers-color-scheme (kein Toggle nötig, siehe
+ * Roadmap "Dark Mode").
+ */
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #ffffff;
+  --color-bg-muted: #f5f5f5;
+  --color-surface: #ffffff;
+  --color-border: #d9d9d9;
+  --color-text: #1a1a1a;
+  --color-text-muted: #666666;
+  --color-accent: #2563eb;
+  --color-accent-contrast: #ffffff;
+  --color-success: #2e7d32;
+  --color-success-bg: #e8f5e9;
+  --color-warning: #b45309;
+  --color-warning-bg: #fef3c7;
+  --color-danger: #c0392b;
+  --color-danger-bg: #fdecea;
+
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-xxl: 2rem;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.82rem;
+  --font-size-md: 0.9rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.4rem;
+
+  --focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #121212;
+    --color-bg-muted: #1e1e1e;
+    --color-surface: #1a1a1a;
+    --color-border: #3a3a3a;
+    --color-text: #f2f2f2;
+    --color-text-muted: #aaaaaa;
+    --color-accent: #4f8dff;
+    --color-accent-contrast: #0b1020;
+    --color-success: #6fcf74;
+    --color-success-bg: #173620;
+    --color-warning: #f2b84b;
+    --color-warning-bg: #3a2c10;
+    --color-danger: #f2685c;
+    --color-danger-bg: #3a1a17;
+  }
+}
+
+/* Sichtbarer Fokus-Ring für Tastaturbedienung, unabhängig vom Browser-Default. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

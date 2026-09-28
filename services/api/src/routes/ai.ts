@@ -21,6 +21,9 @@ export async function aiRoutes(app: FastifyInstance) {
 
   app.get("/ai/inbox", async () => aiStore.list());
 
+  // Wichtig: gecachte Vorschläge kommen jetzt aus einer JSON-Datei (services/api/data),
+  // nicht mehr nur aus dem Prozessspeicher – überleben also einen Neustart/Redeploy.
+
   app.get("/ai/documents/:id/suggestion", async (request, reply) => {
     if (!classifier) {
       return reply.code(409).send({
@@ -31,7 +34,7 @@ export async function aiRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const documentId = Number(id);
 
-    const cached = aiStore.get(documentId);
+    const cached = await aiStore.get(documentId);
     if (cached) return cached;
 
     const [doc, tags, correspondents, documentTypes] = await Promise.all([
@@ -50,7 +53,7 @@ export async function aiRoutes(app: FastifyInstance) {
       knownDocumentTypes: documentTypes,
     });
 
-    aiStore.set(suggestion);
+    await aiStore.set(suggestion);
     return suggestion;
   });
 
@@ -82,13 +85,13 @@ export async function aiRoutes(app: FastifyInstance) {
       tags: tagIds.filter((tagId): tagId is number => tagId !== null),
     });
 
-    aiStore.delete(documentId);
+    await aiStore.delete(documentId);
     return updated;
   });
 
   app.post("/ai/documents/:id/dismiss", async (request) => {
     const { id } = request.params as { id: string };
-    aiStore.delete(Number(id));
+    await aiStore.delete(Number(id));
     return { ok: true };
   });
 }

@@ -39,6 +39,20 @@ export async function documentRoutes(app: FastifyInstance) {
     return paperless.updateDocument(Number(id), patch);
   });
 
+  app.delete("/documents/:id", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    await paperless.deleteDocument(Number(id));
+    return reply.code(204).send();
+  });
+
+  app.get("/documents/:id/download", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { buffer, contentType, fileName } = await paperless.downloadDocument(Number(id));
+    reply.header("Content-Type", contentType);
+    reply.header("Content-Disposition", `attachment; filename="${fileName}"`);
+    return reply.send(Buffer.from(buffer));
+  });
+
   app.post("/documents/upload", async (request, reply) => {
     const file = await request.file();
     if (!file) {
