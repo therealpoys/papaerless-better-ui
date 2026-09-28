@@ -9,21 +9,23 @@
 - [x] Paperless-Client (Dokumente, Tags, Korrespondenten, Typen)
 - [x] Upload im Web
 - [x] Dokumentliste + Detail
-- [ ] Suche & Filter (Tags, Korrespondent, Zeitraum)
+- [x] Suche & Filter (Tags, Korrespondent, Zeitraum)
 
-## Phase 2 – KI-Erkennung
-- [ ] Klassifizierung aus OCR-Text
-- [ ] Review-Inbox (Vorschläge bestätigen/korrigieren)
+## Phase 2 – Mobile App
+- [x] Kamera-Scan mit Zuschnitt, Mehrseiten → PDF
+- [x] Upload-Queue (offline-fähig)
+- [x] Schnelles Bestätigen
 
-## Phase 3 – Mobile App
-- [ ] Kamera-Scan mit Zuschnitt, Mehrseiten → PDF
-- [ ] Upload-Queue (offline-fähig)
-- [ ] Schnelles Bestätigen
+## Phase 3 – E-Mail
+- [x] Paperless Mail-Regeln testen (siehe `docs/decisions/0002-mail-ingest.md`)
+- [x] Eigener mail-ingest Service (`services/mail-ingest`)
 
-## Phase 4 – E-Mail
-- [ ] Paperless Mail-Regeln testen
-- [ ] ggf. eigener mail-ingest Service
+## Phase 4 – Später
+- [x] Erinnerungen (Fälligkeiten, Vertragskündigungen)
+- [x] Push-Benachrichtigungen (Web Push + Expo Push)
 
-## Später
-- [ ] Erinnerungen (Fälligkeiten, Vertragskündigungen)
-- [ ] Push-Benachrichtigungen
+## Optional – KI-Erkennung
+Kein Teil des Kern-Flows; Paperless bleibt ohne KI voll nutzbar. Nur aktivieren, wenn
+`AI_PROVIDER`/`AI_API_KEY` gesetzt sind (siehe `.env.example`).
+- [x] Klassifizierung aus OCR-Text (`services/ai-classifier`)
+- [x] Review-Inbox (Vorschläge bestätigen/korrigieren)

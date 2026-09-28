@@ -3,9 +3,28 @@ import { paperless } from "../paperless.js";
 
 export async function documentRoutes(app: FastifyInstance) {
   app.get("/documents", async (request) => {
-    const { pageSize } = request.query as { pageSize?: string };
+    const query = request.query as {
+      pageSize?: string;
+      query?: string;
+      tags?: string | string[];
+      correspondent?: string;
+      documentType?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    };
+
+    const tags = query.tags
+      ? (Array.isArray(query.tags) ? query.tags : [query.tags]).map(Number)
+      : undefined;
+
     return paperless.listDocuments({
-      pageSize: pageSize ? Number(pageSize) : undefined,
+      pageSize: query.pageSize ? Number(query.pageSize) : undefined,
+      query: query.query,
+      tags,
+      correspondent: query.correspondent ? Number(query.correspondent) : undefined,
+      documentType: query.documentType ? Number(query.documentType) : undefined,
+      dateFrom: query.dateFrom,
+      dateTo: query.dateTo,
     });
   });
 

@@ -16,6 +16,10 @@ build/
 .env.*
 !.env.example
 
+# Laufzeitdaten Backend (Reminders, Push-Subscriptions) & Mail-Ingest (verarbeitete Message-IDs)
+services/api/data/
+services/mail-ingest/data/
+
 # Paperless lokale Daten
 infra/paperless/data/
 infra/paperless/media/

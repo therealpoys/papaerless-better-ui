@@ -1,4 +1,10 @@
-import type { Correspondent, DocumentType, PaperlessDocument, Tag } from "@papaerless/shared-types";
+import type {
+  Correspondent,
+  DocumentSearchParams,
+  DocumentType,
+  PaperlessDocument,
+  Tag,
+} from "@papaerless/shared-types";
 
 export interface PaperlessClientConfig {
   baseUrl: string;
@@ -53,10 +59,20 @@ export class PaperlessClient {
     return (await res.json()) as T;
   }
 
-  async listDocuments(params: { pageSize?: number } = {}): Promise<PaperlessDocument[]> {
-    const pageSize = params.pageSize ?? 25;
+  async listDocuments(params: DocumentSearchParams = {}): Promise<PaperlessDocument[]> {
+    const search = new URLSearchParams();
+    search.set("page_size", String(params.pageSize ?? 25));
+    if (params.query) search.set("query", params.query);
+    if (params.correspondent) search.set("correspondent__id", String(params.correspondent));
+    if (params.documentType) search.set("document_type__id", String(params.documentType));
+    if (params.dateFrom) search.set("created__date__gte", params.dateFrom);
+    if (params.dateTo) search.set("created__date__lte", params.dateTo);
+    for (const tagId of params.tags ?? []) {
+      search.append("tags__id__in", String(tagId));
+    }
+
     const data = await this.request<PaginatedResponse<RawDocument>>(
-      `/api/documents/?page_size=${pageSize}`,
+      `/api/documents/?${search.toString()}`,
     );
     return data.results.map(toDocument);
   }
@@ -119,5 +135,29 @@ export class PaperlessClient {
       `/api/document_types/?page_size=100`,
     );
     return data.results;
+  }
+
+  async createTag(name: string): Promise<Tag> {
+    return this.request<Tag>(`/api/tags/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async createCorrespondent(name: string): Promise<Correspondent> {
+    return this.request<Correspondent>(`/api/correspondents/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+  }
+
+  async createDocumentType(name: string): Promise<DocumentType> {
+    return this.request<DocumentType>(`/api/document_types/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
   }
 }

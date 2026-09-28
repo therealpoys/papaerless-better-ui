@@ -1,0 +1,61 @@
+import { useEffect, useState } from "react";
+import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
+import { ScanScreen } from "./src/screens/ScanScreen";
+import { QueueScreen } from "./src/screens/QueueScreen";
+import { ConfirmScreen } from "./src/screens/ConfirmScreen";
+import { registerExpoPush } from "./src/lib/push";
+
+type Tab = "scan" | "queue" | "confirm";
+
+const TABS: { key: Tab; label: string }[] = [
+  { key: "scan", label: "Scannen" },
+  { key: "queue", label: "Warteschlange" },
+  { key: "confirm", label: "Bestätigen" },
+];
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>("scan");
+
+  useEffect(() => {
+    registerExpoPush().catch((err) => console.warn("Push-Registrierung fehlgeschlagen:", err));
+  }, []);
+
+  return (
+    <SafeAreaView style={styles.root}>
+      <StatusBar style="light" />
+
+      <View style={styles.content}>
+        {tab === "scan" && <ScanScreen onUploaded={() => setTab("queue")} />}
+        {tab === "queue" && <QueueScreen />}
+        {tab === "confirm" && <ConfirmScreen />}
+      </View>
+
+      <View style={styles.tabBar}>
+        {TABS.map((t) => (
+          <TouchableOpacity
+            key={t.key}
+            style={styles.tabButton}
+            onPress={() => setTab(t.key)}
+          >
+            <Text style={[styles.tabLabel, tab === t.key && styles.tabLabelActive]}>{t.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: "#000" },
+  content: { flex: 1 },
+  tabBar: {
+    flexDirection: "row",
+    borderTopWidth: 1,
+    borderTopColor: "#222",
+    backgroundColor: "#111",
+  },
+  tabButton: { flex: 1, paddingVertical: 14, alignItems: "center" },
+  tabLabel: { color: "#888", fontSize: 13 },
+  tabLabelActive: { color: "#fff", fontWeight: "700" },
+});

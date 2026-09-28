@@ -45,3 +45,32 @@ export interface UploadJob {
   suggestion?: MetadataSuggestion;
   error?: string;
 }
+
+export interface DocumentSearchParams {
+  query?: string;
+  tags?: number[];
+  correspondent?: number;
+  documentType?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  pageSize?: number;
+}
+
+export type ReminderKind = "due_date" | "cancellation_deadline";
+
+export interface Reminder {
+  id: string;
+  documentId: number;
+  documentTitle: string;
+  kind: ReminderKind;
+  dueDate: string;
+  note?: string;
+  notifiedAt?: string;
+}
+
+export interface PushSubscriptionRecord {
+  id: string;
+  kind: "web" | "expo";
+  endpoint: string;
+  createdAt: string;
+}

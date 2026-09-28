@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Paperless Better UI",
+    "slug": "papaerless-better-ui",
+    "scheme": "papaerless",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Wird zum Scannen von Dokumenten benötigt."
+      }
+    },
+    "android": {
+      "permissions": ["CAMERA"]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Wird zum Scannen von Dokumenten benötigt."
+        }
+      ]
+    ]
+  }
+}

@@ -23,11 +23,43 @@ body {
 .app__header {
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .app__header h1 {
   font-size: 1.1rem;
   margin: 0;
+}
+
+.app__tabs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.app__tabs button {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  color: #444;
+}
+
+.app__tabs button.app__tab--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.app__main--full {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
 }
 
 .app__body {
@@ -167,6 +199,139 @@ button[type="button"] {
 button[type="button"]:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+.search-filter {
+  margin: 0 1rem 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.search-filter__query {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.search-filter__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.search-filter__row select,
+.search-filter__row input {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.search-filter__date {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.search-filter__reset {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+button.secondary {
+  background: white;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.hint {
+  color: #2e7d32;
+  font-size: 0.8rem;
+}
+
+.suggestion-card {
+  max-width: 560px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.suggestion-card__header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.suggestion-card__meta {
+  font-size: 0.8rem;
+  color: #666;
+  margin: 0;
+}
+
+.suggestion-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.reminder-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.reminder-form select,
+.reminder-form input {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.reminder-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reminder-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.7rem 1rem;
+  font-size: 0.85rem;
+}
+
+.reminder-list__item--overdue {
+  border-color: #c0392b;
+}
+
+.reminder-list__meta {
+  font-size: 0.78rem;
+  color: #777;
 }
 
 .empty-state {

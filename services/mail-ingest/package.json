@@ -1,27 +1,23 @@
 {
-  "name": "@papaerless/api",
+  "name": "@papaerless/mail-ingest",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
+    "start": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fastify/cors": "^10.0.0",
-    "@fastify/multipart": "^9.0.0",
-    "@papaerless/ai-classifier": "workspace:*",
     "@papaerless/paperless-client": "workspace:*",
-    "@papaerless/shared-types": "workspace:*",
     "dotenv": "^16.4.0",
-    "fastify": "^5.1.0",
-    "web-push": "^3.6.7"
+    "imapflow": "^1.0.185",
+    "mailparser": "^3.7.2"
   },
   "devDependencies": {
+    "@types/mailparser": "^3.4.5",
     "@types/node": "^22.10.0",
-    "@types/web-push": "^3.6.4",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0"
   }
