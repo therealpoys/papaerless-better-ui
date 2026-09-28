@@ -1,14 +1,15 @@
 # Roadmap
 
 ## Phase 0 – Setup
-- [ ] Tech-Stack festlegen (ADR 0001)
-- [ ] Lokales Paperless-ngx via Docker
-- [ ] API-Token erzeugen, Verbindung testen
+- [x] Tech-Stack festlegen (ADR 0001)
+- [x] Lokales Paperless-ngx via Docker
+- [x] API-Token erzeugen, Verbindung testen
 
 ## Phase 1 – Web MVP
-- [ ] Paperless-Client (Dokumente, Tags, Korrespondenten, Typen)
-- [ ] Upload im Web
-- [ ] Dokumentliste + Detail
+- [x] Paperless-Client (Dokumente, Tags, Korrespondenten, Typen)
+- [x] Upload im Web
+- [x] Dokumentliste + Detail
+- [ ] Suche & Filter (Tags, Korrespondent, Zeitraum)
 
 ## Phase 2 – KI-Erkennung
 - [ ] Klassifizierung aus OCR-Text

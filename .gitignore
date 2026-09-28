@@ -9,6 +9,7 @@ build/
 .next/
 .expo/
 *.tsbuildinfo
+.turbo/
 
 # Env / Secrets
 .env
@@ -33,3 +34,6 @@ samples/**/*.eml
 .DS_Store
 .idea/
 *.log
+
+# Claude Code – persönliche Overrides
+.claude/settings.local.json
