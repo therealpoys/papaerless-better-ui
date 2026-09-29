@@ -103,20 +103,17 @@ den Alltagseinsatz blockiert.
 - [ ] **Mobile: Dokumente durchsuchen/bearbeiten** – die App kann bisher nur scannen → hochladen →
       bestätigen, aber keine bestehenden Dokumente durchsuchen oder öffnen. Größeres Stück Arbeit
       (eigene Liste/Detail-Screens analog zu `apps/web`), bewusst nicht nebenbei mit umgesetzt.
-- [ ] **Deployment-Pfad für die eigenen Services** – kein Dockerfile für `api`/`mail-ingest`/
-      `ai-classifier`, keine CI (`.github/workflows` existiert nicht). Hängt an der in
-      `docs/architecture.md` offenen Hosting-Frage (gleicher Server wie Paperless? Reverse
-      Proxy/VPN?) – das ist eine Architekturentscheidung, kein Fix nebenbei; gehört als ADR
-      entschieden, bevor Docker/CI gebaut werden.
-- [x] **Testabdeckung (Grundlage)** – vitest in `services/api`, `services/mail-ingest`,
-      `services/ai-classifier` und `packages/paperless-client`; `pnpm test` (Turborepo-Task `test`)
-      und GitHub-Actions-CI (`.github/workflows/ci.yml`: install --frozen-lockfile, typecheck,
-      lint, test, build auf Node 20/22). Abgedeckt: Auth-Hook, JSON-/KI-/Reminder-Stores,
-      Metadaten- und Reminder-Routen (PaperlessClient gemockt), Mail-Ingest-Zyklus und
-      Processed-Store, KI-Prompt/Antwort-Parsing (Anthropic-SDK gemockt), PaperlessClient
-      (fetch gemockt). Test-Datenverzeichnisse über `API_DATA_DIR` / `MAIL_DATA_DIR`.
-- [ ] **Testabdeckung ausbauen** – noch ohne Tests: Routen `documents`, `ai`, `push`, `backup`,
-      `push-sender`/`reminders-notifier` sowie `apps/*` (Frontend-/Komponententests).
+- [x] **Deployment-Pfad für die eigenen Services** – Hosting-Frage per
+      [ADR 0004](decisions/0004-deployment.md) entschieden (gleicher Docker-Host wie Paperless,
+      TLS-Reverse-Proxy oder VPN davor). Umgesetzt: `infra/docker/` (Dockerfiles für api/mail-ingest
+      als esbuild-Bundle, web hinter nginx mit `/api`-Proxy), `infra/docker-compose.yml`
+      (Gesamtstack mit Healthchecks, Volumes, `restart: unless-stopped`, Profil `mail`),
+      `scripts/setup.sh`, README-Abschnitt "Produktiv betreiben". `ai-classifier` ist Lib von `api`.
+      Noch offen: CI (`.github/workflows`), Image-Registry, Monitoring/automatische Backups.
+- [ ] **Testabdeckung** – `services/api/tests`, `services/mail-ingest/tests`,
+      `services/ai-classifier/tests` enthalten nur `.gitkeep`, es gibt noch keinen Testrunner im
+      Projekt (kein vitest/jest in den `package.json`). Eigene Aufgabe: erst Testtooling
+      einführen, dann Tests nachziehen.
 
 ## Phase 7 – Suche & Discovery
 `apps/web/src/components/SearchFilter.tsx` deckt Volltext, Korrespondent/Dokumenttyp (als

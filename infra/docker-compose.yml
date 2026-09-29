@@ -1,0 +1,153 @@
+# Gesamtstack: Paperless-ngx + eigene Services (siehe docs/decisions/0004-deployment.md)
+#
+# Start aus dem Repo-Root (Secrets kommen aus der Root-.env, angelegt via scripts/setup.sh):
+#   docker compose --env-file .env -f infra/docker-compose.yml up -d --build
+# Mail-Ingest (optional, braucht MAIL_IMAP_*):
+#   docker compose --env-file .env -f infra/docker-compose.yml --profile mail up -d
+#
+# Ports sind standardmäßig nur auf 127.0.0.1 gebunden -> TLS-Reverse-Proxy/VPN davorsetzen.
+name: paperless-better-ui
+
+x-node-service: &node-service
+  restart: unless-stopped
+  init: true
+  read_only: true
+  security_opt:
+    - no-new-privileges:true
+  cap_drop: [ALL]
+
+services:
+  broker:
+    image: docker.io/library/redis:7
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:latest
+    restart: unless-stopped
+    depends_on:
+      broker:
+        condition: service_healthy
+    ports:
+      - "${PAPERLESS_BIND:-127.0.0.1}:8000:8000"
+    volumes:
+      - paperless-data:/usr/src/paperless/data
+      - paperless-media:/usr/src/paperless/media
+      - paperless-export:/usr/src/paperless/export
+      - paperless-consume:/usr/src/paperless/consume
+    environment:
+      PAPERLESS_REDIS: redis://broker:6379
+      PAPERLESS_TIKA_ENABLED: 0
+      # Öffentliche URL von Paperless selbst (CSRF/ALLOWED_HOSTS). Die eigenen Services
+      # sprechen Paperless intern über http://paperless:8000 an (siehe unten).
+      PAPERLESS_URL: ${PAPERLESS_PUBLIC_URL:-http://localhost:8000}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:?PAPERLESS_SECRET_KEY fehlt (scripts/setup.sh)}
+      PAPERLESS_ADMIN_USER: ${PAPERLESS_ADMIN_USER:-admin}
+      PAPERLESS_ADMIN_PASSWORD: ${PAPERLESS_ADMIN_PASSWORD:?PAPERLESS_ADMIN_PASSWORD fehlt (scripts/setup.sh)}
+      PAPERLESS_TIME_ZONE: ${TZ:-Europe/Berlin}
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  api:
+    <<: *node-service
+    build:
+      context: ..
+      dockerfile: infra/docker/node-service.Dockerfile
+      args:
+        SERVICE: api
+        ENTRY: server.ts
+    depends_on:
+      paperless:
+        condition: service_healthy
+    environment:
+      API_PORT: 3001
+      # Intern über das Compose-Netz, unabhängig vom Wert in .env (der ist für den Host-Browser)
+      PAPERLESS_URL: http://paperless:8000
+      PAPERLESS_API_TOKEN: ${PAPERLESS_API_TOKEN:-}
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:-}
+      AI_PROVIDER: ${AI_PROVIDER:-}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      WEB_PUSH_PUBLIC_KEY: ${WEB_PUSH_PUBLIC_KEY:-}
+      WEB_PUSH_PRIVATE_KEY: ${WEB_PUSH_PRIVATE_KEY:-}
+      WEB_PUSH_CONTACT_EMAIL: ${WEB_PUSH_CONTACT_EMAIL:-mailto:admin@example.com}
+      EXPO_ACCESS_TOKEN: ${EXPO_ACCESS_TOKEN:-}
+    volumes:
+      - api-data:/app/data
+    tmpfs:
+      - /tmp
+    ports:
+      - "${API_BIND:-127.0.0.1}:3001:3001"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3001/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  mail-ingest:
+    <<: *node-service
+    profiles: ["mail"]
+    build:
+      context: ..
+      dockerfile: infra/docker/node-service.Dockerfile
+      args:
+        SERVICE: mail-ingest
+        ENTRY: index.ts
+    depends_on:
+      paperless:
+        condition: service_healthy
+    environment:
+      PAPERLESS_URL: http://paperless:8000
+      PAPERLESS_API_TOKEN: ${PAPERLESS_API_TOKEN:-}
+      MAIL_IMAP_HOST: ${MAIL_IMAP_HOST:-}
+      MAIL_IMAP_PORT: ${MAIL_IMAP_PORT:-993}
+      MAIL_IMAP_USER: ${MAIL_IMAP_USER:-}
+      MAIL_IMAP_PASSWORD: ${MAIL_IMAP_PASSWORD:-}
+      MAIL_IMAP_FOLDER: ${MAIL_IMAP_FOLDER:-INBOX}
+      MAIL_POLL_INTERVAL_MS: ${MAIL_POLL_INTERVAL_MS:-60000}
+    volumes:
+      - mail-data:/app/data
+    tmpfs:
+      - /tmp
+    # Kein HTTP-Endpoint -> kein Healthcheck. Beendet sich mit Exit 0, wenn MAIL_IMAP_* leer ist
+    # (deshalb nur über das Profil "mail" starten).
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/docker/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: http://api:3001
+      # nginx setzt daraus den Authorization-Header für /api (Token nicht im JS-Bundle)
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:-}
+    ports:
+      - "${WEB_BIND:-127.0.0.1}:${WEB_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redisdata:
+  paperless-data:
+  paperless-media:
+  paperless-export:
+  paperless-consume:
+  api-data:
+  mail-data:
