@@ -112,8 +112,32 @@ describe("PaperlessClient", () => {
       await expect(client.getTask("t")).resolves.toEqual({ status: "STARTED", documentId: undefined });
     });
 
+    it("versteht das neuere Format (API v10): results, kleiner Status, related_document_ids", async () => {
+      fetchMock.mockResolvedValue(
+        json({ count: 1, results: [{ status: "success", related_document_ids: [16], result_data: { document_id: 16 } }] }),
+      );
+
+      await expect(client.getTask("t")).resolves.toEqual({ status: "SUCCESS", documentId: 16 });
+    });
+
+    it("nimmt im neueren Format notfalls die ID aus result_data", async () => {
+      fetchMock.mockResolvedValue(
+        json({ results: [{ status: "success", related_document_ids: [], result_data: { document_id: 8 } }] }),
+      );
+
+      await expect(client.getTask("t")).resolves.toEqual({ status: "SUCCESS", documentId: 8 });
+    });
+
+    it("meldet im neueren Format einen Fehlschlag", async () => {
+      fetchMock.mockResolvedValue(json({ results: [{ status: "failure", related_document_ids: [] }] }));
+
+      await expect(client.getTask("t")).resolves.toEqual({ status: "FAILURE", documentId: undefined });
+    });
+
     it("meldet UNKNOWN, wenn Paperless die Task nicht kennt oder einen fremden Status liefert", async () => {
       fetchMock.mockResolvedValueOnce(json([]));
+      await expect(client.getTask("t")).resolves.toEqual({ status: "UNKNOWN" });
+      fetchMock.mockResolvedValueOnce(json({ count: 0, results: [] }));
       await expect(client.getTask("t")).resolves.toEqual({ status: "UNKNOWN" });
 
       fetchMock.mockResolvedValueOnce(json([{ status: "REVOKED", related_document: null }]));

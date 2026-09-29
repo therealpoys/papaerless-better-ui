@@ -202,16 +202,26 @@ export class PaperlessClient {
     status: "PENDING" | "STARTED" | "SUCCESS" | "FAILURE" | "UNKNOWN";
     documentId?: number;
   }> {
-    const raw = await this.request<{ status: string; related_document: string | number | null }[]>(
+    // Ältere Paperless-Versionen liefern eine Liste mit GROSSEM Status und `related_document`,
+    // neuere (API v10, z.B. 3.2.1) `{results}` mit kleinem Status und `related_document_ids`.
+    interface RawTask {
+      status?: string;
+      related_document?: string | number | null;
+      related_document_ids?: number[] | null;
+      result_data?: { document_id?: number } | null;
+    }
+    const raw = await this.request<RawTask[] | { results: RawTask[] }>(
       `/api/tasks/?task_id=${encodeURIComponent(taskId)}`,
     );
-    const task = raw[0];
+    const task = (Array.isArray(raw) ? raw : raw.results)?.[0];
     if (!task) return { status: "UNKNOWN" };
-    const status = ["PENDING", "STARTED", "SUCCESS", "FAILURE"].includes(task.status)
-      ? (task.status as "PENDING" | "STARTED" | "SUCCESS" | "FAILURE")
-      : "UNKNOWN";
-    const documentId = task.related_document ? Number(task.related_document) : undefined;
-    return { status, documentId: Number.isFinite(documentId) ? documentId : undefined };
+
+    const status = String(task.status ?? "").toUpperCase();
+    const known = ["PENDING", "STARTED", "SUCCESS", "FAILURE"] as const;
+    const normalized = known.find((k) => k === status) ?? "UNKNOWN";
+
+    const id = Number(task.related_document_ids?.[0] ?? task.result_data?.document_id ?? task.related_document);
+    return { status: normalized, documentId: Number.isFinite(id) && id > 0 ? id : undefined };
   }
 
   async deleteDocument(id: number): Promise<void> {
