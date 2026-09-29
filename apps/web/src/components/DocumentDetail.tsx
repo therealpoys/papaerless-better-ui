@@ -9,6 +9,8 @@ import type {
 } from "@papaerless/shared-types";
 import { Button, Combobox, ErrorState, Field, TagChip } from "@papaerless/ui";
 import { api } from "../lib/api";
+import { friendlyError } from "../lib/errors";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface DocumentDetailProps {
   documentId: number;
@@ -112,6 +114,7 @@ export function DocumentDetail({
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [suggestionStatus, setSuggestionStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   function load() {
@@ -127,7 +130,7 @@ export function DocumentDetail({
         setDocumentType(loaded.documentType);
         setSelectedTags(loaded.tags);
       })
-      .catch((err) => setLoadError(err instanceof Error ? err.message : t("documentDetail.loadFailed")));
+      .catch((err) => setLoadError(friendlyError(err, t, t("documentDetail.loadFailed"))));
   }
 
   useEffect(load, [documentId]);
@@ -144,7 +147,7 @@ export function DocumentDetail({
       });
       onSaved();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t("documentDetail.saveFailed"));
+      setSaveError(friendlyError(err, t, t("documentDetail.saveFailed")));
     } finally {
       setIsSaving(false);
     }
@@ -161,7 +164,7 @@ export function DocumentDetail({
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t("documentDetail.downloadFailed"));
+      setSaveError(friendlyError(err, t, t("documentDetail.downloadFailed")));
     } finally {
       setIsDownloading(false);
     }
@@ -169,18 +172,14 @@ export function DocumentDetail({
 
   async function handleDelete() {
     if (!doc) return;
-    const confirmed = window.confirm(
-      t("documentDetail.confirmDelete", { title: doc.title || t("documentDetail.untitledFallback") }),
-    );
-    if (!confirmed) return;
-
+    setConfirmingDelete(false);
     setIsDeleting(true);
     setDeleteError(null);
     try {
       await api.deleteDocument(documentId);
       onDeleted();
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : t("documentDetail.deleteFailed"));
+      setDeleteError(friendlyError(err, t, t("documentDetail.deleteFailed")));
       setIsDeleting(false);
     }
   }
@@ -201,7 +200,7 @@ export function DocumentDetail({
       setNewTagName("");
       onMetadataChanged();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t("documentDetail.createTagFailed"));
+      setSaveError(friendlyError(err, t, t("documentDetail.createTagFailed")));
     } finally {
       setIsCreatingTag(false);
     }
@@ -314,12 +313,24 @@ export function DocumentDetail({
         <Button variant="secondary" onClick={handleDownload} disabled={isDownloading}>
           {isDownloading ? t("documentDetail.downloading") : t("documentDetail.download")}
         </Button>
-        <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
+        <Button variant="danger" onClick={() => setConfirmingDelete(true)} disabled={isDeleting}>
           {isDeleting ? t("documentDetail.deleting") : t("documentDetail.delete")}
         </Button>
       </div>
       {saveError && <ErrorState message={saveError} onRetry={handleSave} retryLabel={t("common.retry")} />}
       {deleteError && <ErrorState message={deleteError} onRetry={handleDelete} retryLabel={t("common.retry")} />}
+
+      <ConfirmDialog
+        open={confirmingDelete}
+        title={t("documentDetail.confirmDelete.title")}
+        cancelLabel={t("documentDetail.confirmDelete.cancel")}
+        confirmLabel={t("documentDetail.confirmDelete.confirm")}
+        onCancel={() => setConfirmingDelete(false)}
+        onConfirm={handleDelete}
+      >
+        <p className="confirm-dialog__doc">{doc.title || t("documentDetail.untitledFallback")}</p>
+        <p>{t("documentDetail.confirmDelete.warning")}</p>
+      </ConfirmDialog>
 
       <ReminderForm documentId={documentId} />
 

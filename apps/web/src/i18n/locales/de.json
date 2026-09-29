@@ -51,8 +51,14 @@
       "set": "Übernehmen",
       "deleting": "…",
       "delete": "Löschen",
-      "confirmDelete": "{{count}} Dokument(e) wirklich endgültig löschen? Das kann nicht rückgängig gemacht werden.",
-      "actionFailed": "Aktion fehlgeschlagen"
+      "confirmDelete": {
+        "title": "{{count}} Dokument(e) löschen?",
+        "warning": "Das kann nicht rückgängig gemacht werden.",
+        "more": "… und {{count}} weitere",
+        "cancel": "Abbrechen",
+        "confirm": "Ja, löschen"
+      },
+      "actionFailed": "Die Aktion hat nicht geklappt."
     },
     "empty": {
       "title": "Noch keine Dokumente",
@@ -103,14 +109,19 @@
     "download": "Original speichern",
     "deleting": "Löscht…",
     "delete": "Löschen",
-    "confirmDelete": "\"{{title}}\" wirklich endgültig löschen? Das kann nicht rückgängig gemacht werden.",
+    "confirmDelete": {
+      "title": "Dokument löschen?",
+      "warning": "Das kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "confirm": "Ja, löschen"
+    },
     "untitledFallback": "Dokument",
     "loading": "Lädt…",
-    "loadFailed": "Laden fehlgeschlagen",
-    "saveFailed": "Speichern fehlgeschlagen",
-    "downloadFailed": "Speichern der Datei fehlgeschlagen",
-    "deleteFailed": "Löschen fehlgeschlagen",
-    "createTagFailed": "Schlagwort anlegen fehlgeschlagen",
+    "loadFailed": "Das Dokument konnte nicht geladen werden.",
+    "saveFailed": "Ihre Änderungen konnten nicht gespeichert werden.",
+    "downloadFailed": "Der Download hat nicht geklappt.",
+    "deleteFailed": "Das Dokument konnte nicht gelöscht werden.",
+    "createTagFailed": "Das Schlagwort konnte nicht angelegt werden.",
     "ai": {
       "label": "Automatische Vorschläge (optional)",
       "requesting": "Wird angefragt…",
@@ -151,8 +162,8 @@
       "heading": "Zuletzt genutzt",
       "clear": "Leeren"
     },
-    "queryPlaceholder": "Im ganzen Text suchen…",
-    "queryAriaLabel": "Im ganzen Text suchen",
+    "queryPlaceholder": "Wonach suchen Sie? z.B. Stromrechnung",
+    "queryAriaLabel": "Wonach suchen Sie?",
     "correspondentLabel": "Absender",
     "correspondentHint": " – tippen zum Eingrenzen",
     "correspondentAriaLabel": "Nach Absender eingrenzen",
@@ -178,7 +189,10 @@
       "from": "Von",
       "to": "Bis"
     },
-    "resetAll": "Alles zurücksetzen"
+    "resetAll": "Alles zurücksetzen",
+    "more": {
+      "toggle": "Weitere Filter"
+    }
   },
   "reviewInbox": {
     "documentHeading": "Dokument #{{id}}",
@@ -292,6 +306,15 @@
         "term": "Erinnerung",
         "definition": "Ein Datum, an das Sie erinnert werden, zum Beispiel eine Kündigungsfrist."
       }
+    }
+  },
+  "errors": {
+    "hint": {
+      "network": "Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es gleich noch einmal.",
+      "auth": "Sie haben dafür gerade keine Berechtigung. Bitte melden Sie sich neu an oder wenden Sie sich an den Administrator.",
+      "notFound": "Das Dokument wurde nicht gefunden – vielleicht wurde es bereits gelöscht. Bitte laden Sie die Seite neu.",
+      "server": "Der Dienst ist gerade nicht erreichbar. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "unknown": "Bitte versuchen Sie es noch einmal. Wenn es weiterhin nicht klappt, wenden Sie sich an den Administrator."
     }
   }
 }

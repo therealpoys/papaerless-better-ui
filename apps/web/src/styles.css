@@ -835,3 +835,95 @@ body {
   font-size: var(--font-size-lg);
   font-weight: 600;
 }
+/* Suche für weniger technikaffine Nutzer: großes Feld, Filter eingeklappt */
+.search-filter__query--large {
+  padding: 0.9rem 1rem;
+  font-size: 1.15rem;
+  border-width: 2px;
+  border-radius: var(--radius-md);
+}
+
+.search-filter__more-toggle {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  min-height: 44px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.search-filter__more-toggle[aria-expanded="true"] .search-filter__more-chevron {
+  transform: rotate(90deg);
+}
+
+.search-filter__more-chevron {
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.search-filter__more-toggle:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+.search-filter__more-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.search-filter__more-panel[hidden] {
+  display: none;
+}
+
+/* Bestätigungsdialog */
+.confirm-dialog {
+  max-width: min(32rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 1.05rem;
+}
+
+.confirm-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.confirm-dialog__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.3rem;
+}
+
+.confirm-dialog__doc {
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.confirm-dialog__list {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+  font-weight: 600;
+}
+
+.confirm-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.confirm-dialog__actions .ui-button {
+  min-height: 48px;
+  padding-inline: 1.25rem;
+  font-size: 1.05rem;
+}

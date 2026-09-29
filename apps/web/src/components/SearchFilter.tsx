@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   Correspondent,
@@ -147,10 +147,6 @@ export function SearchFilter({
     setSaveName("");
   }
 
-  const [advancedOpen] = useState(
-    () => Boolean(value.dateFrom || value.dateTo || (value.tags?.length ?? 0) > 0),
-  );
-
   function toggleTag(id: number) {
     const current = value.tags ?? [];
     const next = current.includes(id) ? current.filter((t) => t !== id) : [...current, id];
@@ -218,10 +214,25 @@ export function SearchFilter({
 
   const hasActiveFilters = activeFilters.length > 0;
 
+  // Alles außer dem Suchfeld liegt hinter "Weitere Filter" – ist dort etwas aktiv, klappt der Bereich von selbst auf.
+  const hasPanelFilters = Boolean(
+    value.correspondent ||
+      value.documentType ||
+      value.dateFrom ||
+      value.dateTo ||
+      value.sort ||
+      (value.tags?.length ?? 0) > 0,
+  );
+  const [moreOpen, setMoreOpen] = useState(hasPanelFilters);
+  useEffect(() => {
+    if (hasPanelFilters) setMoreOpen(true);
+  }, [hasPanelFilters]);
+  const morePanelId = useId();
+
   return (
     <div className="search-filter">
       <input
-        className="search-filter__query"
+        className="search-filter__query search-filter__query--large"
         type="search"
         placeholder={t("searchFilter.queryPlaceholder")}
         aria-label={t("searchFilter.queryAriaLabel")}
@@ -238,6 +249,40 @@ export function SearchFilter({
         )}
       </div>
 
+      <button
+        type="button"
+        className="search-filter__more-toggle"
+        aria-expanded={moreOpen}
+        aria-controls={morePanelId}
+        onClick={() => setMoreOpen((open) => !open)}
+      >
+        <span aria-hidden="true" className="search-filter__more-chevron">▸</span>
+        {t("searchFilter.more.toggle")}
+      </button>
+
+      {hasActiveFilters && (
+        <ul className="search-filter__badges" aria-label={t("searchFilter.activeFilters.ariaLabel")}>
+          {activeFilters.map((filter) => (
+            <li key={filter.key}>
+              <button type="button" className="search-filter__badge" onClick={filter.onRemove}>
+                {filter.label}
+                <span aria-hidden="true">×</span>
+                <span className="sr-only">{t("searchFilter.activeFilters.remove")}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {hasActiveFilters && (
+        <div className="search-filter__actions">
+          <Button variant="secondary" onClick={() => applySearch({})}>
+            {t("searchFilter.resetAll")}
+          </Button>
+        </div>
+      )}
+
+      <div id={morePanelId} className="search-filter__more-panel" hidden={!moreOpen}>
       <div className="search-filter__row">
         <div className="search-filter__field">
           <span className="search-filter__field-label">
@@ -290,23 +335,7 @@ export function SearchFilter({
         </select>
       </label>
 
-      {hasActiveFilters && (
-        <ul className="search-filter__badges" aria-label={t("searchFilter.activeFilters.ariaLabel")}>
-          {activeFilters.map((filter) => (
-            <li key={filter.key}>
-              <button type="button" className="search-filter__badge" onClick={filter.onRemove}>
-                {filter.label}
-                <span aria-hidden="true">×</span>
-                <span className="sr-only">{t("searchFilter.activeFilters.remove")}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <details className="search-filter__advanced" open={advancedOpen}>
-        <summary>{t("searchFilter.advanced.summary")}</summary>
-        <div className="search-filter__advanced-body">
+      <div className="search-filter__advanced-body">
           <div className="search-filter__presets" role="group" aria-label={t("searchFilter.presets.ariaLabel")}>
             {PRESETS.map((key) => {
               const range = presetRange(key);
@@ -349,16 +378,7 @@ export function SearchFilter({
               ))}
             </div>
           )}
-        </div>
-      </details>
-
-      {hasActiveFilters && (
-        <div className="search-filter__actions">
-          <Button variant="link" onClick={() => applySearch({})}>
-            {t("searchFilter.resetAll")}
-          </Button>
-        </div>
-      )}
+      </div>
 
       <details className="search-filter__advanced">
         <summary>{t("searchFilter.saved.summary")}</summary>
@@ -430,6 +450,7 @@ export function SearchFilter({
           )}
         </div>
       </details>
+      </div>
     </div>
   );
 }
