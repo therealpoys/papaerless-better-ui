@@ -52,7 +52,7 @@ describe("PaperlessClient", () => {
 
   it("wirft bei Fehlerstatus mit Status und Pfad", async () => {
     fetchMock.mockResolvedValue(new Response("nope", { status: 500 }));
-    await expect(client.getDocument(9)).rejects.toThrow(/500.*\/api\/documents\/9\//);
+    await expect(client.getDocument(9)).rejects.toThrow(/\/api\/documents\/9\/.*Status 500/);
   });
 
   it("mappt Updates auf document_type und sendet nur gesetzte Felder", async () => {
@@ -95,6 +95,6 @@ describe("PaperlessClient", () => {
     fetchMock.mockResolvedValueOnce(json("task-uuid"));
     expect(await client.uploadDocument(new Blob(["x"]), "a.pdf")).toBe("task-uuid");
     fetchMock.mockResolvedValueOnce(new Response("bad", { status: 400 }));
-    await expect(client.uploadDocument(new Blob(["x"]), "a.pdf")).rejects.toThrow(/Upload fehlgeschlagen \(400\)/);
+    await expect(client.uploadDocument(new Blob(["x"]), "a.pdf")).rejects.toThrow(/Upload fehlgeschlagen \(Paperless-Status 400\)/);
   });
 });
