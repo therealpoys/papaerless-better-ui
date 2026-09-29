@@ -231,9 +231,9 @@
     "status": {
       "waiting": "Wartet …",
       "uploading": "Wird hochgeladen …",
-      "done": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
+      "done": "Fertig",
       "error": "Das hat leider nicht geklappt.",
-      "reading": "Wird gelesen – gleich kommen Vorschläge …"
+      "reading": "Wird eingelesen – gleich öffnet sich ein Fenster …"
     },
     "allDone_one": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
     "allDone_other": "Fertig – Ihre {{count}} Dokumente sind angekommen und werden jetzt gelesen.",
@@ -243,8 +243,7 @@
       "network": "Die Verbindung hat nicht geklappt. Bitte prüfen Sie Ihr Internet und versuchen Sie es erneut.",
       "server": "Das Dokument konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
     },
-    "retry": "Bitte erneut versuchen",
-    "suggestionHeading": "Vorschlag für „{{name}}“ – bitte prüfen"
+    "retry": "Bitte erneut versuchen"
   },
   "help": {
     "title": "Hilfe",
@@ -308,5 +307,21 @@
       "server": "Der Dienst ist gerade nicht erreichbar. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
       "unknown": "Bitte versuchen Sie es noch einmal. Wenn es weiterhin nicht klappt, wenden Sie sich an den Administrator."
     }
+  },
+  "uploadReview": {
+    "title": "Neues Dokument – bitte kurz prüfen",
+    "aiNote": "Das ist mein Vorschlag anhand des Inhalts. Sie können alles ändern.",
+    "noSuggestion": "Zu diesem Dokument gibt es leider keinen Vorschlag. Bitte wählen Sie die Angaben selbst.",
+    "aiOff": "Automatische Vorschläge sind ausgeschaltet. Bitte wählen Sie die Angaben selbst.",
+    "titleLabel": "Titel",
+    "correspondent": "Absender (von wem ist der Brief?)",
+    "documentType": "Art des Dokuments (z. B. Rechnung)",
+    "tags": "Schlagwörter",
+    "noTags": "Es gibt noch keine Schlagwörter.",
+    "none": "– keine Angabe –",
+    "newEntry": "{{name}} (neu anlegen)",
+    "save": "Speichern",
+    "later": "Später",
+    "saveFailed": "Die Angaben konnten nicht gespeichert werden."
   }
 }

@@ -1,13 +1,24 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { MetadataSuggestion } from "@papaerless/shared-types";
+import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
 import { api } from "../lib/api";
-import { SuggestionCard } from "./ReviewInbox";
+import { UploadReviewDialog } from "./UploadReviewDialog";
 import { classifyUploadError, validateFile, waitForDocumentId, type UploadErrorKey } from "../lib/upload";
 
 interface UploadZoneProps {
   onUploaded: () => void;
   aiEnabled?: boolean;
+  tags: Tag[];
+  correspondents: Correspondent[];
+  documentTypes: DocumentType[];
+  onMetadataChanged: () => void;
+}
+
+interface PendingReview {
+  itemId: number;
+  documentId: number;
+  fileName: string;
+  suggestion?: MetadataSuggestion;
 }
 
 type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error";
@@ -17,17 +28,24 @@ interface UploadItem {
   file: File;
   status: ItemStatus;
   error?: UploadErrorKey;
-  suggestion?: MetadataSuggestion;
 }
 
 const ACCEPT = "application/pdf,image/*,.eml";
 let nextId = 1;
 
-export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
+export function UploadZone({
+  onUploaded,
+  aiEnabled = false,
+  tags,
+  correspondents,
+  documentTypes,
+  onMetadataChanged,
+}: UploadZoneProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [items, setItems] = useState<UploadItem[]>([]);
   const [busy, setBusy] = useState(false);
+  const [reviews, setReviews] = useState<PendingReview[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,19 +66,18 @@ export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
       try {
         const { taskId } = await api.uploadDocument(item.file);
         anyDone = true;
-        if (!aiEnabled) {
-          patch(item.id, { status: "done" });
-          continue;
-        }
-        // Vorschläge sind Zugabe: schlägt das fehl, ist der Upload trotzdem erfolgreich.
+        // Danach öffnet sich das Prüf-Fenster. Klappt das Einlesen nicht, ist der Upload trotzdem ok.
         patch(item.id, { status: "reading" });
         try {
           const documentId = await waitForDocumentId(api.getUploadTask, taskId);
-          const suggestion = documentId ? await api.suggestMetadata(documentId) : undefined;
-          patch(item.id, { status: "done", suggestion });
+          if (documentId) {
+            const suggestion = aiEnabled ? await api.suggestMetadata(documentId).catch(() => undefined) : undefined;
+            setReviews((prev) => [...prev, { itemId: item.id, documentId, fileName: item.file.name, suggestion }]);
+          }
         } catch {
-          patch(item.id, { status: "done" });
+          // kein Fenster – das Dokument liegt trotzdem in der Liste
         }
+        patch(item.id, { status: "done" });
       } catch (err) {
         patch(item.id, { status: "error", error: classifyUploadError(err) });
       }
@@ -92,7 +109,7 @@ export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
 
   const hasError = items.some((item) => item.status === "error");
   const allDone =
-    items.length > 0 && !busy && items.every((item) => item.status === "done" && !item.suggestion);
+    items.length > 0 && !busy && items.every((item) => item.status === "done");
 
   return (
     <section
@@ -158,16 +175,6 @@ export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
                   ? t(`uploadZone.errors.${item.error}`)
                   : t(`uploadZone.status.${item.status}`)}
               </span>
-              {item.suggestion && (
-                <SuggestionCard
-                  suggestion={item.suggestion}
-                  heading={t("uploadZone.suggestionHeading", { name: item.file.name })}
-                  onDone={() => {
-                    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, suggestion: undefined } : i)));
-                    onUploaded();
-                  }}
-                />
-              )}
             </li>
           ))}
         </ul>
@@ -182,6 +189,23 @@ export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
         <button type="button" className="upload-card__retry" onClick={retryFailed}>
           {t("uploadZone.retry")}
         </button>
+      )}
+      {reviews[0] && (
+        <UploadReviewDialog
+          key={reviews[0].documentId}
+          documentId={reviews[0].documentId}
+          fileName={reviews[0].fileName}
+          suggestion={reviews[0].suggestion}
+          aiEnabled={aiEnabled}
+          tags={tags}
+          correspondents={correspondents}
+          documentTypes={documentTypes}
+          onClose={(saved) => {
+            setReviews((prev) => prev.slice(1));
+            onMetadataChanged();
+            if (saved) onUploaded();
+          }}
+        />
       )}
     </section>
   );

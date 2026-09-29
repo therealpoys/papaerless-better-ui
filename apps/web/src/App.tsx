@@ -119,7 +119,14 @@ export default function App() {
       {tab === "documents" && (
         <div className="app__body">
           <aside className="app__sidebar">
-            <UploadZone onUploaded={reloadDocuments} aiEnabled={aiEnabled} />
+            <UploadZone
+              onUploaded={reloadDocuments}
+              aiEnabled={aiEnabled}
+              tags={tags}
+              correspondents={correspondents}
+              documentTypes={documentTypes}
+              onMetadataChanged={reloadMetadata}
+            />
             <SearchFilter
               value={filters}
               onChange={setFilters}
