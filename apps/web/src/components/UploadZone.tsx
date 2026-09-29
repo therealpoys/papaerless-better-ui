@@ -1,49 +1,86 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ErrorState, UploadProgress, type UploadStage } from "@papaerless/ui";
 import { api } from "../lib/api";
+import { classifyUploadError, validateFile, type UploadErrorKey } from "../lib/upload";
 
 interface UploadZoneProps {
   onUploaded: () => void;
 }
 
-/** OCR läuft asynchron in Paperless – wir wissen nicht, wann es fertig ist, geben aber
- * eine grobe Schätzung als "wird verarbeitet"-Phase aus, statt den Fortschritt einfach
- * verschwinden zu lassen (siehe Roadmap "Upload-Flow: Fortschritt sichtbar machen"). */
-const PROCESSING_HINT_MS = 3000;
+type ItemStatus = "waiting" | "uploading" | "done" | "error";
+
+interface UploadItem {
+  id: number;
+  file: File;
+  status: ItemStatus;
+  error?: UploadErrorKey;
+}
+
+const ACCEPT = "application/pdf,image/*,.eml";
+let nextId = 1;
 
 export function UploadZone({ onUploaded }: UploadZoneProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
-  const [stage, setStage] = useState<UploadStage | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [lastFiles, setLastFiles] = useState<FileList | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState<UploadItem[]>([]);
+  const [busy, setBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    setLastFiles(files);
-    setStage("uploading");
-    setError(null);
-    try {
-      for (const file of Array.from(files)) {
-        await api.uploadDocument(file);
-      }
-      setStage("processing");
-      setTimeout(() => {
-        setStage("done");
-        onUploaded();
-        setTimeout(() => setStage(null), 1500);
-      }, PROCESSING_HINT_MS);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("uploadZone.uploadFailed"));
-      setStage(null);
-    }
+  function patch(id: number, changes: Partial<UploadItem>) {
+    setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   }
 
+  async function uploadAll(list: UploadItem[]) {
+    setBusy(true);
+    let anyDone = false;
+    for (const item of list) {
+      const invalid = validateFile(item.file);
+      if (invalid) {
+        patch(item.id, { status: "error", error: invalid });
+        continue;
+      }
+      patch(item.id, { status: "uploading", error: undefined });
+      try {
+        await api.uploadDocument(item.file);
+        patch(item.id, { status: "done" });
+        anyDone = true;
+      } catch (err) {
+        patch(item.id, { status: "error", error: classifyUploadError(err) });
+      }
+    }
+    setBusy(false);
+    if (anyDone) onUploaded();
+  }
+
+  function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0 || busy) return;
+    const list: UploadItem[] = Array.from(files).map((file) => ({
+      id: nextId++,
+      file,
+      status: "waiting",
+    }));
+    setItems(list);
+    void uploadAll(list);
+  }
+
+  function retryFailed() {
+    if (busy) return;
+    const failed = items.filter((item) => item.status === "error");
+    if (failed.length === 0) return;
+    const ids = new Set(failed.map((item) => item.id));
+    const reset = failed.map((item): UploadItem => ({ ...item, status: "waiting", error: undefined }));
+    setItems((prev) => prev.map((item) => (ids.has(item.id) ? { ...item, status: "waiting", error: undefined } : item)));
+    void uploadAll(reset);
+  }
+
+  const hasError = items.some((item) => item.status === "error");
+  const allDone = items.length > 0 && !busy && items.every((item) => item.status === "done");
+
   return (
-    <div
-      className={`upload-zone ${isDragging ? "upload-zone--active" : ""}`}
+    <section
+      className={`upload-card ${isDragging ? "upload-card--active" : ""}`}
+      aria-label={t("uploadZone.sectionAriaLabel")}
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -54,40 +91,71 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
         setIsDragging(false);
         handleFiles(e.dataTransfer.files);
       }}
-      onClick={() => inputRef.current?.click()}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          inputRef.current?.click();
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      aria-label={t("uploadZone.dropAreaAriaLabel")}
     >
       <input
-        ref={inputRef}
+        ref={fileInputRef}
         type="file"
         multiple
-        accept="application/pdf,image/*,.eml"
+        accept={ACCEPT}
         hidden
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
       />
-      {stage ? (
-        <UploadProgress
-          stage={stage}
-          labels={{
-            uploading: t("uploadZone.progress.uploading"),
-            processing: t("uploadZone.progress.processing"),
-            done: t("uploadZone.progress.done"),
-          }}
-        />
-      ) : (
-        <p>{t("uploadZone.dropAreaLabel")}</p>
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        hidden
+        onChange={(e) => {
+          handleFiles(e.target.files);
+          e.target.value = "";
+        }}
+      />
+
+      <button type="button" className="upload-card__main" disabled={busy} onClick={() => fileInputRef.current?.click()}>
+        <span className="upload-card__main-icon" aria-hidden="true">
+          +
+        </span>
+        {t("uploadZone.addButton")}
+      </button>
+      <button
+        type="button"
+        className="upload-card__camera"
+        disabled={busy}
+        onClick={() => cameraInputRef.current?.click()}
+      >
+        {t("uploadZone.cameraButton")}
+      </button>
+      <p className="upload-card__hint">{t("uploadZone.dropHint")}</p>
+
+      {items.length > 0 && (
+        <ul className="upload-card__list" aria-live="polite">
+          {items.map((item) => (
+            <li key={item.id} className={`upload-card__item upload-card__item--${item.status}`}>
+              <span className="upload-card__name">{item.file.name}</span>
+              <span className="upload-card__status">
+                {item.status === "error" && item.error
+                  ? t(`uploadZone.errors.${item.error}`)
+                  : t(`uploadZone.status.${item.status}`)}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
-      {error && (
-        <ErrorState message={error} onRetry={() => handleFiles(lastFiles)} retryLabel={t("common.retry")} />
+
+      {allDone && (
+        <p className="upload-card__success" role="status">
+          {t("uploadZone.allDone", { count: items.length })}
+        </p>
       )}
-    </div>
+      {hasError && !busy && (
+        <button type="button" className="upload-card__retry" onClick={retryFailed}>
+          {t("uploadZone.retry")}
+        </button>
+      )}
+    </section>
   );
 }

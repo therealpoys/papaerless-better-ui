@@ -208,13 +208,24 @@
     "done": "Erledigt"
   },
   "uploadZone": {
-    "dropAreaAriaLabel": "Datei hochladen: hierher ziehen oder klicken zum Auswählen",
-    "dropAreaLabel": "Datei hierher ziehen oder klicken zum Auswählen",
-    "uploadFailed": "Upload fehlgeschlagen",
-    "progress": {
-      "uploading": "Hochladen",
-      "processing": "OCR läuft",
-      "done": "Fertig"
-    }
+    "sectionAriaLabel": "Dokument hinzufügen",
+    "addButton": "Dokument hinzufügen",
+    "cameraButton": "Foto mit der Kamera aufnehmen",
+    "dropHint": "Sie können eine Datei auch einfach hierher ziehen.",
+    "status": {
+      "waiting": "Wartet …",
+      "uploading": "Wird hochgeladen …",
+      "done": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
+      "error": "Das hat leider nicht geklappt."
+    },
+    "allDone_one": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
+    "allDone_other": "Fertig – Ihre {{count}} Dokumente sind angekommen und werden jetzt gelesen.",
+    "errors": {
+      "unsupportedType": "Dieser Dateityp wird nicht unterstützt. Bitte wählen Sie ein PDF oder ein Foto aus.",
+      "tooLarge": "Die Datei ist zu groß (mehr als 50 MB). Bitte wählen Sie eine kleinere Datei oder machen Sie ein neues Foto.",
+      "network": "Die Verbindung hat nicht geklappt. Bitte prüfen Sie Ihr Internet und versuchen Sie es erneut.",
+      "server": "Das Dokument konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    },
+    "retry": "Bitte erneut versuchen"
   }
 }
