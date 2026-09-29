@@ -26,3 +26,23 @@ export function classifyUploadError(err: unknown): UploadErrorKey {
   if (/API-Fehler \d{3}/.test(message)) return "server";
   return "network";
 }
+
+type TaskStatus = { status: "PENDING" | "STARTED" | "SUCCESS" | "FAILURE" | "UNKNOWN"; documentId?: number };
+
+/**
+ * Wartet, bis Paperless das hochgeladene Dokument fertig eingelesen hat, und liefert dessen ID.
+ * `null` bei Fehlschlag oder wenn es zu lange dauert (dann gibt es einfach keine Vorschläge).
+ */
+export async function waitForDocumentId(
+  getTask: (taskId: string) => Promise<TaskStatus>,
+  taskId: string,
+  { attempts = 40, intervalMs = 1500 }: { attempts?: number; intervalMs?: number } = {},
+): Promise<number | null> {
+  for (let i = 0; i < attempts; i++) {
+    const task = await getTask(taskId);
+    if (task.status === "SUCCESS" && task.documentId) return task.documentId;
+    if (task.status === "FAILURE") return null;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return null;
+}

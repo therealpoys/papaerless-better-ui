@@ -8,9 +8,11 @@ const paperless = vi.hoisted(() => ({
   getDocument: vi.fn(),
   listTags: vi.fn(),
   createTag: vi.fn(),
+  getTask: vi.fn(),
 }));
 vi.mock("../src/paperless.js", () => ({ paperless }));
 
+import { documentRoutes } from "../src/routes/documents.js";
 import { metadataRoutes } from "../src/routes/metadata.js";
 import { reminderRoutes } from "../src/routes/reminders.js";
 
@@ -31,6 +33,7 @@ async function build() {
   const app = Fastify();
   await app.register(metadataRoutes, { prefix: "/api" });
   await app.register(reminderRoutes, { prefix: "/api" });
+  await app.register(documentRoutes, { prefix: "/api" });
   await app.ready();
   return app;
 }
@@ -83,5 +86,27 @@ describe("reminderRoutes", () => {
 
     await app.inject({ method: "POST", url: `/api/reminders/${reminder.id}/dismiss` });
     expect((await app.inject({ method: "GET", url: "/api/reminders" })).json()).toEqual([]);
+  });
+});
+
+describe("documentRoutes: Upload-Status", () => {
+  it("liefert den Status des Einlese-Vorgangs samt Dokument-ID", async () => {
+    paperless.getTask.mockResolvedValue({ status: "SUCCESS", documentId: 42 });
+
+    const res = await (await build()).inject({ method: "GET", url: "/api/documents/tasks/abc-123" });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ status: "SUCCESS", documentId: 42 });
+    expect(paperless.getTask).toHaveBeenCalledWith("abc-123");
+  });
+
+  it("wird nicht mit /documents/:id verwechselt", async () => {
+    paperless.getTask.mockResolvedValue({ status: "PENDING" });
+    paperless.getDocument.mockResolvedValue({ id: 1 });
+
+    await (await build()).inject({ method: "GET", url: "/api/documents/tasks/xyz" });
+
+    expect(paperless.getTask).toHaveBeenCalledTimes(1);
+    expect(paperless.getDocument).not.toHaveBeenCalled();
   });
 });

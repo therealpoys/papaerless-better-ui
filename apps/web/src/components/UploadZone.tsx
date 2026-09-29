@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { api } from "../lib/api";
 import { SuggestionCard } from "./ReviewInbox";
-import { classifyUploadError, validateFile, type UploadErrorKey } from "../lib/upload";
+import { classifyUploadError, validateFile, waitForDocumentId, type UploadErrorKey } from "../lib/upload";
 
 interface UploadZoneProps {
   onUploaded: () => void;
@@ -18,19 +18,6 @@ interface UploadItem {
   status: ItemStatus;
   error?: UploadErrorKey;
   suggestion?: MetadataSuggestion;
-}
-
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-// Paperless liest das Dokument asynchron ein; erst danach gibt es Text für Vorschläge.
-async function waitForDocumentId(taskId: string): Promise<number | null> {
-  for (let i = 0; i < 40; i++) {
-    const task = await api.getUploadTask(taskId);
-    if (task.status === "SUCCESS" && task.documentId) return task.documentId;
-    if (task.status === "FAILURE") return null;
-    await sleep(1500);
-  }
-  return null;
 }
 
 const ACCEPT = "application/pdf,image/*,.eml";
@@ -68,7 +55,7 @@ export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
         // Vorschläge sind Zugabe: schlägt das fehl, ist der Upload trotzdem erfolgreich.
         patch(item.id, { status: "reading" });
         try {
-          const documentId = await waitForDocumentId(taskId);
+          const documentId = await waitForDocumentId(api.getUploadTask, taskId);
           const suggestion = documentId ? await api.suggestMetadata(documentId) : undefined;
           patch(item.id, { status: "done", suggestion });
         } catch {
