@@ -14,37 +14,39 @@
     "regionsAriaLabel": "Bereiche",
     "tabs": {
       "documents": "Dokumente",
-      "inbox": "Review-Inbox",
-      "inboxDisabledSuffix": "(deaktiviert)",
-      "reminders": "Erinnerungen"
+      "inbox": "Neu zu prüfen",
+      "inboxDisabledSuffix": "(aus)",
+      "reminders": "Erinnerungen",
+      "help": "Hilfe"
     },
     "noDocumentSelected": {
       "title": "Kein Dokument ausgewählt",
-      "description": "Wähle links ein Dokument aus, oder lade eine neue Datei hoch."
-    }
+      "description": "Wähle links ein Dokument aus oder füge ein neues hinzu."
+    },
+    "title": "Meine Dokumente"
   },
   "documentList": {
     "selectAllAriaLabel": "Alle auf dieser Seite auswählen",
     "selectAll": "Alle auswählen",
     "selectedCount": "{{count}} ausgewählt",
     "bulkActions": {
-      "tagAriaLabel": "Tag für Bulk-Aktion",
-      "chooseTag": "Tag wählen…",
-      "addTag": "+ Tag",
-      "removeTag": "− Tag",
-      "correspondentAriaLabel": "Korrespondent für Bulk-Aktion",
-      "chooseCorrespondent": "Korrespondent wählen…",
-      "documentTypeAriaLabel": "Dokumenttyp für Bulk-Aktion",
-      "chooseDocumentType": "Dokumenttyp wählen…",
-      "set": "Setzen",
+      "tagAriaLabel": "Schlagwort für alle markierten Dokumente",
+      "chooseTag": "Schlagwort wählen…",
+      "addTag": "+ Schlagwort",
+      "removeTag": "− Schlagwort",
+      "correspondentAriaLabel": "Absender für alle markierten Dokumente",
+      "chooseCorrespondent": "Absender wählen…",
+      "documentTypeAriaLabel": "Art des Dokuments für alle markierten Dokumente",
+      "chooseDocumentType": "Art des Dokuments wählen…",
+      "set": "Übernehmen",
       "deleting": "…",
       "delete": "Löschen",
-      "confirmDelete": "{{count}} Dokument(e) wirklich unwiderruflich aus Paperless löschen?",
+      "confirmDelete": "{{count}} Dokument(e) wirklich endgültig löschen? Das kann nicht rückgängig gemacht werden.",
       "actionFailed": "Aktion fehlgeschlagen"
     },
     "empty": {
       "title": "Noch keine Dokumente",
-      "description": "Lade links eine Datei hoch – Foto, PDF oder Scan."
+      "description": "Füge links ein Dokument hinzu – Foto, PDF oder Scan."
     },
     "selectDocumentAriaLabel": "{{title}} auswählen",
     "untitledFallback": "Dokument",
@@ -61,49 +63,49 @@
       "cancellation_deadline": "Kündigungsfrist"
     },
     "reminderForm": {
-      "label": "Erinnerung anlegen",
+      "label": "Erinnerung einrichten",
       "kindAriaLabel": "Art der Erinnerung",
-      "dueDateAriaLabel": "Fälligkeitsdatum",
+      "dueDateAriaLabel": "Datum, an dem erinnert wird",
       "notePlaceholder": "Notiz (optional)",
       "noteAriaLabel": "Notiz (optional)",
-      "create": "Anlegen",
-      "created": "Erinnerung angelegt.",
-      "createFailed": "Anlegen fehlgeschlagen."
+      "create": "Einrichten",
+      "created": "Erinnerung eingerichtet.",
+      "createFailed": "Einrichten fehlgeschlagen."
     },
     "titleLabel": "Titel",
-    "correspondentLabel": "Korrespondent",
-    "correspondentAriaLabel": "Korrespondent",
-    "correspondentEmptyLabel": "Korrespondent wählen oder neu anlegen",
-    "documentTypeLabel": "Dokumenttyp",
-    "documentTypeAriaLabel": "Dokumenttyp",
-    "documentTypeEmptyLabel": "Dokumenttyp wählen oder neu anlegen",
-    "tagsLabel": "Tags",
-    "newTagPlaceholder": "Neuen Tag eingeben und mit Enter anlegen…",
-    "newTagAriaLabel": "Neuen Tag anlegen",
+    "correspondentLabel": "Absender",
+    "correspondentAriaLabel": "Absender",
+    "correspondentEmptyLabel": "Absender wählen oder neu anlegen",
+    "documentTypeLabel": "Art des Dokuments",
+    "documentTypeAriaLabel": "Art des Dokuments",
+    "documentTypeEmptyLabel": "Art wählen oder neu anlegen",
+    "tagsLabel": "Schlagwörter",
+    "newTagPlaceholder": "Neues Schlagwort eingeben und Eingabetaste drücken…",
+    "newTagAriaLabel": "Neues Schlagwort anlegen",
     "creatingTag": "Legt an…",
     "createTag": "Anlegen",
-    "newTagHint": "Passender Tag nicht dabei? Einfach oben eintippen.",
-    "contentLabel": "Inhalt (OCR)",
+    "newTagHint": "Passendes Schlagwort nicht dabei? Einfach oben eintippen.",
+    "contentLabel": "Erkannter Text",
     "noContent": "(kein Text erkannt)",
     "saving": "Speichert…",
     "save": "Speichern",
-    "downloading": "Lädt…",
-    "download": "Original herunterladen",
+    "downloading": "Wird geladen…",
+    "download": "Original speichern",
     "deleting": "Löscht…",
     "delete": "Löschen",
-    "confirmDelete": "\"{{title}}\" wirklich unwiderruflich aus Paperless löschen?",
+    "confirmDelete": "\"{{title}}\" wirklich endgültig löschen? Das kann nicht rückgängig gemacht werden.",
     "untitledFallback": "Dokument",
     "loading": "Lädt…",
     "loadFailed": "Laden fehlgeschlagen",
     "saveFailed": "Speichern fehlgeschlagen",
-    "downloadFailed": "Download fehlgeschlagen",
+    "downloadFailed": "Speichern der Datei fehlgeschlagen",
     "deleteFailed": "Löschen fehlgeschlagen",
-    "createTagFailed": "Tag anlegen fehlgeschlagen",
+    "createTagFailed": "Schlagwort anlegen fehlgeschlagen",
     "ai": {
-      "label": "KI-Erkennung (optional)",
-      "requesting": "Fragt an…",
-      "request": "KI-Vorschlag anfragen",
-      "requested": "Vorschlag liegt in der Review-Inbox bereit.",
+      "label": "Automatische Vorschläge (optional)",
+      "requesting": "Wird angefragt…",
+      "request": "Vorschläge erstellen lassen",
+      "requested": "Die Vorschläge warten unter „Neu zu prüfen“ auf Sie.",
       "requestFailed": "Anfrage fehlgeschlagen."
     }
   },
@@ -114,11 +116,11 @@
       "createdAsc": "Datum: älteste zuerst",
       "titleAsc": "Titel: A–Z",
       "titleDesc": "Titel: Z–A",
-      "relevance": "Relevanz (Volltext)"
+      "relevance": "Passendste zuerst"
     },
     "pending": "Suche wird gleich ausgeführt…",
     "loading": "Suche läuft…",
-    "count": "{{count}} Dok.",
+    "count": "{{count}} Treffer",
     "presets": {
       "ariaLabel": "Zeitraum-Schnellauswahl",
       "last7": "Letzte 7 Tage",
@@ -126,72 +128,72 @@
       "thisYear": "Dieses Jahr"
     },
     "saved": {
-      "summary": "Gespeicherte & zuletzt genutzte Suchen",
+      "summary": "Gemerkte und zuletzt genutzte Suchen",
       "namePlaceholder": "Name für diese Suche (optional)",
       "nameAriaLabel": "Name der Suche",
       "save": "Speichern",
-      "listAriaLabel": "Gespeicherte Suchen",
-      "delete": "Gespeicherte Suche „{{name}}“ löschen",
+      "listAriaLabel": "Gemerkte Suchen",
+      "delete": "Gemerkte Suche „{{name}}“ löschen",
       "unnamed": "Suche",
-      "empty": "Noch keine Suchen gespeichert. Sie werden nur in diesem Browser abgelegt."
+      "empty": "Noch keine Suchen gemerkt. Sie bleiben nur in diesem Browser gespeichert."
     },
     "recent": {
       "heading": "Zuletzt genutzt",
       "clear": "Leeren"
     },
-    "queryPlaceholder": "Suche im Volltext…",
-    "queryAriaLabel": "Suche im Volltext",
-    "correspondentLabel": "Korrespondent",
-    "correspondentHint": " – tippen zum Filtern",
-    "correspondentAriaLabel": "Korrespondent filtern",
-    "correspondentEmptyLabel": "Alle Korrespondenten",
-    "documentTypeLabel": "Dokumenttyp",
-    "documentTypeHint": " – tippen zum Filtern",
-    "documentTypeAriaLabel": "Dokumenttyp filtern",
-    "documentTypeEmptyLabel": "Alle Typen",
+    "queryPlaceholder": "Im ganzen Text suchen…",
+    "queryAriaLabel": "Im ganzen Text suchen",
+    "correspondentLabel": "Absender",
+    "correspondentHint": " – tippen zum Eingrenzen",
+    "correspondentAriaLabel": "Nach Absender eingrenzen",
+    "correspondentEmptyLabel": "Alle Absender",
+    "documentTypeLabel": "Art des Dokuments",
+    "documentTypeHint": " – tippen zum Eingrenzen",
+    "documentTypeAriaLabel": "Nach Art eingrenzen",
+    "documentTypeEmptyLabel": "Alle Arten",
     "sortLabel": "Sortierung",
     "sortAriaLabel": "Sortierung",
     "activeFilters": {
-      "ariaLabel": "Aktive Filter",
+      "ariaLabel": "Aktive Einschränkungen",
       "query": "Suche: „{{query}}“",
-      "correspondent": "Korrespondent: {{name}}",
-      "documentType": "Typ: {{name}}",
+      "correspondent": "Absender: {{name}}",
+      "documentType": "Art: {{name}}",
       "from": "Von: {{date}}",
       "to": "Bis: {{date}}",
-      "tag": "Tag: {{name}}",
+      "tag": "Schlagwort: {{name}}",
       "remove": " entfernen"
     },
     "advanced": {
-      "summary": "Erweiterte Filter",
+      "summary": "Weitere Einschränkungen",
       "from": "Von",
       "to": "Bis"
     },
-    "resetAll": "Alle Filter zurücksetzen"
+    "resetAll": "Alles zurücksetzen"
   },
   "reviewInbox": {
     "documentHeading": "Dokument #{{id}}",
     "titleLabel": "Titel",
-    "correspondentLabel": "Korrespondent",
-    "documentTypeLabel": "Dokumenttyp",
-    "tagsLabel": "Tags (kommagetrennt)",
+    "correspondentLabel": "Absender",
+    "documentTypeLabel": "Art des Dokuments",
+    "tagsLabel": "Schlagwörter (mit Komma getrennt)",
     "dateMeta": "Datum: {{date}}",
     "amountMeta": "Betrag: {{amount}} €",
     "apply": "Übernehmen",
-    "dismiss": "Verwerfen",
+    "dismiss": "Ablehnen",
     "applyFailed": "Übernehmen fehlgeschlagen",
-    "dismissFailed": "Verwerfen fehlgeschlagen",
+    "dismissFailed": "Ablehnen fehlgeschlagen",
     "confidence": {
       "high": "sicher",
       "medium": "eher unsicher",
       "low": "unsicher"
     },
     "disabled": {
-      "title": "KI-Erkennung ist deaktiviert",
-      "description": "Zum Aktivieren <1>AI_PROVIDER</1> und <2>AI_API_KEY</2> im Backend setzen (siehe <3>.env.example</3>). Dieses Feature ist optional – Paperless funktioniert ohne es genauso gut."
+      "title": "Automatische Vorschläge sind ausgeschaltet",
+      "description": "Zum Einschalten müssen <1>AI_PROVIDER</1> und <2>AI_API_KEY</2> im Hintergrundsystem (Backend) eingetragen werden (siehe <3>.env.example</3>). Das ist freiwillig – alles andere funktioniert auch ohne."
     },
     "empty": {
-      "title": "Keine offenen Vorschläge",
-      "description": "Öffne ein Dokument und klicke auf „KI-Vorschlag anfragen“."
+      "title": "Nichts zu prüfen",
+      "description": "Öffnen Sie ein Dokument und wählen Sie „Vorschläge erstellen lassen“."
     }
   },
   "remindersPanel": {
@@ -201,20 +203,74 @@
     },
     "empty": {
       "title": "Keine Erinnerungen",
-      "description": "Lege im Dokument-Detail eine Erinnerung an (z.B. für Vertragskündigungen oder Zahlungsfristen)."
+      "description": "Richten Sie bei einem Dokument eine Erinnerung ein (z. B. für Kündigungen oder Zahlungsfristen)."
     },
     "due": "fällig",
     "overdue": "überfällig",
     "done": "Erledigt"
   },
   "uploadZone": {
-    "dropAreaAriaLabel": "Datei hochladen: hierher ziehen oder klicken zum Auswählen",
-    "dropAreaLabel": "Datei hierher ziehen oder klicken zum Auswählen",
-    "uploadFailed": "Upload fehlgeschlagen",
+    "dropAreaAriaLabel": "Dokument hinzufügen: Datei hierher ziehen oder klicken zum Auswählen",
+    "dropAreaLabel": "Datei hierher ziehen oder hier klicken, um ein Dokument hinzuzufügen",
+    "uploadFailed": "Hinzufügen fehlgeschlagen",
     "progress": {
-      "uploading": "Hochladen",
-      "processing": "OCR läuft",
+      "uploading": "Wird hochgeladen",
+      "processing": "Text wird erkannt",
       "done": "Fertig"
+    }
+  },
+  "help": {
+    "title": "Hilfe",
+    "intro": "So kommen Sie in wenigen Schritten zurecht.",
+    "stepsHeading": "Erste Schritte",
+    "steps": {
+      "add": {
+        "title": "Dokument hinzufügen",
+        "text": "Ziehen Sie auf der Startseite ein Foto, eine PDF-Datei oder einen Scan in das Feld links oder klicken Sie darauf. Das Programm liest den Text automatisch aus."
+      },
+      "review": {
+        "title": "Vorschläge prüfen",
+        "text": "Unter „Neu zu prüfen“ finden Sie Vorschläge für Titel, Absender und Schlagwörter. Passt alles, klicken Sie auf „Übernehmen“, sonst auf „Ablehnen“."
+      },
+      "search": {
+        "title": "Dokument finden",
+        "text": "Tippen Sie links oben ein Wort ein, das im Dokument vorkommt, zum Beispiel einen Namen oder eine Nummer. Mit „Absender“ oder „Art des Dokuments“ grenzen Sie die Liste weiter ein."
+      },
+      "reminder": {
+        "title": "Erinnerung einrichten",
+        "text": "Öffnen Sie ein Dokument, wählen Sie ein Datum und klicken Sie auf „Einrichten“. Alle Erinnerungen sehen Sie im Reiter „Erinnerungen“."
+      },
+      "save": {
+        "title": "Änderungen speichern",
+        "text": "Wenn Sie bei einem Dokument etwas ändern, klicken Sie unten auf „Speichern“, damit nichts verloren geht."
+      }
+    },
+    "glossaryHeading": "Was bedeutet das?",
+    "glossary": {
+      "sender": {
+        "term": "Absender",
+        "definition": "Von wem oder von welcher Firma das Dokument stammt, zum Beispiel Ihre Krankenkasse."
+      },
+      "docType": {
+        "term": "Art des Dokuments",
+        "definition": "Um was für ein Schreiben es sich handelt, zum Beispiel Rechnung, Vertrag oder Bescheid."
+      },
+      "keyword": {
+        "term": "Schlagwort",
+        "definition": "Ein Stichwort, mit dem Sie Dokumente sortieren, zum Beispiel „Steuer“ oder „Auto“."
+      },
+      "recognizedText": {
+        "term": "Erkannter Text",
+        "definition": "Der Text, den das Programm aus Ihrem Foto oder Scan abliest. Damit können Sie im Dokument suchen."
+      },
+      "suggestion": {
+        "term": "Vorschlag",
+        "definition": "Das Programm rät Titel, Absender und Schlagwörter. Sie entscheiden, ob es passt."
+      },
+      "reminder": {
+        "term": "Erinnerung",
+        "definition": "Ein Datum, an das Sie erinnert werden, zum Beispiel eine Kündigungsfrist."
+      }
     }
   }
 }

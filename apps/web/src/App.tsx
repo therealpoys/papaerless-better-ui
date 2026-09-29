@@ -16,8 +16,9 @@ import { UploadZone } from "./components/UploadZone";
 import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
+import { HelpPanel } from "./components/HelpPanel";
 
-type Tab = "documents" | "inbox" | "reminders";
+type Tab = "documents" | "inbox" | "reminders" | "help";
 
 export default function App() {
   const { t } = useTranslation();
@@ -76,7 +77,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1>Paperless Better UI</h1>
+        <h1>{t("app.title")}</h1>
         <nav className="app__tabs" aria-label={t("app.regionsAriaLabel")}>
           <button
             type="button"
@@ -101,6 +102,14 @@ export default function App() {
             onClick={() => setTab("reminders")}
           >
             {t("app.tabs.reminders")}
+          </button>
+          <button
+            type="button"
+            className={tab === "help" ? "app__tab--active" : ""}
+            aria-current={tab === "help" ? "page" : undefined}
+            onClick={() => setTab("help")}
+          >
+            {t("app.tabs.help")}
           </button>
         </nav>
       </header>
@@ -173,6 +182,12 @@ export default function App() {
       {tab === "reminders" && (
         <main className="app__main app__main--full">
           <RemindersPanel />
+        </main>
+      )}
+
+      {tab === "help" && (
+        <main className="app__main app__main--full">
+          <HelpPanel />
         </main>
       )}
     </div>
