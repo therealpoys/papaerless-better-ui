@@ -20,7 +20,7 @@ export async function documentRoutes(app: FastifyInstance) {
       ? (Array.isArray(query.tags) ? query.tags : [query.tags]).map(Number)
       : undefined;
 
-    const sort = query.sort === "title" || query.sort === "created" ? query.sort : undefined;
+    const sort = query.sort === "title" || query.sort === "created" || query.sort === "score" ? query.sort : undefined;
     const sortOrder = query.sortOrder === "asc" || query.sortOrder === "desc" ? query.sortOrder : undefined;
 
     return paperless.listDocuments({

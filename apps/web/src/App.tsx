@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   Correspondent,
@@ -37,8 +37,18 @@ export default function App() {
   const [aiEnabled, setAiEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+  const requestSeq = useRef(0);
+
   const reloadDocuments = useCallback(() => {
-    api.listDocuments({ ...filters, page }).then(setDocumentsResult).catch((err) => setError(err.message));
+    // Nur die jüngste Antwort übernehmen, sonst überschreibt eine langsame alte Suche die neue.
+    const seq = ++requestSeq.current;
+    setIsLoading(true);
+    api
+      .listDocuments({ ...filters, page })
+      .then((r) => seq === requestSeq.current && setDocumentsResult(r))
+      .catch((err) => seq === requestSeq.current && setError(err.message))
+      .finally(() => seq === requestSeq.current && setIsLoading(false));
   }, [filters, page]);
 
   const reloadMetadata = useCallback(() => {
@@ -107,6 +117,7 @@ export default function App() {
               tags={tags}
               correspondents={correspondents}
               documentTypes={documentTypes}
+              isLoading={isLoading}
             />
             <DocumentList
               documents={documentsResult.results}
