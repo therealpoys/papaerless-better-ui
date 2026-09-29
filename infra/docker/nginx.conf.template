@@ -1,0 +1,43 @@
+# Wird vom nginx-Entrypoint via envsubst gerendert (${API_UPSTREAM}, ${API_AUTH_TOKEN}).
+# nginx-eigene Variablen ($host, $uri, ...) bleiben unangetastet (envsubst ersetzt nur gesetzte Env-Vars).
+server {
+    listen 8080;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Uploads (Scans, PDFs) durchreichen
+    client_max_body_size 100m;
+
+    # Docker-DNS zur Laufzeit auflösen, damit nginx auch startet, wenn api kurz fehlt
+    resolver 127.0.0.11 valid=10s;
+
+    location /api/ {
+        set $upstream ${API_UPSTREAM};
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Token serverseitig injizieren -> steckt nicht im JS-Bundle.
+        proxy_set_header Authorization "Bearer ${API_AUTH_TOKEN}";
+        proxy_request_buffering off;
+        proxy_read_timeout 120s;
+    }
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    location / {
+        add_header Cache-Control "no-cache";
+        try_files $uri /index.html;
+    }
+}

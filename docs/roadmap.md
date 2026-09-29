@@ -96,11 +96,13 @@ den Alltagseinsatz blockiert.
 - [ ] **Mobile: Dokumente durchsuchen/bearbeiten** – die App kann bisher nur scannen → hochladen →
       bestätigen, aber keine bestehenden Dokumente durchsuchen oder öffnen. Größeres Stück Arbeit
       (eigene Liste/Detail-Screens analog zu `apps/web`), bewusst nicht nebenbei mit umgesetzt.
-- [ ] **Deployment-Pfad für die eigenen Services** – kein Dockerfile für `api`/`mail-ingest`/
-      `ai-classifier`, keine CI (`.github/workflows` existiert nicht). Hängt an der in
-      `docs/architecture.md` offenen Hosting-Frage (gleicher Server wie Paperless? Reverse
-      Proxy/VPN?) – das ist eine Architekturentscheidung, kein Fix nebenbei; gehört als ADR
-      entschieden, bevor Docker/CI gebaut werden.
+- [x] **Deployment-Pfad für die eigenen Services** – Hosting-Frage per
+      [ADR 0004](decisions/0004-deployment.md) entschieden (gleicher Docker-Host wie Paperless,
+      TLS-Reverse-Proxy oder VPN davor). Umgesetzt: `infra/docker/` (Dockerfiles für api/mail-ingest
+      als esbuild-Bundle, web hinter nginx mit `/api`-Proxy), `infra/docker-compose.yml`
+      (Gesamtstack mit Healthchecks, Volumes, `restart: unless-stopped`, Profil `mail`),
+      `scripts/setup.sh`, README-Abschnitt "Produktiv betreiben". `ai-classifier` ist Lib von `api`.
+      Noch offen: CI (`.github/workflows`), Image-Registry, Monitoring/automatische Backups.
 - [ ] **Testabdeckung** – `services/api/tests`, `services/mail-ingest/tests`,
       `services/ai-classifier/tests` enthalten nur `.gitkeep`, es gibt noch keinen Testrunner im
       Projekt (kein vitest/jest in den `package.json`). Eigene Aufgabe: erst Testtooling
