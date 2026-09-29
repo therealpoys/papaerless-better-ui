@@ -9,6 +9,8 @@ import type {
 } from "@papaerless/shared-types";
 import { Button, EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
+import { friendlyError } from "../lib/errors";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface DocumentListProps {
   documents: PaperlessDocument[];
@@ -24,6 +26,8 @@ interface DocumentListProps {
   onPageChange: (page: number) => void;
   onBulkActionDone: (deletedIds?: number[]) => void;
 }
+
+const MAX_LISTED_TITLES = 5;
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -77,6 +81,7 @@ export function DocumentList({
   const [bulkDocumentType, setBulkDocumentType] = useState("");
   const [isBulkBusy, setIsBulkBusy] = useState(false);
   const [bulkError, setBulkError] = useState<string | null>(null);
+  const [confirmingBulkDelete, setConfirmingBulkDelete] = useState(false);
   const [lastAction, setLastAction] = useState<BulkEditAction | null>(null);
 
   // Auswahl an die aktuell sichtbaren Dokumente anpassen, z.B. wenn Filter/Seite wechseln
@@ -121,19 +126,18 @@ export function DocumentList({
       setLastAction(null);
       onBulkActionDone(action.method === "delete" ? ids : undefined);
     } catch (err) {
-      setBulkError(err instanceof Error ? err.message : t("documentList.bulkActions.actionFailed"));
+      setBulkError(friendlyError(err, t, t("documentList.bulkActions.actionFailed")));
     } finally {
       setIsBulkBusy(false);
     }
   }
 
-  function handleBulkDelete() {
-    const confirmed = window.confirm(
-      t("documentList.bulkActions.confirmDelete", { count: selectedIds.size }),
-    );
-    if (!confirmed) return;
+  function handleBulkDeleteConfirmed() {
+    setConfirmingBulkDelete(false);
     runBulkAction({ method: "delete" });
   }
+
+  const selectedDocuments = documents.filter((d) => selectedIds.has(d.id));
 
   if (documents.length === 0) {
     return (
@@ -248,11 +252,30 @@ export function DocumentList({
             </Button>
           </div>
 
-          <Button variant="danger" disabled={isBulkBusy} onClick={handleBulkDelete}>
+          <Button variant="danger" disabled={isBulkBusy} onClick={() => setConfirmingBulkDelete(true)}>
             {isBulkBusy ? t("documentList.bulkActions.deleting") : t("documentList.bulkActions.delete")}
           </Button>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmingBulkDelete}
+        title={t("documentList.bulkActions.confirmDelete.title", { count: selectedIds.size })}
+        cancelLabel={t("documentList.bulkActions.confirmDelete.cancel")}
+        confirmLabel={t("documentList.bulkActions.confirmDelete.confirm", { count: selectedIds.size })}
+        onCancel={() => setConfirmingBulkDelete(false)}
+        onConfirm={handleBulkDeleteConfirmed}
+      >
+        <ul className="confirm-dialog__list">
+          {selectedDocuments.slice(0, MAX_LISTED_TITLES).map((doc) => (
+            <li key={doc.id}>{doc.title || t("documentList.noTitle")}</li>
+          ))}
+        </ul>
+        {selectedDocuments.length > MAX_LISTED_TITLES && (
+          <p>{t("documentList.bulkActions.confirmDelete.more", { count: selectedDocuments.length - MAX_LISTED_TITLES })}</p>
+        )}
+        <p>{t("documentList.bulkActions.confirmDelete.warning")}</p>
+      </ConfirmDialog>
 
       {bulkError && (
         <ErrorState

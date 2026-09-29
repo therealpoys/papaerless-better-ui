@@ -39,8 +39,14 @@
       "set": "Setzen",
       "deleting": "…",
       "delete": "Löschen",
-      "confirmDelete": "{{count}} Dokument(e) wirklich unwiderruflich aus Paperless löschen?",
-      "actionFailed": "Aktion fehlgeschlagen"
+      "confirmDelete": {
+        "title": "{{count}} Dokument(e) löschen?",
+        "warning": "Das kann nicht rückgängig gemacht werden.",
+        "more": "… und {{count}} weitere",
+        "cancel": "Abbrechen",
+        "confirm": "Ja, löschen"
+      },
+      "actionFailed": "Die Aktion hat nicht geklappt."
     },
     "empty": {
       "title": "Noch keine Dokumente",
@@ -91,14 +97,19 @@
     "download": "Original herunterladen",
     "deleting": "Löscht…",
     "delete": "Löschen",
-    "confirmDelete": "\"{{title}}\" wirklich unwiderruflich aus Paperless löschen?",
+    "confirmDelete": {
+      "title": "Dokument löschen?",
+      "warning": "Das kann nicht rückgängig gemacht werden.",
+      "cancel": "Abbrechen",
+      "confirm": "Ja, löschen"
+    },
     "untitledFallback": "Dokument",
     "loading": "Lädt…",
-    "loadFailed": "Laden fehlgeschlagen",
-    "saveFailed": "Speichern fehlgeschlagen",
-    "downloadFailed": "Download fehlgeschlagen",
-    "deleteFailed": "Löschen fehlgeschlagen",
-    "createTagFailed": "Tag anlegen fehlgeschlagen",
+    "loadFailed": "Das Dokument konnte nicht geladen werden.",
+    "saveFailed": "Ihre Änderungen konnten nicht gespeichert werden.",
+    "downloadFailed": "Der Download hat nicht geklappt.",
+    "deleteFailed": "Das Dokument konnte nicht gelöscht werden.",
+    "createTagFailed": "Das Schlagwort konnte nicht angelegt werden.",
     "ai": {
       "label": "KI-Erkennung (optional)",
       "requesting": "Fragt an…",
@@ -139,8 +150,8 @@
       "heading": "Zuletzt genutzt",
       "clear": "Leeren"
     },
-    "queryPlaceholder": "Suche im Volltext…",
-    "queryAriaLabel": "Suche im Volltext",
+    "queryPlaceholder": "Wonach suchen Sie? z.B. Stromrechnung",
+    "queryAriaLabel": "Wonach suchen Sie?",
     "correspondentLabel": "Korrespondent",
     "correspondentHint": " – tippen zum Filtern",
     "correspondentAriaLabel": "Korrespondent filtern",
@@ -166,7 +177,10 @@
       "from": "Von",
       "to": "Bis"
     },
-    "resetAll": "Alle Filter zurücksetzen"
+    "resetAll": "Alles zurücksetzen",
+    "more": {
+      "toggle": "Weitere Filter"
+    }
   },
   "reviewInbox": {
     "documentHeading": "Dokument #{{id}}",
@@ -215,6 +229,15 @@
       "uploading": "Hochladen",
       "processing": "OCR läuft",
       "done": "Fertig"
+    }
+  },
+  "errors": {
+    "hint": {
+      "network": "Bitte prüfen Sie Ihre Internetverbindung und versuchen Sie es gleich noch einmal.",
+      "auth": "Sie haben dafür gerade keine Berechtigung. Bitte melden Sie sich neu an oder wenden Sie sich an den Administrator.",
+      "notFound": "Das Dokument wurde nicht gefunden – vielleicht wurde es bereits gelöscht. Bitte laden Sie die Seite neu.",
+      "server": "Der Dienst ist gerade nicht erreichbar. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
+      "unknown": "Bitte versuchen Sie es noch einmal. Wenn es weiterhin nicht klappt, wenden Sie sich an den Administrator."
     }
   }
 }
