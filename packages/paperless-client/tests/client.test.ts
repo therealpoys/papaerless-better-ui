@@ -97,4 +97,27 @@ describe("PaperlessClient", () => {
     fetchMock.mockResolvedValueOnce(new Response("bad", { status: 400 }));
     await expect(client.uploadDocument(new Blob(["x"]), "a.pdf")).rejects.toThrow(/Upload fehlgeschlagen \(Paperless-Status 400\)/);
   });
+
+  describe("getTask", () => {
+    it("liefert bei SUCCESS die Dokument-ID als Zahl", async () => {
+      fetchMock.mockResolvedValue(json([{ status: "SUCCESS", related_document: "42" }]));
+
+      await expect(client.getTask("abc-123")).resolves.toEqual({ status: "SUCCESS", documentId: 42 });
+      expect(new URL(fetchMock.mock.calls[0][0]).searchParams.get("task_id")).toBe("abc-123");
+    });
+
+    it("liefert bei laufendem Vorgang keine Dokument-ID", async () => {
+      fetchMock.mockResolvedValue(json([{ status: "STARTED", related_document: null }]));
+
+      await expect(client.getTask("t")).resolves.toEqual({ status: "STARTED", documentId: undefined });
+    });
+
+    it("meldet UNKNOWN, wenn Paperless die Task nicht kennt oder einen fremden Status liefert", async () => {
+      fetchMock.mockResolvedValueOnce(json([]));
+      await expect(client.getTask("t")).resolves.toEqual({ status: "UNKNOWN" });
+
+      fetchMock.mockResolvedValueOnce(json([{ status: "REVOKED", related_document: null }]));
+      await expect(client.getTask("t")).resolves.toEqual({ status: "UNKNOWN", documentId: undefined });
+    });
+  });
 });
