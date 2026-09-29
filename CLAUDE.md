@@ -24,5 +24,5 @@ Noch offen, siehe [docs/decisions/0001-tech-stack.md](docs/decisions/0001-tech-s
 ## Befehle
 - `pnpm install` – Dependencies installieren
 - `pnpm dev` – alle Apps/Services im Dev-Modus (Turborepo), u.a. `services/api` auf :3001 und `apps/web` auf :5173
-- `pnpm typecheck` / `pnpm build` / `pnpm lint` – über alle Packages
+- `pnpm typecheck` / `pnpm build` / `pnpm lint` / `pnpm test` (vitest) – über alle Packages
 - `docker compose -f infra/paperless/docker-compose.yml up -d` – lokales Paperless-ngx auf :8000 starten

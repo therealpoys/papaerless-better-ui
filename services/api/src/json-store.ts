@@ -3,11 +3,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.resolve(here, "../data");
+// API_DATA_DIR überschreibt das Standardverzeichnis (v.a. für Tests).
+const defaultDataDir = path.resolve(here, "../data");
+const getDataDir = () => process.env.API_DATA_DIR ?? defaultDataDir;
 
 export async function readJsonFile<T>(fileName: string, fallback: T): Promise<T> {
   try {
-    const raw = await fs.readFile(path.join(dataDir, fileName), "utf-8");
+    const raw = await fs.readFile(path.join(getDataDir(), fileName), "utf-8");
     return JSON.parse(raw) as T;
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return fallback;
@@ -16,6 +18,6 @@ export async function readJsonFile<T>(fileName: string, fallback: T): Promise<T>
 }
 
 export async function writeJsonFile<T>(fileName: string, data: T): Promise<void> {
-  await fs.mkdir(dataDir, { recursive: true });
-  await fs.writeFile(path.join(dataDir, fileName), JSON.stringify(data, null, 2), "utf-8");
+  await fs.mkdir(getDataDir(), { recursive: true });
+  await fs.writeFile(path.join(getDataDir(), fileName), JSON.stringify(data, null, 2), "utf-8");
 }
