@@ -851,14 +851,21 @@ body {
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
+  text-align: left;
 }
 .review-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
 .review-dialog h2 { margin: 0 0 var(--space-xs); font-size: var(--font-size-lg); }
-.review-dialog__file { margin: 0 0 var(--space-sm); color: var(--color-text-muted, inherit); word-break: break-all; }
-.review-dialog__note { margin: 0 0 var(--space-md); }
-.review-dialog__field { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: var(--space-md); }
-.review-dialog__field select, .review-dialog__field input { width: 100%; }
-.review-dialog__tags { border: 1px solid var(--color-border); border-radius: var(--radius-sm); margin: 0 0 var(--space-md); }
-.review-dialog__tag { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0.2rem 0.75rem 0.2rem 0; }
+.review-dialog__file { margin: 0 0 var(--space-sm); font-size: var(--font-size-sm); color: var(--color-text-muted, #666); overflow-wrap: anywhere; }
+.review-dialog__note { margin: 0 0 var(--space-md); padding: var(--space-sm); border-radius: var(--radius-sm); background: var(--color-success-bg, #eef3ff); }
+.review-dialog__field { display: flex; flex-direction: column; align-items: stretch; gap: 0.3rem; margin-bottom: var(--space-md); }
+.review-dialog__field > label, .review-dialog__field > span { font-weight: 600; text-align: left; }
+.review-dialog__field select, .review-dialog__field input { width: 100%; text-align: left; }
+.review-dialog__chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.review-dialog__chip {
+  padding: 0.3rem 0.8rem; border: 1px solid var(--color-border); border-radius: 999px;
+  background: var(--color-surface); color: var(--color-text); cursor: pointer;
+}
+.review-dialog__chip[aria-pressed="true"] { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-accent-contrast, #fff); }
+.review-dialog__more, .review-dialog__later { align-self: flex-start; border: none; background: none; color: var(--color-accent); cursor: pointer; text-decoration: underline; padding: 0.3rem 0; }
 .review-dialog__error { color: var(--color-danger, #b00020); }
-.review-dialog__actions { display: flex; gap: var(--space-sm); justify-content: flex-end; }
+.review-dialog__actions { display: flex; gap: var(--space-md); align-items: center; justify-content: flex-end; }

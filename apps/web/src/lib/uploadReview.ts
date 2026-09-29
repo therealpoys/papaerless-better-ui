@@ -77,3 +77,44 @@ export async function saveReview(deps: SaveDeps, documentId: number, form: Revie
     tags,
   });
 }
+
+/** Macht aus einem Dateinamen einen lesbaren Titel (ohne Endung, ohne Hash samt Anhang dahinter, ohne Unterstriche). */
+export function cleanTitle(fileName: string): string {
+  return fileName
+    .replace(/\.[A-Za-z0-9]{1,5}$/, "")
+    .replace(/[_-]?[0-9a-f]{16,}.*$/i, "")
+    .replace(/_+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function mentions(text: string, name: string): boolean {
+  const n = name.trim().toLowerCase();
+  return n.length >= 3 && text.includes(n);
+}
+
+/**
+ * Einfache Erkennung ohne KI: Titel aus der ersten Textzeile, Absender/Art/Schlagwörter, deren
+ * Name im erkannten Text vorkommt. Liefert nie einen erfundenen Wert, nur vorhandene Einträge.
+ */
+export function heuristicSuggestion(
+  doc: { id: number; content: string },
+  fileName: string,
+  known: Known,
+): MetadataSuggestion {
+  const text = doc.content.toLowerCase();
+  const firstLine = doc.content
+    .split("\n")
+    .map((l) => l.trim())
+    .find((l) => l.length >= 5);
+  const title = firstLine && firstLine.length <= 80 ? firstLine : cleanTitle(fileName);
+
+  return {
+    documentId: doc.id,
+    title,
+    correspondent: known.correspondents.find((c) => mentions(text, c.name))?.name,
+    documentType: known.documentTypes.find((t) => mentions(text, t.name))?.name,
+    tags: known.tags.filter((t) => mentions(text, t.name)).map((t) => t.name),
+    confidence: 0.5,
+  };
+}

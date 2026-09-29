@@ -309,19 +309,21 @@
     }
   },
   "uploadReview": {
-    "title": "Neues Dokument – bitte kurz prüfen",
-    "aiNote": "Das ist mein Vorschlag anhand des Inhalts. Sie können alles ändern.",
-    "noSuggestion": "Zu diesem Dokument gibt es leider keinen Vorschlag. Bitte wählen Sie die Angaben selbst.",
-    "aiOff": "Automatische Vorschläge sind ausgeschaltet. Bitte wählen Sie die Angaben selbst.",
+    "title": "Dokument gespeichert – passt das so?",
     "titleLabel": "Titel",
-    "correspondent": "Absender (von wem ist der Brief?)",
-    "documentType": "Art des Dokuments (z. B. Rechnung)",
+    "correspondent": "Von wem ist das?",
+    "documentType": "Was ist das? (z. B. Rechnung)",
     "tags": "Schlagwörter",
     "noTags": "Es gibt noch keine Schlagwörter.",
     "none": "– keine Angabe –",
     "newEntry": "{{name}} (neu anlegen)",
     "save": "Speichern",
     "later": "Später",
-    "saveFailed": "Die Angaben konnten nicht gespeichert werden."
+    "saveFailed": "Die Angaben konnten nicht gespeichert werden.",
+    "noteAi": "Das schlägt die KI anhand des Inhalts vor. Sie können alles ändern.",
+    "noteAuto": "Ich habe das anhand des erkannten Textes ausgewählt. Bitte kurz prüfen.",
+    "noteNothing": "Ich konnte nichts Passendes erkennen. Wählen Sie bei Bedarf selbst aus oder klicken Sie auf „Später“.",
+    "moreTags": "{{count}} weitere anzeigen",
+    "saving": "Wird gespeichert …"
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
-import { formFromSuggestion, saveReview } from "./uploadReview";
+import { cleanTitle, formFromSuggestion, heuristicSuggestion, saveReview } from "./uploadReview";
 
 const known = {
   tags: [{ id: 1, name: "Rechnung" }, { id: 2, name: "Steuer" }],
@@ -65,5 +65,44 @@ describe("saveReview", () => {
     await saveReview(d, 9, { title: "  ", correspondent: null, documentType: null, tags: [] });
 
     expect(d.updateDocument).toHaveBeenCalledWith(9, { title: "9", correspondent: null, documentType: null, tags: [] });
+  });
+});
+
+describe("cleanTitle", () => {
+  it("entfernt Endung, Hash-Anhang und Unterstriche", () => {
+    expect(cleanTitle("03.6.3 - Rollen_22cd5caf7a604ae7aa9d65e661ff751f-030926-1337-214.pdf")).toBe("03.6.3 - Rollen");
+    expect(cleanTitle("Strom_Rechnung_Mai.PDF")).toBe("Strom Rechnung Mai");
+  });
+});
+
+describe("heuristicSuggestion", () => {
+  const doc = (content: string) => ({ id: 3, content });
+
+  it("nimmt die erste sinnvolle Textzeile als Titel", () => {
+    const s = heuristicSuggestion(doc("\n  \nab\nLLM Management Plattform - Rechte & Rollen\nVersion 0.1"), "x_y.pdf", known);
+    expect(s.title).toBe("LLM Management Plattform - Rechte & Rollen");
+  });
+
+  it("nimmt den bereinigten Dateinamen, wenn es keinen brauchbaren Text gibt oder die Zeile zu lang ist", () => {
+    expect(heuristicSuggestion(doc(""), "Strom_Mai.pdf", known).title).toBe("Strom Mai");
+    expect(heuristicSuggestion(doc("a".repeat(200)), "Strom_Mai.pdf", known).title).toBe("Strom Mai");
+  });
+
+  it("schlägt nur vorhandene Absender, Arten und Schlagwörter vor, die im Text vorkommen", () => {
+    const s = heuristicSuggestion(
+      doc("Ihre Rechnung der TELEKOM\nVertrag Nr. 5, Thema Steuer"),
+      "a.pdf",
+      known,
+    );
+    expect(s.correspondent).toBe("Telekom");
+    expect(s.documentType).toBe("Vertrag");
+    expect(s.tags).toEqual(["Rechnung", "Steuer"]);
+  });
+
+  it("lässt alles leer, wenn nichts passt", () => {
+    const s = heuristicSuggestion(doc("Hallo Welt, nichts Bekanntes"), "a.pdf", known);
+    expect(s.correspondent).toBeUndefined();
+    expect(s.documentType).toBeUndefined();
+    expect(s.tags).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
-import { Button, ConfidenceBadge } from "@papaerless/ui";
+import { Button } from "@papaerless/ui";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
 import { formFromSuggestion, saveReview, type Choice, type ReviewForm } from "../lib/uploadReview";
@@ -9,8 +9,8 @@ import { formFromSuggestion, saveReview, type Choice, type ReviewForm } from "..
 interface Props {
   documentId: number;
   fileName: string;
-  suggestion?: MetadataSuggestion;
-  aiEnabled: boolean;
+  suggestion: MetadataSuggestion;
+  source: "ai" | "auto";
   tags: Tag[];
   correspondents: Correspondent[];
   documentTypes: DocumentType[];
@@ -58,7 +58,7 @@ export function UploadReviewDialog({
   documentId,
   fileName,
   suggestion,
-  aiEnabled,
+  source,
   tags,
   correspondents,
   documentTypes,
@@ -78,6 +78,8 @@ export function UploadReviewDialog({
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
 
+  const hasHits = Boolean(suggestion.correspondent || suggestion.documentType || suggestion.tags?.length);
+  const [showAllTags, setShowAllTags] = useState(false);
   const newTags = form.tags.filter((tag): tag is string => typeof tag === "string");
   const toggleTag = (tag: number | string) =>
     setForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((x) => x !== tag) : [...f.tags, tag] }));
@@ -95,6 +97,16 @@ export function UploadReviewDialog({
     }
   }
 
+  const allChips = [
+    ...tags.map((tag) => ({ key: String(tag.id), value: tag.id as number | string, label: tag.name })),
+    ...newTags.map((name) => ({ key: `new-${name}`, value: name as number | string, label: t("uploadReview.newEntry", { name }) })),
+  ];
+  // Ausgewählte zuerst; der Rest ist eingeklappt, wenn es viele Schlagwörter gibt.
+  const sorted = [...allChips.filter((c) => form.tags.includes(c.value)), ...allChips.filter((c) => !form.tags.includes(c.value))];
+  const LIMIT = 8;
+  const chips = showAllTags ? sorted : sorted.slice(0, Math.max(LIMIT, form.tags.length));
+  const hiddenCount = sorted.length - chips.length;
+
   return (
     <dialog
       ref={dialogRef}
@@ -108,23 +120,13 @@ export function UploadReviewDialog({
       <h2 id={titleId}>{t("uploadReview.title")}</h2>
       <p className="review-dialog__file">{fileName}</p>
 
-      {aiEnabled && suggestion ? (
-        <p className="review-dialog__note">
-          {t("uploadReview.aiNote")}{" "}
-          <ConfidenceBadge
-            confidence={suggestion.confidence}
-            levelLabels={{
-              high: t("reviewInbox.confidence.high"),
-              medium: t("reviewInbox.confidence.medium"),
-              low: t("reviewInbox.confidence.low"),
-            }}
-          />
-        </p>
-      ) : (
-        <p className="review-dialog__note">
-          {aiEnabled ? t("uploadReview.noSuggestion") : t("uploadReview.aiOff")}
-        </p>
-      )}
+      <p className="review-dialog__note">
+        {source === "ai"
+          ? t("uploadReview.noteAi")
+          : hasHits
+            ? t("uploadReview.noteAuto")
+            : t("uploadReview.noteNothing")}
+      </p>
 
       <div className="review-dialog__field">
         <label htmlFor={`${titleId}-t`}>{t("uploadReview.titleLabel")}</label>
@@ -144,19 +146,29 @@ export function UploadReviewDialog({
         onChange={(c) => setForm({ ...form, documentType: c })}
       />
 
-      <fieldset className="review-dialog__tags">
-        <legend>{t("uploadReview.tags")}</legend>
-        {tags.length === 0 && newTags.length === 0 && <p>{t("uploadReview.noTags")}</p>}
-        {[...tags.map((tag) => ({ key: tag.id, value: tag.id as number | string, name: tag.name })),
-          ...newTags.map((name) => ({ key: `new-${name}`, value: name as number | string, name: t("uploadReview.newEntry", { name }) }))].map(
-          (tag) => (
-            <label key={tag.key} className="review-dialog__tag">
-              <input type="checkbox" checked={form.tags.includes(tag.value)} onChange={() => toggleTag(tag.value)} />
-              {tag.name}
-            </label>
-          ),
+      <div className="review-dialog__field">
+        <span id={`${titleId}-tags`}>{t("uploadReview.tags")}</span>
+        <div className="review-dialog__chips" role="group" aria-labelledby={`${titleId}-tags`}>
+          {chips.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              className="review-dialog__chip"
+              aria-pressed={form.tags.includes(chip.value)}
+              onClick={() => toggleTag(chip.value)}
+            >
+              {form.tags.includes(chip.value) ? "✓ " : ""}
+              {chip.label}
+            </button>
+          ))}
+          {chips.length === 0 && <span>{t("uploadReview.noTags")}</span>}
+        </div>
+        {hiddenCount > 0 && (
+          <button type="button" className="review-dialog__more" onClick={() => setShowAllTags(true)}>
+            {t("uploadReview.moreTags", { count: hiddenCount })}
+          </button>
         )}
-      </fieldset>
+      </div>
 
       {error && (
         <p role="alert" className="review-dialog__error">
@@ -165,11 +177,11 @@ export function UploadReviewDialog({
       )}
 
       <div className="review-dialog__actions">
-        <Button onClick={handleSave} disabled={saving}>
-          {t("uploadReview.save")}
-        </Button>
-        <Button variant="secondary" onClick={() => onClose(false)} disabled={saving}>
+        <button type="button" className="review-dialog__later" onClick={() => onClose(false)} disabled={saving}>
           {t("uploadReview.later")}
+        </button>
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? t("uploadReview.saving") : t("uploadReview.save")}
         </Button>
       </div>
     </dialog>

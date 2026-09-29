@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
 import { api } from "../lib/api";
 import { UploadReviewDialog } from "./UploadReviewDialog";
+import { heuristicSuggestion } from "../lib/uploadReview";
 import { classifyUploadError, validateFile, waitForDocumentId, type UploadErrorKey } from "../lib/upload";
 
 interface UploadZoneProps {
@@ -18,7 +19,8 @@ interface PendingReview {
   itemId: number;
   documentId: number;
   fileName: string;
-  suggestion?: MetadataSuggestion;
+  suggestion: MetadataSuggestion;
+  source: "ai" | "auto";
 }
 
 type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error";
@@ -71,8 +73,14 @@ export function UploadZone({
         try {
           const documentId = await waitForDocumentId(api.getUploadTask, taskId);
           if (documentId) {
-            const suggestion = aiEnabled ? await api.suggestMetadata(documentId).catch(() => undefined) : undefined;
-            setReviews((prev) => [...prev, { itemId: item.id, documentId, fileName: item.file.name, suggestion }]);
+            const ai = aiEnabled ? await api.suggestMetadata(documentId).catch(() => undefined) : undefined;
+            // Ohne KI (oder ohne KI-Ergebnis) erkennen wir Titel, Absender & Co. selbst aus dem Text.
+            const doc = ai ? null : await api.getDocument(documentId);
+            const suggestion = ai ?? heuristicSuggestion(doc!, item.file.name, { tags, correspondents, documentTypes });
+            setReviews((prev) => [
+              ...prev,
+              { itemId: item.id, documentId, fileName: item.file.name, suggestion, source: ai ? "ai" : "auto" },
+            ]);
           }
         } catch {
           // kein Fenster – das Dokument liegt trotzdem in der Liste
@@ -196,7 +204,7 @@ export function UploadZone({
           documentId={reviews[0].documentId}
           fileName={reviews[0].fileName}
           suggestion={reviews[0].suggestion}
-          aiEnabled={aiEnabled}
+          source={reviews[0].source}
           tags={tags}
           correspondents={correspondents}
           documentTypes={documentTypes}
