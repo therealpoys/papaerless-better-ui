@@ -89,3 +89,21 @@ describe("AnthropicClassifier", () => {
     await expect(classifier().classify(input)).rejects.toThrow(/kein JSON/);
   });
 });
+
+describe("Standard-Modell", () => {
+  it("nutzt eine gültige Modell-ID, wenn AI_MODEL nicht gesetzt ist", async () => {
+    create.mockResolvedValue(reply('{"title":"x"}'));
+
+    await createClassifier({ provider: "anthropic", apiKey: "k" })!.classify(input);
+
+    expect(create.mock.calls[0][0].model).toBe("claude-sonnet-5-5");
+  });
+
+  it("nutzt AI_MODEL, wenn gesetzt", async () => {
+    create.mockResolvedValue(reply('{"title":"x"}'));
+
+    await createClassifier({ provider: "anthropic", apiKey: "k", model: "claude-haiku-4-5-20251001" })!.classify(input);
+
+    expect(create.mock.calls[0][0].model).toBe("claude-haiku-4-5-20251001");
+  });
+});

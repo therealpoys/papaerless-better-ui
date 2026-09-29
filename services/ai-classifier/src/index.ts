@@ -21,7 +21,7 @@ export function createClassifier(config: AiClassifierConfig): Classifier | null 
       if (!config.apiKey) {
         throw new Error("AI_PROVIDER=anthropic erfordert AI_API_KEY");
       }
-      return new AnthropicClassifier(config.apiKey, config.model ?? "claude-sonnet-5");
+      return new AnthropicClassifier(config.apiKey, config.model ?? "claude-sonnet-5-5");
     }
     default:
       throw new Error(
