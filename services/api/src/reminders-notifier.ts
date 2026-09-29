@@ -24,9 +24,11 @@ async function checkDueReminders(): Promise<void> {
   }
 }
 
-export function startRemindersNotifier(): void {
+/** Startet den periodischen Check und gibt eine Funktion zum Stoppen zurück (Graceful Shutdown). */
+export function startRemindersNotifier(): () => void {
   checkDueReminders().catch((err) => console.error("Reminder-Check fehlgeschlagen:", err));
-  setInterval(() => {
+  const timer = setInterval(() => {
     checkDueReminders().catch((err) => console.error("Reminder-Check fehlgeschlagen:", err));
   }, CHECK_INTERVAL_MS);
+  return () => clearInterval(timer);
 }

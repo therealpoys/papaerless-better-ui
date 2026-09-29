@@ -11,7 +11,28 @@ import type {
 export interface PaperlessClientConfig {
   baseUrl: string;
   apiToken: string;
+  /** Timeout pro Request in ms (Default 15000). */
+  timeoutMs?: number;
+  /** Zusätzliche Versuche für idempotente GETs (Default 2). */
+  maxRetries?: number;
 }
+
+/**
+ * Fehler beim Zugriff auf Paperless. `message` ist bewusst sauber (kein Token, kein Body);
+ * der Antwort-Body steht nur in `detail` und ist fürs Logging gedacht.
+ */
+export class PaperlessError extends Error {
+  constructor(
+    message: string,
+    readonly status?: number,
+    readonly detail?: string,
+  ) {
+    super(message);
+    this.name = "PaperlessError";
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface PaginatedResponse<T> {
   count: number;
@@ -45,17 +66,69 @@ function toDocument(raw: RawDocument): PaperlessDocument {
 export class PaperlessClient {
   constructor(private readonly config: PaperlessClientConfig) {}
 
+  /**
+   * fetch mit Timeout; GETs werden bei Netzwerkfehlern, Timeouts und 502/503/504 mit
+   * exponentiellem Backoff wiederholt. Nicht-idempotente Requests werden nie wiederholt.
+   */
+  private async fetchPaperless(path: string, init: RequestInit = {}): Promise<Response> {
+    const timeoutMs = this.config.timeoutMs ?? 15_000;
+    const method = (init.method ?? "GET").toUpperCase();
+    const retries = method === "GET" ? (this.config.maxRetries ?? 2) : 0;
+
+    for (let attempt = 0; ; attempt++) {
+      try {
+        const res = await fetch(`${this.config.baseUrl}${path}`, {
+          ...init,
+          headers: { Authorization: `Token ${this.config.apiToken}`, ...init.headers },
+          signal: AbortSignal.timeout(timeoutMs),
+        });
+        if (attempt < retries && [502, 503, 504].includes(res.status)) {
+          await res.body?.cancel();
+          await sleep(200 * 2 ** attempt);
+          continue;
+        }
+        return res;
+      } catch (err) {
+        if (attempt < retries) {
+          await sleep(200 * 2 ** attempt);
+          continue;
+        }
+        const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+        throw new PaperlessError(
+          timedOut
+            ? `Paperless antwortet nicht (Timeout nach ${timeoutMs} ms)`
+            : "Paperless ist nicht erreichbar",
+          undefined,
+          err instanceof Error ? err.message : String(err),
+        );
+      }
+    }
+  }
+
+  private async failure(what: string, res: Response): Promise<PaperlessError> {
+    const detail = (await res.text().catch(() => "")).slice(0, 500);
+    return new PaperlessError(`${what} (Paperless-Status ${res.status})`, res.status, detail);
+  }
+
+  /** Erreichbarkeitsprüfung für /health. */
+  async ping(timeoutMs = 3000): Promise<boolean> {
+    try {
+      const res = await fetch(`${this.config.baseUrl}/api/`, {
+        headers: { Authorization: `Token ${this.config.apiToken}` },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      await res.body?.cancel();
+      return res.status < 500;
+    } catch {
+      return false;
+    }
+  }
+
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const res = await fetch(`${this.config.baseUrl}${path}`, {
-      ...init,
-      headers: {
-        Authorization: `Token ${this.config.apiToken}`,
-        ...init.headers,
-      },
-    });
+    const res = await this.fetchPaperless(path, init);
 
     if (!res.ok) {
-      throw new Error(`Paperless-API-Fehler ${res.status} bei ${path}: ${await res.text()}`);
+      throw await this.failure(`Paperless-API-Fehler bei ${path.split("?")[0]}`, res);
     }
 
     return (await res.json()) as T;
@@ -114,14 +187,10 @@ export class PaperlessClient {
     const form = new FormData();
     form.append("document", file, fileName);
 
-    const res = await fetch(`${this.config.baseUrl}/api/documents/post_document/`, {
-      method: "POST",
-      headers: { Authorization: `Token ${this.config.apiToken}` },
-      body: form,
-    });
+    const res = await this.fetchPaperless(`/api/documents/post_document/`, { method: "POST", body: form });
 
     if (!res.ok) {
-      throw new Error(`Upload fehlgeschlagen (${res.status}): ${await res.text()}`);
+      throw await this.failure("Upload fehlgeschlagen", res);
     }
 
     // Paperless liefert die Task-UUID des Konsumier-Vorgangs zurück
@@ -129,13 +198,10 @@ export class PaperlessClient {
   }
 
   async deleteDocument(id: number): Promise<void> {
-    const res = await fetch(`${this.config.baseUrl}/api/documents/${id}/`, {
-      method: "DELETE",
-      headers: { Authorization: `Token ${this.config.apiToken}` },
-    });
+    const res = await this.fetchPaperless(`/api/documents/${id}/`, { method: "DELETE" });
 
     if (!res.ok) {
-      throw new Error(`Löschen fehlgeschlagen (${res.status}): ${await res.text()}`);
+      throw await this.failure("Löschen fehlgeschlagen", res);
     }
   }
 
@@ -160,12 +226,10 @@ export class PaperlessClient {
   }
 
   async downloadDocument(id: number): Promise<{ buffer: ArrayBuffer; contentType: string; fileName: string }> {
-    const res = await fetch(`${this.config.baseUrl}/api/documents/${id}/download/`, {
-      headers: { Authorization: `Token ${this.config.apiToken}` },
-    });
+    const res = await this.fetchPaperless(`/api/documents/${id}/download/`);
 
     if (!res.ok) {
-      throw new Error(`Download fehlgeschlagen (${res.status}): ${await res.text()}`);
+      throw await this.failure("Download fehlgeschlagen", res);
     }
 
     const contentType = res.headers.get("content-type") ?? "application/octet-stream";
