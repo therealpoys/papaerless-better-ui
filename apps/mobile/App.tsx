@@ -7,15 +7,17 @@ import { ScanScreen } from "./src/screens/ScanScreen";
 import { QueueScreen } from "./src/screens/QueueScreen";
 import { ConfirmScreen } from "./src/screens/ConfirmScreen";
 import { RemindersScreen } from "./src/screens/RemindersScreen";
+import { DocumentsScreen } from "./src/screens/DocumentsScreen";
 import { registerExpoPush } from "./src/lib/push";
 
-type Tab = "scan" | "queue" | "confirm" | "reminders";
+type Tab = "scan" | "queue" | "documents" | "confirm" | "reminders";
 
 export default function App() {
   const { t } = useTranslation();
   const TABS: { key: Tab; label: string }[] = [
     { key: "scan", label: t("app.tabs.scan") },
     { key: "queue", label: t("app.tabs.queue") },
+    { key: "documents", label: t("app.tabs.documents") },
     { key: "confirm", label: t("app.tabs.confirm") },
     { key: "reminders", label: t("app.tabs.reminders") },
   ];
@@ -32,6 +34,7 @@ export default function App() {
       <View style={styles.content}>
         {tab === "scan" && <ScanScreen onUploaded={() => setTab("queue")} />}
         {tab === "queue" && <QueueScreen />}
+        {tab === "documents" && <DocumentsScreen />}
         {tab === "confirm" && <ConfirmScreen />}
         {tab === "reminders" && <RemindersScreen />}
       </View>

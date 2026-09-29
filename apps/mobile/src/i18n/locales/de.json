@@ -4,7 +4,8 @@
       "scan": "Scannen",
       "queue": "Warteschlange",
       "confirm": "Bestätigen",
-      "reminders": "Erinnerungen"
+      "reminders": "Erinnerungen",
+      "documents": "Dokumente"
     }
   },
   "scanScreen": {
@@ -55,5 +56,34 @@
     "due": "fällig",
     "overdue": "überfällig",
     "done": "Erledigt"
+  },
+  "documentsScreen": {
+    "searchPlaceholder": "Dokumente durchsuchen…",
+    "searchAriaLabel": "Suche",
+    "loadFailed": "Dokumente konnten nicht geladen werden",
+    "retry": "Erneut versuchen",
+    "empty": "Noch keine Dokumente vorhanden.",
+    "noResults": "Keine Treffer für „{{query}}“.",
+    "untitled": "(ohne Titel)",
+    "loadingMore": "Lädt weitere…",
+    "count": "{{count}} Dokumente"
+  },
+  "documentDetailScreen": {
+    "back": "Zurück",
+    "loading": "Lädt…",
+    "loadFailed": "Dokument konnte nicht geladen werden",
+    "retry": "Erneut versuchen",
+    "titleLabel": "Titel",
+    "correspondentLabel": "Korrespondent",
+    "documentTypeLabel": "Dokumenttyp",
+    "tagsLabel": "Tags",
+    "dateLabel": "Datum",
+    "dateHint": "Das Datum ist hier nur lesbar; ändern lässt es sich in Paperless bzw. im Web.",
+    "contentLabel": "Inhalt (OCR)",
+    "noContent": "Kein erkannter Text vorhanden.",
+    "save": "Speichern",
+    "saving": "Speichert…",
+    "saved": "Gespeichert.",
+    "saveFailed": "Speichern fehlgeschlagen"
   }
 }
