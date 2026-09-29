@@ -2,16 +2,22 @@ export interface Tag {
   id: number;
   name: string;
   color?: string;
+  /** Von Paperless mitgeliefert (globale Anzahl, unabhängig von aktiven Filtern). */
+  document_count?: number;
 }
 
 export interface Correspondent {
   id: number;
   name: string;
+  /** Von Paperless mitgeliefert (globale Anzahl, unabhängig von aktiven Filtern). */
+  document_count?: number;
 }
 
 export interface DocumentType {
   id: number;
   name: string;
+  /** Von Paperless mitgeliefert (globale Anzahl, unabhängig von aktiven Filtern). */
+  document_count?: number;
 }
 
 export interface PaperlessDocument {
@@ -46,7 +52,8 @@ export interface UploadJob {
   error?: string;
 }
 
-export type DocumentSortField = "created" | "title";
+/** "score" = Relevanz (nur mit Volltextsuche sinnvoll, Paperless `ordering=score`). */
+export type DocumentSortField = "created" | "title" | "score";
 export type SortOrder = "asc" | "desc";
 
 export interface DocumentSearchParams {

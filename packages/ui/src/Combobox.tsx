@@ -1,8 +1,10 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useId, useMemo, useState, type KeyboardEvent } from "react";
 
 export interface ComboboxOption {
   id: number;
   name: string;
+  /** Optionaler Zusatz rechts in der Liste (z.B. Trefferzahl). */
+  document_count?: number;
 }
 
 interface ComboboxProps {
@@ -20,6 +22,8 @@ interface ComboboxProps {
   typeToCreateHint?: string;
   noResultsHint?: string;
   createFailedLabel?: string;
+  /** Formatiert `document_count` für die Anzeige neben der Option; ohne Angabe keine Zahl. */
+  countLabel?: (count: number) => string;
 }
 
 /** Select mit Freitext-Suche + optional "Neu anlegen", statt nur aus bestehenden Werten
@@ -40,7 +44,10 @@ export function Combobox({
   typeToCreateHint = "Tippen, um einen neuen Eintrag anzulegen",
   noResultsHint = "Keine Treffer",
   createFailedLabel = "Anlegen fehlgeschlagen",
+  countLabel,
 }: ComboboxProps) {
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const listId = useId();
   const [query, setQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -79,12 +86,21 @@ export function Combobox({
     setQuery("");
     setIsOpen(false);
     setError(null);
+    setActiveIndex(-1);
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
-      if (filtered.length === 1 && !canCreate) {
+      setIsOpen(true);
+      if (filtered.length === 0) return;
+      const delta = e.key === "ArrowDown" ? 1 : -1;
+      setActiveIndex((i) => (i + delta + filtered.length) % filtered.length);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (activeIndex >= 0 && activeIndex < filtered.length) {
+        handleSelect(filtered[activeIndex]);
+      } else if (filtered.length === 1 && !canCreate) {
         handleSelect(filtered[0]);
       } else if (canCreate) {
         handleCreate();
@@ -93,6 +109,7 @@ export function Combobox({
       setQuery("");
       setIsOpen(false);
       setError(null);
+      setActiveIndex(-1);
     }
   }
 
@@ -103,6 +120,9 @@ export function Combobox({
         type="text"
         role="combobox"
         aria-expanded={isOpen}
+        aria-controls={isOpen ? listId : undefined}
+        aria-autocomplete="list"
+        aria-activedescendant={isOpen && activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
         aria-label={ariaLabel}
         value={isOpen ? query : (selected?.name ?? "")}
         placeholder={emptyLabel}
@@ -110,7 +130,10 @@ export function Combobox({
           setIsOpen(true);
           setQuery("");
         }}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setActiveIndex(-1);
+        }}
         onKeyDown={handleKeyDown}
         onBlur={() => window.setTimeout(() => setIsOpen(false), 150)}
       />
@@ -125,16 +148,20 @@ export function Combobox({
         </button>
       )}
       {isOpen && (
-        <ul className="ui-combobox__list" role="listbox">
-          {filtered.map((option) => (
-            <li key={option.id}>
+        <ul className="ui-combobox__list" role="listbox" id={listId}>
+          {filtered.map((option, index) => (
+            <li key={option.id} role="option" id={`${listId}-${index}`} aria-selected={option.id === value}>
               <button
                 type="button"
-                className="ui-combobox__option"
+                tabIndex={-1}
+                className={`ui-combobox__option${index === activeIndex ? " ui-combobox__option--active" : ""}`}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => handleSelect(option)}
               >
-                {option.name}
+                <span>{option.name}</span>
+                {countLabel && option.document_count !== undefined && (
+                  <span className="ui-combobox__count">{countLabel(option.document_count)}</span>
+                )}
               </button>
             </li>
           ))}

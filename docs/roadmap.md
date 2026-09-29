@@ -111,30 +111,38 @@ den Alltagseinsatz blockiert.
 `<select>`), Datumsbereich und Tag-Toggle-Chips ab, aber Bedienung und Feedback sind noch
 rudimentär. Ziel: Filtern fühlt sich schnell, transparent und modern an – näher an Facetten-Suche
 als an einem HTML-Formular.
-- [ ] **Aktive Filter als Chips sichtbar machen** – aktuell nur ein einzelner "Filter
+- [x] **Aktive Filter als Chips sichtbar machen** – aktuell nur ein einzelner "Filter
       zurücksetzen"-Link (`SearchFilter.tsx`, `hasActiveFilters`); einzelne Filter (Tag,
       Korrespondent, Zeitraum, Suchbegriff) sollen als eigene, einzeln entfernbare Chips über der
       Trefferliste erscheinen.
-- [ ] **Live-Suche mit Debounce** – `value.query` triggert aktuell bei jedem Tastendruck direkt
+      **Status:** Umgesetzt: einzeln entfernbare Chips (Suche, Korrespondent, Typ, Zeitraum, Tags).
+- [x] **Live-Suche mit Debounce** – `value.query` triggert aktuell bei jedem Tastendruck direkt
       `onChange`; stattdessen serverseitige Suche erst nach kurzer Pause (z. B. 300 ms) auslösen,
       inkl. sichtbarem Lade-/Pending-Zustand während des Debounce.
-- [ ] **Kombobox statt `<select>` für Korrespondent/Dokumenttyp** – die neue
+      **Status:** Umgesetzt: 300 ms Debounce, Pending-/Lade-Hinweis (aria-live), veraltete Antworten werden verworfen.
+- [x] **Kombobox statt `<select>` für Korrespondent/Dokumenttyp** – die neue
       `packages/ui/src/Combobox.tsx` (bisher für "neu anlegen" in `DocumentDetail.tsx` genutzt) als
       Filterelement in `SearchFilter.tsx` einsetzen, inkl. Freitext-Tippen und ggf.
       Mehrfachauswahl statt der bisherigen einzelnen `<select>`-Dropdowns.
-- [ ] **Sortierung der Trefferliste** – Datum (neu/alt), Relevanz (bei Volltextsuche), Titel
+      **Status:** Umgesetzt für Korrespondent/Dokumenttyp inkl. Pfeiltasten/Enter/Esc. Mehrfachauswahl bewusst weggelassen (Paperless-Filter hier Einzelwert; Tags bleiben Mehrfach-Chips).
+- [x] **Sortierung der Trefferliste** – Datum (neu/alt), Relevanz (bei Volltextsuche), Titel
       (A–Z); Auswahl muss sich mit aktiven Filtern kombinieren lassen.
-- [ ] **Datums-Presets** – Schnellauswahl ("Letzte 7 Tage", "Letzter Monat", "Dieses Jahr") über
+      **Status:** Umgesetzt: Datum neu/alt, Titel A–Z/Z–A, Relevanz (nur bei Volltext, `ordering=-score`; nicht gegen echtes Paperless getestet).
+- [x] **Datums-Presets** – Schnellauswahl ("Letzte 7 Tage", "Letzter Monat", "Dieses Jahr") über
       den bestehenden Von/Bis-Datumsfeldern, statt jedes Mal manuell zu tippen.
-- [ ] **Trefferzahl pro Filter/Facette anzeigen** – z. B. Anzahl Dokumente je Tag/Korrespondent/
+      **Status:** Umgesetzt: Letzte 7 Tage / Letzter Monat / Dieses Jahr.
+- [~] **Trefferzahl pro Filter/Facette anzeigen** – z. B. Anzahl Dokumente je Tag/Korrespondent/
       Dokumenttyp neben der jeweiligen Option, damit erkennbar ist, ob ein Filter überhaupt etwas
       liefert, bevor man klickt.
-- [ ] **Gespeicherte/zuletzt genutzte Suchen** – häufige Filterkombinationen benennen und wieder
+      **Status:** Teilweise: nur die globale `document_count` von Paperless (Tags, Korrespondenten, Typen) ohne Zusatzrequests. Filter-abhängige Facettenzahlen weggelassen, da sie N Requests bräuchten.
+- [x] **Gespeicherte/zuletzt genutzte Suchen** – häufige Filterkombinationen benennen und wieder
       aufrufen können (lokal oder pro Nutzer im Backend), plus Kurzliste der zuletzt genutzten
       Suchen.
-- [ ] **Tastatur-Bedienbarkeit der Filterleiste** – Pfeiltasten/Tab-Reihenfolge durch Tag-Chips und
+      **Status:** Umgesetzt lokal (localStorage, pro Browser): benannte Suchen + die letzten 5; kein Backend/Nutzer-Sync.
+- [x] **Tastatur-Bedienbarkeit der Filterleiste** – Pfeiltasten/Tab-Reihenfolge durch Tag-Chips und
       neue Kombobox-Vorschläge, sichtbarer Fokus (siehe bereits vorhandene `:focus-visible`-Regeln
       aus Phase 5) auch für neu hinzukommende Filter-Chips und Presets.
+      **Status:** Umgesetzt: Combobox mit Pfeiltasten/Enter/Esc und `aria-activedescendant`; Chips, Presets und gespeicherte Suchen sind native Buttons mit `:focus-visible`. Nur per Playwright-Smoke-Test geprüft, kein Screenreader-Test.
 
 ## Phase 8 – Skalierung & Komfort im Alltag
 Weitere Ziele über die Suche hinaus, die für produktive Nutzung mit wachsender Dokumentmenge

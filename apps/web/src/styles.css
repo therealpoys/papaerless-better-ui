@@ -509,3 +509,113 @@ body {
   font-size: var(--font-size-xs);
   color: var(--color-text-muted);
 }
+
+/* Phase 7: Suche & Discovery */
+.search-filter__status {
+  min-height: 1.1rem;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.search-filter__pending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.search-filter__spinner {
+  width: 0.7rem;
+  height: 0.7rem;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: search-filter-spin 0.7s linear infinite;
+}
+
+@keyframes search-filter-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-filter__spinner {
+    animation: none;
+  }
+}
+
+.search-filter__presets,
+.search-filter__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.search-filter__tag-count {
+  opacity: 0.7;
+}
+
+.search-filter__saved {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.search-filter__saved li {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.search-filter__saved-apply {
+  flex: 1;
+  text-align: left;
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-size: var(--font-size-sm);
+  padding: 0.25rem 0.3rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-filter__saved-apply:hover {
+  background: var(--color-bg-muted);
+}
+
+.search-filter__saved-delete {
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+}
+
+.search-filter__recent-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.search-filter__empty-hint {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.search-filter__badge:focus-visible,
+.search-filter__saved-apply:focus-visible,
+.search-filter__saved-delete:focus-visible,
+.search-filter__advanced summary:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}

@@ -161,7 +161,9 @@
 }
 
 .ui-combobox__option {
-  display: block;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
   width: 100%;
   text-align: left;
   padding: 0.4rem 0.5rem;
@@ -173,7 +175,8 @@
   cursor: pointer;
 }
 
-.ui-combobox__option:hover {
+.ui-combobox__option:hover,
+.ui-combobox__option--active {
   background: var(--color-bg-muted);
 }
 
@@ -255,4 +258,10 @@
 
 .ui-progress__dot--done {
   background: var(--color-success);
+}
+
+.ui-combobox__count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
 }

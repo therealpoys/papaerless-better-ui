@@ -113,7 +113,31 @@
       "createdDesc": "Datum: neueste zuerst",
       "createdAsc": "Datum: älteste zuerst",
       "titleAsc": "Titel: A–Z",
-      "titleDesc": "Titel: Z–A"
+      "titleDesc": "Titel: Z–A",
+      "relevance": "Relevanz (Volltext)"
+    },
+    "pending": "Suche wird gleich ausgeführt…",
+    "loading": "Suche läuft…",
+    "count": "{{count}} Dok.",
+    "presets": {
+      "ariaLabel": "Zeitraum-Schnellauswahl",
+      "last7": "Letzte 7 Tage",
+      "lastMonth": "Letzter Monat",
+      "thisYear": "Dieses Jahr"
+    },
+    "saved": {
+      "summary": "Gespeicherte & zuletzt genutzte Suchen",
+      "namePlaceholder": "Name für diese Suche (optional)",
+      "nameAriaLabel": "Name der Suche",
+      "save": "Speichern",
+      "listAriaLabel": "Gespeicherte Suchen",
+      "delete": "Gespeicherte Suche „{{name}}“ löschen",
+      "unnamed": "Suche",
+      "empty": "Noch keine Suchen gespeichert. Sie werden nur in diesem Browser abgelegt."
+    },
+    "recent": {
+      "heading": "Zuletzt genutzt",
+      "clear": "Leeren"
     },
     "queryPlaceholder": "Suche im Volltext…",
     "queryAriaLabel": "Suche im Volltext",
