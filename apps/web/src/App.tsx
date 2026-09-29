@@ -16,7 +16,6 @@ import { UploadZone } from "./components/UploadZone";
 import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
-import { FontSizeSwitch } from "./components/FontSizeSwitch";
 import { HelpPanel } from "./components/HelpPanel";
 
 type Tab = "documents" | "inbox" | "reminders" | "help";
@@ -113,7 +112,6 @@ export default function App() {
             {t("app.tabs.help")}
           </button>
         </nav>
-        <FontSizeSwitch />
       </header>
 
       {error && <ErrorState message={error} onRetry={reloadDocuments} retryLabel={t("common.retry")} />}

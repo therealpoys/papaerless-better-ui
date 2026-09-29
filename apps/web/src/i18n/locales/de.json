@@ -12,16 +12,6 @@
   },
   "app": {
     "regionsAriaLabel": "Bereiche",
-    "fontSize": {
-      "label": "Schrift:",
-      "groupAriaLabel": "Schriftgröße",
-      "normal": "A",
-      "large": "A+",
-      "xlarge": "A++",
-      "normalTitle": "Normale Schrift",
-      "largeTitle": "Große Schrift",
-      "xlargeTitle": "Sehr große Schrift"
-    },
     "tabs": {
       "documents": "Dokumente",
       "inbox": "Neu zu prüfen",
