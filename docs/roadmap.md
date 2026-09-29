@@ -93,6 +93,13 @@ den Alltagseinsatz blockiert.
 - [x] **Mobile: Erinnerungen sichtbar** – `apps/mobile` hatte keinen Reminders-Screen, obwohl das
       Backend das längst kann. Neuer Tab „Erinnerungen" (`RemindersScreen.tsx`) zum Ansehen/
       Erledigt-Markieren. Anlegen bleibt web-only, da Mobile keine Dokumentliste/-detail hat.
+- [x] **Backend-Härtung** – `services/api`: zeitkonstanter Token-Vergleich (`timingSafeEqual`,
+      401 ohne Details), Rate-Limit (`@fastify/rate-limit`) und Security-Header (`@fastify/helmet`),
+      `CORS_ORIGIN` konfigurierbar, zentraler Error-Handler (Paperless-Fehler → 502, keine
+      Stacktraces/Tokens im Response), `paperless-client` mit Timeout + Retries/Backoff für GETs,
+      `/health` prüft Paperless (`paperless: ok|unreachable`, 503 wenn nicht erreichbar), gesammelte
+      Env-Validierung, `API_HOST`, Warnung bei offener API auf nicht-lokalem Host, Graceful Shutdown
+      (SIGTERM/SIGINT), `MAX_UPLOAD_MB` (Default 50).
 - [ ] **Mobile: Dokumente durchsuchen/bearbeiten** – die App kann bisher nur scannen → hochladen →
       bestätigen, aber keine bestehenden Dokumente durchsuchen oder öffnen. Größeres Stück Arbeit
       (eigene Liste/Detail-Screens analog zu `apps/web`), bewusst nicht nebenbei mit umgesetzt.

@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@fastify/cors": "^10.0.0",
+    "@fastify/helmet": "^13.1.1",
     "@fastify/multipart": "^9.0.0",
+    "@fastify/rate-limit": "^11.2.0",
     "@papaerless/ai-classifier": "workspace:*",
     "@papaerless/paperless-client": "workspace:*",
     "@papaerless/shared-types": "workspace:*",

@@ -1,3 +1,4 @@
+import { timingSafeEqual, createHash } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { env } from "./env.js";
 
@@ -7,6 +8,14 @@ import { env } from "./env.js";
  * "Authorization: Bearer <token>" – sonst 401. /health bleibt immer offen
  * (z.B. für Healthchecks eines Reverse Proxys).
  */
+// Hash beider Seiten -> gleiche Länge, timingSafeEqual leakt weder Inhalt noch Länge des Tokens.
+function tokenMatches(given: string | undefined, expected: string): boolean {
+  if (given === undefined) return false;
+  const a = createHash("sha256").update(given).digest();
+  const b = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(a, b);
+}
+
 export async function registerAuth(app: FastifyInstance) {
   if (!env.apiAuthToken) {
     app.log.warn(
@@ -22,8 +31,8 @@ export async function registerAuth(app: FastifyInstance) {
     const header = request.headers.authorization;
     const token = header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : undefined;
 
-    if (token !== env.apiAuthToken) {
-      return reply.code(401).send({ error: "Nicht autorisiert" });
+    if (!tokenMatches(token, env.apiAuthToken!)) {
+      return reply.code(401).send({ error: "Unauthorized" });
     }
   });
 }
