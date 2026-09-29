@@ -869,3 +869,4 @@ body {
 .review-dialog__more, .review-dialog__later { align-self: flex-start; border: none; background: none; color: var(--color-accent); cursor: pointer; text-decoration: underline; padding: 0.3rem 0; }
 .review-dialog__error { color: var(--color-danger, #b00020); }
 .review-dialog__actions { display: flex; gap: var(--space-md); align-items: center; justify-content: flex-end; }
+.review-dialog .ui-combobox__list { max-height: 12rem; overflow-y: auto; }

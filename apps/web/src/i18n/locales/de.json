@@ -315,7 +315,6 @@
     "documentType": "Was ist das? (z. B. Rechnung)",
     "tags": "Schlagwörter",
     "noTags": "Es gibt noch keine Schlagwörter.",
-    "none": "– keine Angabe –",
     "newEntry": "{{name}} (neu anlegen)",
     "save": "Speichern",
     "later": "Später",
@@ -324,6 +323,8 @@
     "noteAuto": "Ich habe das anhand des erkannten Textes ausgewählt. Bitte kurz prüfen.",
     "noteNothing": "Ich konnte nichts Passendes erkennen. Wählen Sie bei Bedarf selbst aus oder klicken Sie auf „Später“.",
     "moreTags": "{{count}} weitere anzeigen",
-    "saving": "Wird gespeichert …"
+    "saving": "Wird gespeichert …",
+    "pickOrType": "Auswählen oder tippen zum Suchen …",
+    "createOption": "„{{name}}“ verwenden (wird neu angelegt)"
   }
 }

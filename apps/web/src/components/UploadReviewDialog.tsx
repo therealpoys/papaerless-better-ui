@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
-import { Button } from "@papaerless/ui";
+import { Button, Combobox } from "@papaerless/ui";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
-import { formFromSuggestion, saveReview, type Choice, type ReviewForm } from "../lib/uploadReview";
+import { choiceFromComboId, comboIdFromChoice, formFromSuggestion, saveReview, type Choice, type ReviewForm } from "../lib/uploadReview";
 
 interface Props {
   documentId: number;
@@ -22,6 +22,7 @@ const NEW_PREFIX = "new:";
 const toValue = (c: Choice) => (c === null ? "" : typeof c === "string" ? NEW_PREFIX + c : String(c));
 const fromValue = (v: string): Choice => (v === "" ? null : v.startsWith(NEW_PREFIX) ? v.slice(NEW_PREFIX.length) : Number(v));
 
+/** Durchsuchbare Auswahl. Neue Namen bekommen intern negative IDs und werden erst beim Speichern angelegt. */
 function ChoiceSelect({
   label,
   value,
@@ -34,21 +35,36 @@ function ChoiceSelect({
   onChange: (c: Choice) => void;
 }) {
   const { t } = useTranslation();
-  const id = useId();
+  const extrasRef = useRef<string[]>(typeof value === "string" ? [value] : []);
+  const [, rerender] = useState(0);
+
+  const options = [...items, ...extrasRef.current.map((name, i) => ({ id: -(i + 1), name }))];
+  const comboValue = comboIdFromChoice(value, extrasRef.current);
+
   return (
     <div className="review-dialog__field">
-      <label htmlFor={id}>{label}</label>
-      <select id={id} value={toValue(value)} onChange={(e) => onChange(fromValue(e.target.value))}>
-        <option value="">{t("uploadReview.none")}</option>
-        {typeof value === "string" && (
-          <option value={toValue(value)}>{t("uploadReview.newEntry", { name: value })}</option>
-        )}
-        {items.map((item) => (
-          <option key={item.id} value={item.id}>
-            {item.name}
-          </option>
-        ))}
-      </select>
+      <span>{label}</span>
+      <Combobox
+        aria-label={label}
+        options={options}
+        value={comboValue}
+        emptyLabel={t("uploadReview.pickOrType")}
+        removeSelectionLabel={t("common.combobox.removeSelection")}
+        noResultsHint={t("common.combobox.noResults")}
+        createOptionLabel={(name) => t("uploadReview.createOption", { name })}
+        onCreate={async (name) => {
+          const known = items.find((i) => i.name.toLowerCase() === name.toLowerCase());
+          if (known) return known;
+          let index = extrasRef.current.findIndex((e) => e.toLowerCase() === name.toLowerCase());
+          if (index < 0) {
+            extrasRef.current = [...extrasRef.current, name];
+            index = extrasRef.current.length - 1;
+            rerender((n) => n + 1);
+          }
+          return { id: -(index + 1), name: extrasRef.current[index] };
+        }}
+        onChange={(id) => onChange(choiceFromComboId(id, extrasRef.current))}
+      />
     </div>
   );
 }

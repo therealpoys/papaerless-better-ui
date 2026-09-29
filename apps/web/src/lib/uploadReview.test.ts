@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
-import { cleanTitle, formFromSuggestion, heuristicSuggestion, saveReview } from "./uploadReview";
+import { choiceFromComboId, cleanTitle, comboIdFromChoice, formFromSuggestion, heuristicSuggestion, saveReview } from "./uploadReview";
 
 const known = {
   tags: [{ id: 1, name: "Rechnung" }, { id: 2, name: "Steuer" }],
@@ -104,5 +104,23 @@ describe("heuristicSuggestion", () => {
     expect(s.correspondent).toBeUndefined();
     expect(s.documentType).toBeUndefined();
     expect(s.tags).toEqual([]);
+  });
+});
+
+describe("Auswahl mit neuen Namen", () => {
+  const extras = ["EnBW", "Stadtwerke"];
+
+  it("übersetzt Auswahl und Listen-ID in beide Richtungen", () => {
+    expect(comboIdFromChoice(10, extras)).toBe(10);
+    expect(comboIdFromChoice(null, extras)).toBeNull();
+    expect(comboIdFromChoice("Stadtwerke", extras)).toBe(-2);
+    expect(choiceFromComboId(-1, extras)).toBe("EnBW");
+    expect(choiceFromComboId(10, extras)).toBe(10);
+    expect(choiceFromComboId(null, extras)).toBeNull();
+  });
+
+  it("behandelt unbekannte Namen bzw. IDs sicher", () => {
+    expect(comboIdFromChoice("Unbekannt", extras)).toBeNull();
+    expect(choiceFromComboId(-9, extras)).toBeNull();
   });
 });

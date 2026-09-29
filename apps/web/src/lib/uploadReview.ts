@@ -118,3 +118,18 @@ export function heuristicSuggestion(
     confidence: 0.5,
   };
 }
+
+/**
+ * Die Auswahlliste kennt nur Zahlen. Neue (noch nicht angelegte) Namen bekommen deshalb negative
+ * IDs: -1 für den ersten Namen in `extras`, -2 für den zweiten usw.
+ */
+export function comboIdFromChoice(choice: Choice, extras: string[]): number | null {
+  if (typeof choice !== "string") return choice;
+  const index = extras.indexOf(choice);
+  return index < 0 ? null : -(index + 1);
+}
+
+export function choiceFromComboId(id: number | null, extras: string[]): Choice {
+  if (id === null) return null;
+  return id < 0 ? (extras[-id - 1] ?? null) : id;
+}
