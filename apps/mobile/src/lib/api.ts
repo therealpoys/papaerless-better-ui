@@ -1,4 +1,13 @@
-import type { MetadataSuggestion, PaperlessDocument, Reminder } from "@papaerless/shared-types";
+import type {
+  Correspondent,
+  DocumentSearchParams,
+  DocumentType,
+  MetadataSuggestion,
+  PaginatedDocuments,
+  PaperlessDocument,
+  Reminder,
+  Tag,
+} from "@papaerless/shared-types";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001";
 const API_TOKEN = process.env.EXPO_PUBLIC_API_TOKEN;
@@ -39,7 +48,28 @@ export const api = {
     return (await res.json()) as { taskId: string };
   },
 
-  listDocuments: () => request<PaperlessDocument[]>("/api/documents?pageSize=10"),
+  listDocuments: (params: DocumentSearchParams = {}) => {
+    const search = new URLSearchParams();
+    if (params.query) search.set("query", params.query);
+    if (params.page) search.set("page", String(params.page));
+    search.set("pageSize", String(params.pageSize ?? 20));
+    if (params.sort) search.set("sort", params.sort);
+    if (params.sortOrder) search.set("sortOrder", params.sortOrder);
+    return request<PaginatedDocuments>(`/api/documents?${search.toString()}`);
+  },
+  getDocument: (id: number) => request<PaperlessDocument>(`/api/documents/${id}`),
+  updateDocument: (
+    id: number,
+    patch: Partial<Pick<PaperlessDocument, "title" | "correspondent" | "documentType" | "tags">>,
+  ) =>
+    request<PaperlessDocument>(`/api/documents/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }),
+  listTags: () => request<Tag[]>("/api/tags"),
+  listCorrespondents: () => request<Correspondent[]>("/api/correspondents"),
+  listDocumentTypes: () => request<DocumentType[]>("/api/document-types"),
 
   aiStatus: () => request<{ enabled: boolean }>("/api/ai/status"),
   listSuggestions: () => request<MetadataSuggestion[]>("/api/ai/inbox"),

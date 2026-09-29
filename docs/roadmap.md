@@ -93,9 +93,16 @@ den Alltagseinsatz blockiert.
 - [x] **Mobile: Erinnerungen sichtbar** – `apps/mobile` hatte keinen Reminders-Screen, obwohl das
       Backend das längst kann. Neuer Tab „Erinnerungen" (`RemindersScreen.tsx`) zum Ansehen/
       Erledigt-Markieren. Anlegen bleibt web-only, da Mobile keine Dokumentliste/-detail hat.
-- [ ] **Mobile: Dokumente durchsuchen/bearbeiten** – die App kann bisher nur scannen → hochladen →
-      bestätigen, aber keine bestehenden Dokumente durchsuchen oder öffnen. Größeres Stück Arbeit
-      (eigene Liste/Detail-Screens analog zu `apps/web`), bewusst nicht nebenbei mit umgesetzt.
+- [x] **Mobile: Dokumente durchsuchen/bearbeiten** – neuer Tab „Dokumente" mit
+      `DocumentsScreen.tsx` (paginierte Liste mit Nachladen beim Scrollen, Suchfeld mit 400-ms-
+      Debounce, Pull-to-Refresh, Lade-/Leer-/Fehlerzustand mit Retry, Tag- und Korrespondent-
+      Anzeige) und `DocumentDetailScreen.tsx` (Titel, Korrespondent, Dokumenttyp und Tags
+      ansehen/ändern und speichern, OCR-Text anzeigen). Neue Funktionen in `src/lib/api.ts`,
+      alle Texte in `de.json`. Bewusst nicht enthalten: Datum ändern (das Gateway-`PATCH` kennt
+      kein `created`, Datum ist nur lesbar), neue Tags/Korrespondenten anlegen, Löschen,
+      Erinnerung anlegen, Original teilen/öffnen (bräuchte `expo-sharing` als neue Dependency
+      plus Datei-Download mit Token). Nur per Typecheck geprüft, nicht auf einem Gerät/Emulator
+      getestet.
 - [ ] **Deployment-Pfad für die eigenen Services** – kein Dockerfile für `api`/`mail-ingest`/
       `ai-classifier`, keine CI (`.github/workflows` existiert nicht). Hängt an der in
       `docs/architecture.md` offenen Hosting-Frage (gleicher Server wie Paperless? Reverse
