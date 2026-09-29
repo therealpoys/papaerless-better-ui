@@ -3,11 +3,13 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const filePath = path.resolve(here, "../data/processed.json");
+// MAIL_DATA_DIR überschreibt das Standardverzeichnis (v.a. für Tests).
+const getFilePath = () =>
+  path.join(process.env.MAIL_DATA_DIR ?? path.resolve(here, "../data"), "processed.json");
 
 async function load(): Promise<string[]> {
   try {
-    const raw = await fs.readFile(filePath, "utf-8");
+    const raw = await fs.readFile(getFilePath(), "utf-8");
     return JSON.parse(raw) as string[];
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
@@ -29,7 +31,7 @@ export const processedStore = {
     const ids = await load();
     if (ids.includes(messageId)) return;
     ids.push(messageId);
-    await fs.mkdir(path.dirname(filePath), { recursive: true });
-    await fs.writeFile(filePath, JSON.stringify(ids, null, 2), "utf-8");
+    await fs.mkdir(path.dirname(getFilePath()), { recursive: true });
+    await fs.writeFile(getFilePath(), JSON.stringify(ids, null, 2), "utf-8");
   },
 };
