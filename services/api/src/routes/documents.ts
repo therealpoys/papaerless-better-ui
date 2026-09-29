@@ -46,6 +46,11 @@ export async function documentRoutes(app: FastifyInstance) {
     return reply.code(204).send();
   });
 
+  app.get("/documents/tasks/:taskId", async (request) => {
+    const { taskId } = request.params as { taskId: string };
+    return paperless.getTask(taskId);
+  });
+
   app.get("/documents/:id", async (request) => {
     const { id } = request.params as { id: string };
     return paperless.getDocument(Number(id));

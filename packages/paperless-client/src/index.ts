@@ -197,6 +197,23 @@ export class PaperlessClient {
     return (await res.json()) as string;
   }
 
+  /** Status eines Konsumier-Vorgangs; `documentId` ist erst bei SUCCESS gesetzt. */
+  async getTask(taskId: string): Promise<{
+    status: "PENDING" | "STARTED" | "SUCCESS" | "FAILURE" | "UNKNOWN";
+    documentId?: number;
+  }> {
+    const raw = await this.request<{ status: string; related_document: string | number | null }[]>(
+      `/api/tasks/?task_id=${encodeURIComponent(taskId)}`,
+    );
+    const task = raw[0];
+    if (!task) return { status: "UNKNOWN" };
+    const status = ["PENDING", "STARTED", "SUCCESS", "FAILURE"].includes(task.status)
+      ? (task.status as "PENDING" | "STARTED" | "SUCCESS" | "FAILURE")
+      : "UNKNOWN";
+    const documentId = task.related_document ? Number(task.related_document) : undefined;
+    return { status, documentId: Number.isFinite(documentId) ? documentId : undefined };
+  }
+
   async deleteDocument(id: number): Promise<void> {
     const res = await this.fetchPaperless(`/api/documents/${id}/`, { method: "DELETE" });
 

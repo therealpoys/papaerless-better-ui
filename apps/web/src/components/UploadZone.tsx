@@ -1,25 +1,42 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { api } from "../lib/api";
+import { SuggestionCard } from "./ReviewInbox";
 import { classifyUploadError, validateFile, type UploadErrorKey } from "../lib/upload";
 
 interface UploadZoneProps {
   onUploaded: () => void;
+  aiEnabled?: boolean;
 }
 
-type ItemStatus = "waiting" | "uploading" | "done" | "error";
+type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error";
 
 interface UploadItem {
   id: number;
   file: File;
   status: ItemStatus;
   error?: UploadErrorKey;
+  suggestion?: MetadataSuggestion;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Paperless liest das Dokument asynchron ein; erst danach gibt es Text für Vorschläge.
+async function waitForDocumentId(taskId: string): Promise<number | null> {
+  for (let i = 0; i < 40; i++) {
+    const task = await api.getUploadTask(taskId);
+    if (task.status === "SUCCESS" && task.documentId) return task.documentId;
+    if (task.status === "FAILURE") return null;
+    await sleep(1500);
+  }
+  return null;
 }
 
 const ACCEPT = "application/pdf,image/*,.eml";
 let nextId = 1;
 
-export function UploadZone({ onUploaded }: UploadZoneProps) {
+export function UploadZone({ onUploaded, aiEnabled = false }: UploadZoneProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const [items, setItems] = useState<UploadItem[]>([]);
@@ -42,9 +59,21 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
       }
       patch(item.id, { status: "uploading", error: undefined });
       try {
-        await api.uploadDocument(item.file);
-        patch(item.id, { status: "done" });
+        const { taskId } = await api.uploadDocument(item.file);
         anyDone = true;
+        if (!aiEnabled) {
+          patch(item.id, { status: "done" });
+          continue;
+        }
+        // Vorschläge sind Zugabe: schlägt das fehl, ist der Upload trotzdem erfolgreich.
+        patch(item.id, { status: "reading" });
+        try {
+          const documentId = await waitForDocumentId(taskId);
+          const suggestion = documentId ? await api.suggestMetadata(documentId) : undefined;
+          patch(item.id, { status: "done", suggestion });
+        } catch {
+          patch(item.id, { status: "done" });
+        }
       } catch (err) {
         patch(item.id, { status: "error", error: classifyUploadError(err) });
       }
@@ -75,7 +104,8 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
   }
 
   const hasError = items.some((item) => item.status === "error");
-  const allDone = items.length > 0 && !busy && items.every((item) => item.status === "done");
+  const allDone =
+    items.length > 0 && !busy && items.every((item) => item.status === "done" && !item.suggestion);
 
   return (
     <section
@@ -141,6 +171,16 @@ export function UploadZone({ onUploaded }: UploadZoneProps) {
                   ? t(`uploadZone.errors.${item.error}`)
                   : t(`uploadZone.status.${item.status}`)}
               </span>
+              {item.suggestion && (
+                <SuggestionCard
+                  suggestion={item.suggestion}
+                  heading={t("uploadZone.suggestionHeading", { name: item.file.name })}
+                  onDone={() => {
+                    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, suggestion: undefined } : i)));
+                    onUploaded();
+                  }}
+                />
+              )}
             </li>
           ))}
         </ul>

@@ -4,11 +4,13 @@ import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { Button, Card, ConfidenceBadge, EmptyState, ErrorState, Field } from "@papaerless/ui";
 import { api } from "../lib/api";
 
-function SuggestionCard({
+export function SuggestionCard({
   suggestion,
+  heading,
   onDone,
 }: {
   suggestion: MetadataSuggestion;
+  heading?: string;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -55,7 +57,7 @@ function SuggestionCard({
   return (
     <Card className="suggestion-card">
       <div className="suggestion-card__header">
-        <span>{t("reviewInbox.documentHeading", { id: suggestion.documentId })}</span>
+        <span>{heading ?? t("reviewInbox.documentHeading", { id: suggestion.documentId })}</span>
         <ConfidenceBadge
           confidence={suggestion.confidence}
           levelLabels={{

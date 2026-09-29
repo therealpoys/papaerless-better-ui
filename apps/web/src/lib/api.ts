@@ -79,6 +79,11 @@ export const api = {
     });
   },
 
+  getUploadTask: (taskId: string) =>
+    request<{ status: "PENDING" | "STARTED" | "SUCCESS" | "FAILURE" | "UNKNOWN"; documentId?: number }>(
+      `/api/documents/tasks/${encodeURIComponent(taskId)}`,
+    ),
+
   deleteDocument: (id: number) => request<void>(`/api/documents/${id}`, { method: "DELETE" }),
 
   downloadDocument: async (id: number): Promise<{ blob: Blob; fileName: string }> => {

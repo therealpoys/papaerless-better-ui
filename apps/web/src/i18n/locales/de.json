@@ -232,7 +232,8 @@
       "waiting": "Wartet …",
       "uploading": "Wird hochgeladen …",
       "done": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
-      "error": "Das hat leider nicht geklappt."
+      "error": "Das hat leider nicht geklappt.",
+      "reading": "Wird gelesen – gleich kommen Vorschläge …"
     },
     "allDone_one": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
     "allDone_other": "Fertig – Ihre {{count}} Dokumente sind angekommen und werden jetzt gelesen.",
@@ -242,7 +243,8 @@
       "network": "Die Verbindung hat nicht geklappt. Bitte prüfen Sie Ihr Internet und versuchen Sie es erneut.",
       "server": "Das Dokument konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
     },
-    "retry": "Bitte erneut versuchen"
+    "retry": "Bitte erneut versuchen",
+    "suggestionHeading": "Vorschlag für „{{name}}“ – bitte prüfen"
   },
   "help": {
     "title": "Hilfe",
