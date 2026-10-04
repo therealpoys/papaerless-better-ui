@@ -1,4 +1,5 @@
 import { AnthropicClassifier } from "./anthropic-provider.js";
+import { OllamaClassifier } from "./ollama-provider.js";
 import type { Classifier } from "./types.js";
 
 export type { ClassifyInput, Classifier } from "./types.js";
@@ -7,6 +8,8 @@ export interface AiClassifierConfig {
   provider?: string;
   apiKey?: string;
   model?: string;
+  /** Nur für ollama: Basis-URL des Servers (Default http://localhost:11434). */
+  baseUrl?: string;
 }
 
 /**
@@ -23,9 +26,15 @@ export function createClassifier(config: AiClassifierConfig): Classifier | null 
       }
       return new AnthropicClassifier(config.apiKey, config.model ?? "claude-sonnet-5-5");
     }
+    case "ollama": {
+      if (!config.model) {
+        throw new Error("AI_PROVIDER=ollama erfordert AI_MODEL (z. B. qwen3:4b-instruct-2507-q4_K_M)");
+      }
+      return new OllamaClassifier(config.baseUrl ?? "http://localhost:11434", config.model);
+    }
     default:
       throw new Error(
-        `Unbekannter AI_PROVIDER "${config.provider}". Unterstützt: anthropic (openai/ollama folgen ggf. später).`,
+        `Unbekannter AI_PROVIDER "${config.provider}". Unterstützt: anthropic, ollama.`,
       );
   }
 }

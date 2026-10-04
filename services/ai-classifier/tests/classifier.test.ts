@@ -107,3 +107,33 @@ describe("Standard-Modell", () => {
     expect(create.mock.calls[0][0].model).toBe("claude-haiku-4-5-20251001");
   });
 });
+
+describe("ollama-Provider", () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
+  });
+
+  it("verlangt AI_MODEL", () => {
+    expect(() => createClassifier({ provider: "ollama" })).toThrow(/AI_MODEL/);
+  });
+
+  it("ruft /api/chat mit JSON-Format auf und parst die Antwort", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ message: { content: '{"title":"Rechnung","confidence":0.8}' } })),
+    );
+    const c = createClassifier({ provider: "ollama", model: "m", baseUrl: "http://o:11434/" })!;
+    const s = await c.classify(input);
+    expect(s).toMatchObject({ documentId: 42, title: "Rechnung", confidence: 0.8 });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("http://o:11434/api/chat");
+    expect(JSON.parse(init.body)).toMatchObject({ model: "m", stream: false, format: "json" });
+  });
+
+  it("wirft bei HTTP-Fehler", async () => {
+    fetchMock.mockResolvedValue(new Response("model not found", { status: 404 }));
+    const c = createClassifier({ provider: "ollama", model: "m" })!;
+    await expect(c.classify(input)).rejects.toThrow(/Ollama-Fehler 404/);
+  });
+});

@@ -5,6 +5,7 @@ export const classifier = createClassifier({
   provider: env.aiProvider,
   apiKey: env.aiApiKey,
   model: env.aiModel,
+  baseUrl: env.aiBaseUrl,
 });
 
 export const aiEnabled = classifier !== null;

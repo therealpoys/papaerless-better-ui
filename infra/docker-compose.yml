@@ -78,6 +78,7 @@ services:
       AI_PROVIDER: ${AI_PROVIDER:-}
       AI_API_KEY: ${AI_API_KEY:-}
       AI_MODEL: ${AI_MODEL:-}
+      AI_BASE_URL: ${AI_BASE_URL:-}
       WEB_PUSH_PUBLIC_KEY: ${WEB_PUSH_PUBLIC_KEY:-}
       WEB_PUSH_PRIVATE_KEY: ${WEB_PUSH_PRIVATE_KEY:-}
       WEB_PUSH_CONTACT_EMAIL: ${WEB_PUSH_CONTACT_EMAIL:-mailto:admin@example.com}

@@ -28,7 +28,7 @@ export async function aiRoutes(app: FastifyInstance) {
   app.get("/ai/documents/:id/suggestion", async (request, reply) => {
     if (!classifier) {
       return reply.code(409).send({
-        error: "KI-Erkennung ist deaktiviert. AI_PROVIDER/AI_API_KEY in .env setzen.",
+        error: "KI-Erkennung ist deaktiviert. AI_PROVIDER (und AI_API_KEY bzw. AI_MODEL) in .env setzen.",
       });
     }
 

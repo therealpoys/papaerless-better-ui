@@ -65,6 +65,7 @@ export const env = {
   aiProvider: process.env.AI_PROVIDER || undefined,
   aiApiKey: process.env.AI_API_KEY || undefined,
   aiModel: process.env.AI_MODEL || undefined,
+  aiBaseUrl: process.env.AI_BASE_URL || undefined,
 
   // Optional – Web Push für Erinnerungen; ohne Keys bleibt Push deaktiviert
   webPushPublicKey: process.env.WEB_PUSH_PUBLIC_KEY || undefined,
