@@ -3,6 +3,8 @@ import type {
   Correspondent,
   DocumentSearchParams,
   DocumentType,
+  Folder,
+  FolderCriterion,
   MetadataSuggestion,
   PaginatedDocuments,
   PaperlessDocument,
@@ -94,6 +96,28 @@ export const api = {
     const disposition = res.headers.get("content-disposition") ?? "";
     const match = /filename="?([^";]+)"?/i.exec(disposition);
     return { blob: await res.blob(), fileName: match ? match[1] : `dokument-${id}` };
+  },
+
+  listFolders: () => request<Folder[]>("/api/folders"),
+  createFolder: (input: { name: string; criterion: FolderCriterion }) =>
+    request<Folder>("/api/folders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    }),
+  updateFolder: (id: string, patch: { name?: string; criterion?: FolderCriterion }) =>
+    request<Folder>(`/api/folders/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }),
+  deleteFolder: (id: string) => request<void>(`/api/folders/${encodeURIComponent(id)}`, { method: "DELETE" }),
+
+  /** Vorschaubild per Auth-Fetch (ein <img src> kann keinen Bearer-Token senden). */
+  fetchThumbnail: async (id: number, signal?: AbortSignal): Promise<Blob> => {
+    const res = await fetch(`${API_URL}/api/documents/${id}/thumbnail`, withAuth({ signal }));
+    if (!res.ok) throw new Error(`API-Fehler ${res.status} bei /api/documents/${id}/thumbnail`);
+    return res.blob();
   },
 
   listTags: () => request<Tag[]>("/api/tags"),

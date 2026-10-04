@@ -16,9 +16,10 @@ import { UploadZone } from "./components/UploadZone";
 import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
+import { FoldersPanel } from "./components/FoldersPanel";
 import { HelpPanel } from "./components/HelpPanel";
 
-type Tab = "documents" | "inbox" | "reminders" | "help";
+type Tab = "documents" | "folders" | "inbox" | "reminders" | "help";
 
 export default function App() {
   const { t } = useTranslation();
@@ -86,6 +87,14 @@ export default function App() {
             onClick={() => setTab("documents")}
           >
             {t("app.tabs.documents")}
+          </button>
+          <button
+            type="button"
+            className={tab === "folders" ? "app__tab--active" : ""}
+            aria-current={tab === "folders" ? "page" : undefined}
+            onClick={() => setTab("folders")}
+          >
+            {t("app.tabs.folders")}
           </button>
           <button
             type="button"
@@ -178,6 +187,18 @@ export default function App() {
             )}
           </main>
         </div>
+      )}
+
+      {tab === "folders" && (
+        <main className="app__main app__main--full">
+          <FoldersPanel
+            tags={tags}
+            correspondents={correspondents}
+            documentTypes={documentTypes}
+            aiEnabled={aiEnabled}
+            onMetadataChanged={reloadMetadata}
+          />
+        </main>
       )}
 
       {tab === "inbox" && (

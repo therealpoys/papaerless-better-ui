@@ -88,6 +88,19 @@ export type BulkEditAction =
   | { method: "set_document_type"; documentType: number | null }
   | { method: "delete" };
 
+/** Ordner = gespeicherte Ansicht: zeigt alle Dokumente mit diesem Schlagwort / Absender / dieser Art.
+ *  Es werden nur Definitionen gespeichert, nie Dokumente (Paperless bleibt Source of Truth). */
+export type FolderCriterion =
+  | { kind: "tag"; id: number }
+  | { kind: "correspondent"; id: number }
+  | { kind: "documentType"; id: number };
+
+export interface Folder {
+  id: string;
+  name: string;
+  criterion: FolderCriterion;
+}
+
 export type ReminderKind = "due_date" | "cancellation_deadline";
 
 export interface Reminder {

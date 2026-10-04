@@ -11,6 +11,7 @@ import { paperless } from "./paperless.js";
 import { startRemindersNotifier } from "./reminders-notifier.js";
 import { aiRoutes } from "./routes/ai.js";
 import { backupRoutes } from "./routes/backup.js";
+import { folderRoutes } from "./routes/folders.js";
 import { documentRoutes } from "./routes/documents.js";
 import { metadataRoutes } from "./routes/metadata.js";
 import { pushRoutes } from "./routes/push.js";
@@ -65,6 +66,7 @@ app.get("/health", async (_request, reply) => {
 });
 
 await app.register(documentRoutes, { prefix: "/api" });
+await app.register(folderRoutes, { prefix: "/api" });
 await app.register(metadataRoutes, { prefix: "/api" });
 await app.register(aiRoutes, { prefix: "/api" });
 await app.register(reminderRoutes, { prefix: "/api" });

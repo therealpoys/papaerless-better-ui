@@ -8,6 +8,7 @@ Zusätzlich legt `services/api` aber eigene Zusatzdaten an, die es nur bei uns g
 
 - KI-Vorschläge (`ai-store.ts` → `services/api/data/ai-suggestions.json`)
 - Erinnerungen (`reminders-store.ts` → `services/api/data/reminders.json`)
+- Ordner-Definitionen (`folders-store.ts` → `services/api/data/folders.json`, siehe ADR 0005)
 
 Beide liegen als flache JSON-Dateien (`json-store.ts`) in `services/api/data/`, ein gitignoretes
 Verzeichnis auf dem Host, auf dem `services/api` läuft. Geht dieser Host verloren, sind diese
@@ -50,8 +51,8 @@ Konkret:
 ## Wiederherstellung (manuell)
 - Aus Host-Backup: `services/api/data/ai-suggestions.json` und `reminders.json` an ihren Ort
   zurückkopieren, `services/api` neu starten.
-- Aus einem `/api/backup/export`-JSON: die Arrays `aiSuggestions`/`reminders` aus dem Bundle
-  entnehmen und als `ai-suggestions.json`/`reminders.json` in `services/api/data/` ablegen.
+- Aus einem `/api/backup/export`-JSON: die Arrays `aiSuggestions`/`reminders`/`folders` aus dem Bundle
+  entnehmen und als `ai-suggestions.json`/`reminders.json`/`folders.json` in `services/api/data/` ablegen.
 
 ## Konsequenzen
 - Kein neuer Dienst, keine neue Dependency, keine neue Config (`.env`) nötig.

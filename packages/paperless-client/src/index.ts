@@ -267,6 +267,17 @@ export class PaperlessClient {
     return { buffer: await res.arrayBuffer(), contentType, fileName };
   }
 
+  async getThumbnail(id: number): Promise<{ buffer: ArrayBuffer; contentType: string }> {
+    const res = await this.fetchPaperless(`/api/documents/${id}/thumb/`);
+
+    if (!res.ok) {
+      throw await this.failure("Vorschaubild konnte nicht geladen werden", res);
+    }
+
+    const contentType = res.headers.get("content-type") ?? "application/octet-stream";
+    return { buffer: await res.arrayBuffer(), contentType };
+  }
+
   async listTags(): Promise<Tag[]> {
     const data = await this.request<PaginatedResponse<Tag>>(`/api/tags/?page_size=100`);
     return data.results;

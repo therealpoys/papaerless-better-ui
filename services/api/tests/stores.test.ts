@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { MetadataSuggestion, Reminder } from "@papaerless/shared-types";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { foldersStore } from "../src/folders-store.js";
 import { aiStore } from "../src/ai-store.js";
 import { readJsonFile, writeJsonFile } from "../src/json-store.js";
 import { remindersStore } from "../src/reminders-store.js";
@@ -69,5 +70,33 @@ describe("remindersStore", () => {
 
     await remindersStore.remove("a");
     expect((await remindersStore.list()).map((x) => x.id)).toEqual(["b"]);
+  });
+});
+
+describe("foldersStore", () => {
+  const f = (id: string, name: string) => ({ id, name, criterion: { kind: "tag" as const, id: 1 } });
+
+  it("liefert ohne Datei eine leere Liste und sortiert nach Name", async () => {
+    expect(await foldersStore.list()).toEqual([]);
+    await foldersStore.add(f("b", "Versicherung"));
+    await foldersStore.add(f("a", "Auto"));
+    expect((await foldersStore.list()).map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("benennt um, ändert das Kriterium und entfernt", async () => {
+    await foldersStore.add(f("a", "Auto"));
+    const renamed = await foldersStore.update("a", { name: "KFZ" });
+    expect(renamed).toEqual({ id: "a", name: "KFZ", criterion: { kind: "tag", id: 1 } });
+    const changed = await foldersStore.update("a", { criterion: { kind: "correspondent", id: 9 } });
+    expect(changed?.criterion).toEqual({ kind: "correspondent", id: 9 });
+    expect(changed?.name).toBe("KFZ");
+
+    await foldersStore.remove("a");
+    expect(await foldersStore.list()).toEqual([]);
+  });
+
+  it("liefert undefined bei unbekannter ID und lässt Remove still zu", async () => {
+    expect(await foldersStore.update("nope", { name: "X" })).toBeUndefined();
+    await expect(foldersStore.remove("nope")).resolves.toBeUndefined();
   });
 });

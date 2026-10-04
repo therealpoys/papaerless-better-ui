@@ -17,7 +17,8 @@
       "inbox": "Neu zu prüfen",
       "inboxDisabledSuffix": "(aus)",
       "reminders": "Erinnerungen",
-      "help": "Hilfe"
+      "help": "Hilfe",
+      "folders": "Ordner"
     },
     "noDocumentSelected": {
       "title": "Kein Dokument ausgewählt",
@@ -332,5 +333,68 @@
     "saving": "Wird gespeichert …",
     "pickOrType": "Auswählen oder tippen zum Suchen …",
     "createOption": "„{{name}}“ verwenden (wird neu angelegt)"
+  },
+  "folders": {
+    "title": "Meine Ordner",
+    "create": "Neuer Ordner",
+    "edit": "Bearbeiten",
+    "delete": "Ordner löschen",
+    "loading": "Lädt…",
+    "loadFailed": "Die Ordner konnten nicht geladen werden.",
+    "loadDocumentsFailed": "Die Dokumente des Ordners konnten nicht geladen werden.",
+    "deleteFailed": "Der Ordner konnte nicht gelöscht werden.",
+    "thumbnailError": "Vorschau nicht verfügbar",
+    "documentCount_one": "{{count}} Dokument",
+    "documentCount_other": "{{count}} Dokumente",
+    "unknownCriterion": "(nicht mehr vorhanden)",
+    "backToAll": "Alle Ordner",
+    "backToFolder": "Zurück zu „{{name}}“",
+    "prev": "Zurück",
+    "next": "Weiter",
+    "pageOf": "Seite {{page}} von {{count}}",
+    "kinds": {
+      "tag": "Schlagwort",
+      "correspondent": "Absender",
+      "documentType": "Art des Dokuments"
+    },
+    "empty": {
+      "title": "Noch keine Ordner",
+      "description": "Ein Ordner zeigt automatisch alle Dokumente mit einem bestimmten Schlagwort, Absender oder einer Art. Legen Sie Ihren ersten Ordner an."
+    },
+    "emptyFolder": {
+      "title": "Keine Dokumente",
+      "description": "Zu diesem Kriterium gibt es noch keine Dokumente."
+    },
+    "noResults": {
+      "title": "Keine Treffer",
+      "description": "In diesem Ordner passt kein Dokument zu Ihrer Suche. Ändern Sie die Suche oder die Filter."
+    },
+    "confirmDelete": {
+      "title": "Ordner „{{name}}“ löschen?",
+      "body": "Nur der Ordner wird gelöscht. Ihre Dokumente bleiben unverändert erhalten.",
+      "cancel": "Abbrechen",
+      "confirm": "Ja, Ordner löschen"
+    },
+    "dialog": {
+      "createTitle": "Neuer Ordner",
+      "editTitle": "Ordner bearbeiten",
+      "name": "Name des Ordners",
+      "kind": "Welche Dokumente sollen hinein?",
+      "value": {
+        "tag": "Schlagwort",
+        "correspondent": "Absender",
+        "documentType": "Art des Dokuments"
+      },
+      "pick": "Auswählen oder tippen zum Suchen …",
+      "save": "Speichern",
+      "saving": "Wird gespeichert …",
+      "cancel": "Abbrechen",
+      "errors": {
+        "nameRequired": "Bitte geben Sie einen Namen ein.",
+        "nameTooLong": "Der Name darf höchstens {{max}} Zeichen lang sein.",
+        "criterionRequired": "Bitte wählen Sie aus, welche Dokumente in den Ordner sollen.",
+        "saveFailed": "Der Ordner konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+      }
+    }
   }
 }

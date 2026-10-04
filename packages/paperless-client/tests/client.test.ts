@@ -91,6 +91,15 @@ describe("PaperlessClient", () => {
     expect((await client.downloadDocument(3)).fileName).toBe("dokument-3");
   });
 
+  it("lädt das Thumbnail über /thumb/ und wirft bei Fehlern", async () => {
+    fetchMock.mockResolvedValueOnce(new Response("img", { headers: { "content-type": "image/webp" } }));
+    const t = await client.getThumbnail(3);
+    expect(t.contentType).toBe("image/webp");
+    expect(fetchMock.mock.calls[0][0]).toBe("http://p.test/api/documents/3/thumb/");
+    fetchMock.mockResolvedValueOnce(new Response("nope", { status: 404 }));
+    await expect(client.getThumbnail(3)).rejects.toThrow(/Paperless-Status 404/);
+  });
+
   it("liefert die Task-ID beim Upload und wirft bei Fehlern", async () => {
     fetchMock.mockResolvedValueOnce(json("task-uuid"));
     expect(await client.uploadDocument(new Blob(["x"]), "a.pdf")).toBe("task-uuid");
