@@ -15,12 +15,24 @@ const STAGE_ORDER: UploadStage[] = ["uploading", "processing", "done"];
 export function UploadProgress({
   stage,
   labels = DEFAULT_LABELS,
+  percent,
+  detail,
+  barLabel,
 }: {
   stage: UploadStage;
   labels?: Record<UploadStage, string>;
+  /** 0-100: bestimmter Balken. Ohne Wert (aber mit detail) läuft ein unbestimmter Balken. */
+  percent?: number;
+  /** Zusatzzeile unter dem Balken, z. B. Restzeit oder verstrichene Zeit. */
+  detail?: string;
+  /** Zugänglicher Name des Balkens. */
+  barLabel?: string;
 }) {
   const activeIndex = STAGE_ORDER.indexOf(stage);
+  const clamped = percent === undefined ? undefined : Math.max(0, Math.min(100, Math.round(percent)));
+  const showBar = clamped !== undefined || detail !== undefined;
   return (
+    <div className="ui-progress-wrap">
     <div className="ui-progress" aria-live="polite">
       {STAGE_ORDER.map((key, index) => (
         <span key={key} style={{ display: "inline-flex", alignItems: "center", gap: "0.3rem" }}>
@@ -33,6 +45,20 @@ export function UploadProgress({
           {index < STAGE_ORDER.length - 1 && <span aria-hidden="true">→</span>}
         </span>
       ))}
+    </div>
+      {showBar && (
+        <div
+          className={`ui-progress__bar ${clamped === undefined ? "ui-progress__bar--indeterminate" : ""}`}
+          role="progressbar"
+          aria-label={barLabel}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={clamped}
+        >
+          <div className="ui-progress__fill" style={clamped === undefined ? undefined : { width: `${clamped}%` }} />
+        </div>
+      )}
+      {detail && <p className="ui-progress__detail">{detail}</p>}
     </div>
   );
 }

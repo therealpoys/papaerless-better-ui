@@ -46,3 +46,39 @@ export async function waitForDocumentId(
   }
   return null;
 }
+
+export interface UploadProgressInfo {
+  /** 0-100, ganzzahlig */
+  percent: number;
+  /** Geschätzte Restsekunden; null, solange noch keine verlässliche Schätzung möglich ist. */
+  remainingSeconds: number | null;
+}
+
+/** Mindestdauer, bevor eine Restzeit angezeigt wird (sonst springt die Schätzung wild). */
+const MIN_ELAPSED_MS = 500;
+
+/** Prozent und Restzeit aus dem bisherigen Durchsatz (Bytes pro Sekunde seit Start). */
+export function computeUploadProgress(loaded: number, total: number, elapsedMs: number): UploadProgressInfo {
+  if (!(total > 0)) return { percent: 0, remainingSeconds: null };
+  const safeLoaded = Math.max(0, Math.min(loaded, total));
+  const percent = Math.floor((safeLoaded / total) * 100);
+  if (safeLoaded >= total) return { percent: 100, remainingSeconds: 0 };
+  if (safeLoaded <= 0 || elapsedMs < MIN_ELAPSED_MS) return { percent, remainingSeconds: null };
+  const bytesPerMs = safeLoaded / elapsedMs;
+  return { percent, remainingSeconds: Math.ceil((total - safeLoaded) / bytesPerMs / 1000) };
+}
+
+/** Zerlegt Restsekunden in eine Anzeigeeinheit (Sekunden bis 59, danach aufgerundete Minuten). */
+export function remainingTimeParts(seconds: number): { unit: "seconds" | "minutes"; value: number } {
+  const s = Math.max(1, Math.ceil(seconds));
+  if (s < 60) return { unit: "seconds", value: s };
+  return { unit: "minutes", value: Math.ceil(s / 60) };
+}
+
+/** Verstrichene Zeit als m:ss. */
+export function formatElapsed(ms: number): string {
+  const total = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(total / 60);
+  const secs = total % 60;
+  return `${minutes}:${String(secs).padStart(2, "0")}`;
+}

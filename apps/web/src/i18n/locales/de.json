@@ -236,8 +236,21 @@
       "uploading": "Wird hochgeladen …",
       "done": "Fertig",
       "error": "Das hat leider nicht geklappt.",
-      "reading": "Wird eingelesen – gleich öffnet sich ein Fenster …"
+      "reading": "Wird eingelesen – gleich öffnet sich ein Fenster …",
+      "suggesting": "KI liest Ihr Dokument …"
     },
+    "stages": {
+      "uploading": "Hochladen",
+      "processing": "Einlesen (OCR)",
+      "suggesting": "KI-Vorschlag"
+    },
+    "progressBarLabel": "Fortschritt von {{name}}",
+    "uploadPercent": "{{percent}} % hochgeladen",
+    "remaining_seconds": "noch ca. {{count}} s",
+    "remaining_minutes": "noch ca. {{count}} min",
+    "calculating": "Restzeit wird berechnet …",
+    "working": "Es wird noch gearbeitet – bisher {{elapsed}} min. Bitte lassen Sie diese Seite geöffnet.",
+    "workingAi": "Die KI arbeitet noch – bisher {{elapsed}} min. Das dauert meist 1 bis 2,5 Minuten. Bitte lassen Sie diese Seite geöffnet.",
     "allDone_one": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
     "allDone_other": "Fertig – Ihre {{count}} Dokumente sind angekommen und werden jetzt gelesen.",
     "errors": {

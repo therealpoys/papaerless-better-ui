@@ -32,6 +32,36 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T;
 }
 
+/** fetch kennt keinen Upload-Fortschritt, daher XMLHttpRequest. Gleiche Auth und Fehlerform wie request(). */
+function uploadWithProgress<T>(
+  url: string,
+  body: FormData,
+  onProgress?: (loaded: number, total: number) => void,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", url);
+    if (API_TOKEN) xhr.setRequestHeader("Authorization", `Bearer ${API_TOKEN}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(e.loaded, e.total);
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          resolve(JSON.parse(xhr.responseText) as T);
+        } catch {
+          reject(new Error(`API-Fehler ${xhr.status} bei ${url}: ungültige Antwort`));
+        }
+      } else {
+        reject(new Error(`API-Fehler ${xhr.status} bei ${url}: ${xhr.responseText}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error("Netzwerkfehler beim Hochladen"));
+    xhr.onabort = () => reject(new Error("Upload abgebrochen"));
+    xhr.send(body);
+  });
+}
+
 function toSearchString(params: DocumentSearchParams): string {
   const search = new URLSearchParams();
   if (params.query) search.set("query", params.query);
@@ -72,13 +102,10 @@ export const api = {
       body: JSON.stringify(patch),
     }),
 
-  uploadDocument: async (file: File) => {
+  uploadDocument: (file: File, onProgress?: (loaded: number, total: number) => void) => {
     const form = new FormData();
     form.append("document", file, file.name);
-    return request<{ taskId: string }>("/api/documents/upload", {
-      method: "POST",
-      body: form,
-    });
+    return uploadWithProgress<{ taskId: string }>(`${API_URL}/api/documents/upload`, form, onProgress);
   },
 
   getUploadTask: (taskId: string) =>
