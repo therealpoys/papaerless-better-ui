@@ -3,14 +3,16 @@ import { useTranslation } from "react-i18next";
 import type {
   Correspondent,
   DocumentType,
+  MetadataSuggestion,
   PaperlessDocument,
   ReminderKind,
   Tag,
 } from "@papaerless/shared-types";
-import { Button, Combobox, ErrorState, Field } from "@papaerless/ui";
+import { Button, Combobox, ConfidenceBadge, ErrorState, Field } from "@papaerless/ui";
 import { TagCombobox } from "./TagCombobox";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
+import { buildSuggestionRows } from "../lib/suggestionCompare";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 interface DocumentDetailProps {
@@ -114,12 +116,21 @@ export function DocumentDetail({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [pending, setPending] = useState<MetadataSuggestion | null>(null);
+  const [pendingBusy, setPendingBusy] = useState(false);
+  const [pendingError, setPendingError] = useState<string | null>(null);
   const [suggestionStatus, setSuggestionStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   function load() {
     setDoc(null);
     setLoadError(null);
     setSuggestionStatus("idle");
+    setPending(null);
+    setPendingError(null);
+    api
+      .getPendingSuggestion(documentId)
+      .then(setPending)
+      .catch(() => setPending(null));
     api
       .getDocument(documentId)
       .then((loaded) => {
@@ -193,11 +204,81 @@ export function DocumentDetail({
     }
   }
 
+  async function handlePendingAction(action: "apply" | "dismiss") {
+    if (!pending) return;
+    setPendingBusy(true);
+    setPendingError(null);
+    try {
+      if (action === "apply") {
+        await api.applySuggestion(documentId, pending);
+        onMetadataChanged();
+      } else {
+        await api.dismissSuggestion(documentId);
+      }
+      load();
+    } catch {
+      setPendingError(t(action === "apply" ? "documentDetail.ai.applyFailed" : "documentDetail.ai.dismissFailed"));
+    } finally {
+      setPendingBusy(false);
+    }
+  }
+
   if (loadError) return <ErrorState message={loadError} onRetry={load} retryLabel={t("common.retry")} />;
   if (!doc) return <p aria-live="polite">{t("documentDetail.loading")}</p>;
 
   return (
     <div className="document-detail">
+      {pending && (
+        <section className="suggestion-card" aria-label={t("documentDetail.ai.suggestionHeading")}>
+          <div className="suggestion-card__header">
+            <span>{t("documentDetail.ai.suggestionHeading")}</span>
+            <ConfidenceBadge
+              confidence={pending.confidence}
+              levelLabels={{
+                high: t("documentDetail.ai.confidence.high"),
+                medium: t("documentDetail.ai.confidence.medium"),
+                low: t("documentDetail.ai.confidence.low"),
+              }}
+            />
+          </div>
+          <table className="suggestion-compare">
+            <thead>
+              <tr>
+                <th />
+                <th>{t("documentDetail.ai.currentColumn")}</th>
+                <th>{t("documentDetail.ai.suggestedColumn")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {buildSuggestionRows(doc, pending, { correspondents, documentTypes, tags }).map((row) => (
+                <tr key={row.field} data-changed={row.changed}>
+                  <th scope="row">{t(`documentDetail.${row.field}Label`)}</th>
+                  <td>{row.current.join(", ") || t("documentDetail.ai.empty")}</td>
+                  <td>
+                    {row.suggested.length === 0 ? (
+                      t("documentDetail.ai.empty")
+                    ) : row.changed ? (
+                      <strong>{row.suggested.join(", ")}</strong>
+                    ) : (
+                      `${row.suggested.join(", ")} (${t("documentDetail.ai.unchanged")})`
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="suggestion-card__actions">
+            <Button onClick={() => handlePendingAction("apply")} disabled={pendingBusy}>
+              {pendingBusy ? t("documentDetail.ai.applying") : t("documentDetail.ai.apply")}
+            </Button>
+            <Button variant="secondary" onClick={() => handlePendingAction("dismiss")} disabled={pendingBusy}>
+              {t("documentDetail.ai.dismiss")}
+            </Button>
+          </div>
+          {pendingError && <ErrorState message={pendingError} />}
+        </section>
+      )}
+
       <Field label={t("documentDetail.titleLabel")}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
@@ -296,7 +377,7 @@ export function DocumentDetail({
 
       <ReminderForm documentId={documentId} />
 
-      {aiEnabled && (
+      {aiEnabled && !pending && (
         <div className="ui-field">
           <span className="ui-field__label">{t("documentDetail.ai.label")}</span>
           <Button

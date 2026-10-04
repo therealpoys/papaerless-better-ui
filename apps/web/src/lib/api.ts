@@ -147,6 +147,10 @@ export const api = {
   aiStatus: () => request<{ enabled: boolean }>("/api/ai/status"),
   suggestMetadata: (documentId: number) =>
     request<MetadataSuggestion>(`/api/ai/documents/${documentId}/suggestion`),
+  getPendingSuggestion: (documentId: number) =>
+    request<{ suggestion: MetadataSuggestion | null }>(`/api/ai/documents/${documentId}/pending`).then(
+      (r) => r.suggestion,
+    ),
   listSuggestions: () => request<MetadataSuggestion[]>("/api/ai/inbox"),
   applySuggestion: (documentId: number, suggestion: MetadataSuggestion) =>
     request<PaperlessDocument>(`/api/ai/documents/${documentId}/apply`, {
