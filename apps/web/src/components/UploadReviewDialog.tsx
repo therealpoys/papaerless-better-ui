@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
 import { Button, Combobox } from "@papaerless/ui";
+import { TagCombobox } from "./TagCombobox";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
 import { choiceFromComboId, comboIdFromChoice, formFromSuggestion, saveReview, type Choice, type ReviewForm } from "../lib/uploadReview";
@@ -69,6 +70,48 @@ function ChoiceSelect({
   );
 }
 
+/** Schlagwörter: durchsuchbare Mehrfachauswahl; neue Namen werden wie bei ChoiceSelect erst beim Speichern angelegt. */
+function TagSelect({
+  label,
+  value,
+  items,
+  onChange,
+}: {
+  label: string;
+  value: (number | string)[];
+  items: { id: number; name: string }[];
+  onChange: (v: (number | string)[]) => void;
+}) {
+  const { t } = useTranslation();
+  const extrasRef = useRef<string[]>([]);
+  for (const v of value) if (typeof v === "string" && !extrasRef.current.includes(v)) extrasRef.current.push(v);
+  const options = [...items, ...extrasRef.current.map((name, i) => ({ id: -(i + 1), name }))];
+  const ids = value.map((v) => comboIdFromChoice(v, extrasRef.current)).filter((x): x is number => x !== null);
+
+  return (
+    <div className="review-dialog__field">
+      <span>{label}</span>
+      <TagCombobox
+        aria-label={label}
+        placeholder={t("uploadReview.pickOrType")}
+        options={options}
+        values={ids}
+        createOptionLabel={(name) => t("uploadReview.createOption", { name })}
+        onCreate={async (name) => {
+          const known = items.find((i) => i.name.toLowerCase() === name.toLowerCase());
+          if (known) return known;
+          let index = extrasRef.current.findIndex((e) => e.toLowerCase() === name.toLowerCase());
+          if (index < 0) index = extrasRef.current.push(name) - 1;
+          return { id: -(index + 1), name: extrasRef.current[index] };
+        }}
+        onChange={(next) =>
+          onChange(next.map((id) => choiceFromComboId(id, extrasRef.current)).filter((c): c is number | string => c !== null))
+        }
+      />
+    </div>
+  );
+}
+
 /** Öffnet sich nach dem Upload: Vorschläge (falls KI aktiv) prüfen und Angaben setzen. */
 export function UploadReviewDialog({
   documentId,
@@ -95,11 +138,6 @@ export function UploadReviewDialog({
   }, []);
 
   const hasHits = Boolean(suggestion.correspondent || suggestion.documentType || suggestion.tags?.length);
-  const [showAllTags, setShowAllTags] = useState(false);
-  const newTags = form.tags.filter((tag): tag is string => typeof tag === "string");
-  const toggleTag = (tag: number | string) =>
-    setForm((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((x) => x !== tag) : [...f.tags, tag] }));
-
   async function handleSave() {
     setSaving(true);
     setError(null);
@@ -112,16 +150,6 @@ export function UploadReviewDialog({
       setSaving(false);
     }
   }
-
-  const allChips = [
-    ...tags.map((tag) => ({ key: String(tag.id), value: tag.id as number | string, label: tag.name })),
-    ...newTags.map((name) => ({ key: `new-${name}`, value: name as number | string, label: t("uploadReview.newEntry", { name }) })),
-  ];
-  // Ausgewählte zuerst; der Rest ist eingeklappt, wenn es viele Schlagwörter gibt.
-  const sorted = [...allChips.filter((c) => form.tags.includes(c.value)), ...allChips.filter((c) => !form.tags.includes(c.value))];
-  const LIMIT = 8;
-  const chips = showAllTags ? sorted : sorted.slice(0, Math.max(LIMIT, form.tags.length));
-  const hiddenCount = sorted.length - chips.length;
 
   return (
     <dialog
@@ -162,29 +190,7 @@ export function UploadReviewDialog({
         onChange={(c) => setForm({ ...form, documentType: c })}
       />
 
-      <div className="review-dialog__field">
-        <span id={`${titleId}-tags`}>{t("uploadReview.tags")}</span>
-        <div className="review-dialog__chips" role="group" aria-labelledby={`${titleId}-tags`}>
-          {chips.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              className="review-dialog__chip"
-              aria-pressed={form.tags.includes(chip.value)}
-              onClick={() => toggleTag(chip.value)}
-            >
-              {form.tags.includes(chip.value) ? "✓ " : ""}
-              {chip.label}
-            </button>
-          ))}
-          {chips.length === 0 && <span>{t("uploadReview.noTags")}</span>}
-        </div>
-        {hiddenCount > 0 && (
-          <button type="button" className="review-dialog__more" onClick={() => setShowAllTags(true)}>
-            {t("uploadReview.moreTags", { count: hiddenCount })}
-          </button>
-        )}
-      </div>
+      <TagSelect label={t("uploadReview.tags")} value={form.tags} items={tags} onChange={(v) => setForm({ ...form, tags: v })} />
 
       {error && (
         <p role="alert" className="review-dialog__error">

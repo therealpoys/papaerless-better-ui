@@ -90,7 +90,8 @@
     "newTagAriaLabel": "Neues Schlagwort anlegen",
     "creatingTag": "Legt an…",
     "createTag": "Anlegen",
-    "newTagHint": "Passendes Schlagwort nicht dabei? Einfach oben eintippen.",
+    "newTagHint": "Zum Suchen tippen. Gibt es das Schlagwort noch nicht, können Sie es direkt anlegen.",
+    "tagsPlaceholder": "Schlagwörter suchen oder neu eingeben …",
     "contentLabel": "Erkannter Text",
     "noContent": "(kein Text erkannt)",
     "saving": "Speichert…",
@@ -307,6 +308,11 @@
       "server": "Der Dienst ist gerade nicht erreichbar. Bitte warten Sie einen Moment und versuchen Sie es erneut.",
       "unknown": "Bitte versuchen Sie es noch einmal. Wenn es weiterhin nicht klappt, wenden Sie sich an den Administrator."
     }
+  },
+  "tagCombobox": {
+    "remove": "{{name}} entfernen",
+    "create": "„{{name}}“ als neues Schlagwort anlegen",
+    "creating": "Legt an…"
   },
   "uploadReview": {
     "title": "Dokument gespeichert – passt das so?",

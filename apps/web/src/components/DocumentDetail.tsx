@@ -7,7 +7,8 @@ import type {
   ReminderKind,
   Tag,
 } from "@papaerless/shared-types";
-import { Button, Combobox, ErrorState, Field, TagChip } from "@papaerless/ui";
+import { Button, Combobox, ErrorState, Field } from "@papaerless/ui";
+import { TagCombobox } from "./TagCombobox";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -106,8 +107,6 @@ export function DocumentDetail({
   const [correspondent, setCorrespondent] = useState<number | null>(null);
   const [documentType, setDocumentType] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
-  const [newTagName, setNewTagName] = useState("");
-  const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -184,28 +183,6 @@ export function DocumentDetail({
     }
   }
 
-  function toggleTag(id: number) {
-    setSelectedTags((current) =>
-      current.includes(id) ? current.filter((t) => t !== id) : [...current, id],
-    );
-  }
-
-  async function handleCreateTag() {
-    const name = newTagName.trim();
-    if (!name) return;
-    setIsCreatingTag(true);
-    try {
-      const created = await api.createTag(name);
-      setSelectedTags((current) => [...current, created.id]);
-      setNewTagName("");
-      onMetadataChanged();
-    } catch (err) {
-      setSaveError(friendlyError(err, t, t("documentDetail.createTagFailed")));
-    } finally {
-      setIsCreatingTag(false);
-    }
-  }
-
   async function handleRequestSuggestion() {
     setSuggestionStatus("loading");
     try {
@@ -269,35 +246,20 @@ export function DocumentDetail({
 
       <div className="ui-field">
         <span className="ui-field__label">{t("documentDetail.tagsLabel")}</span>
-        <div className="tag-picker">
-          {tags.map((tag) => (
-            <TagChip key={tag.id} active={selectedTags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>
-              {tag.name}
-            </TagChip>
-          ))}
-        </div>
-        <div className="tag-picker__new">
-          <input
-            type="text"
-            placeholder={t("documentDetail.newTagPlaceholder")}
-            aria-label={t("documentDetail.newTagAriaLabel")}
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleCreateTag();
-              }
-            }}
-          />
-          <Button
-            variant="secondary"
-            onClick={handleCreateTag}
-            disabled={!newTagName.trim() || isCreatingTag}
-          >
-            {isCreatingTag ? t("documentDetail.creatingTag") : t("documentDetail.createTag")}
-          </Button>
-        </div>
+        <TagCombobox
+          aria-label={t("documentDetail.tagsLabel")}
+          placeholder={t("documentDetail.tagsPlaceholder")}
+          options={tags}
+          values={selectedTags}
+          onChange={setSelectedTags}
+          onCreate={async (name) => {
+            const known = tags.find((x) => x.name.toLowerCase() === name.toLowerCase());
+            if (known) return known;
+            const created = await api.createTag(name);
+            onMetadataChanged();
+            return created;
+          }}
+        />
         <span className="ui-field__hint">{t("documentDetail.newTagHint")}</span>
       </div>
 
