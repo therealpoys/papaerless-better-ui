@@ -39,4 +39,15 @@ describe("buildSuggestionRows", () => {
     expect(rows.every((r) => !r.changed)).toBe(true);
     expect(rows[2].current).toEqual([]);
   });
+
+  it("kennzeichnet unbekannte Absender, Arten und Tags als neu (Schreibweise egal)", () => {
+    const rows = buildSuggestionRows(
+      doc,
+      { ...base, correspondent: "Neue GmbH", documentType: "Rechnung", tags: ["wohnung", "Brandneu"] },
+      lists,
+    );
+    expect(rows[0].newNames).toEqual([]);
+    expect(rows[1].newNames).toEqual(["Neue GmbH"]);
+    expect(rows[3].newNames).toEqual(["Brandneu"]);
+  });
 });

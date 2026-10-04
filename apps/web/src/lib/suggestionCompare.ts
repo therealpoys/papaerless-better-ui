@@ -6,6 +6,8 @@ export interface SuggestionRow {
   field: SuggestionField;
   current: string[];
   suggested: string[];
+  /** Vorgeschlagene Werte, die es in Paperless noch nicht gibt (werden beim Übernehmen neu angelegt). */
+  newNames: string[];
   /** true, wenn der Vorschlag einen Wert enthält, der vom aktuellen abweicht. */
   changed: boolean;
 }
@@ -29,6 +31,13 @@ export function buildSuggestionRows(
   suggestion: MetadataSuggestion,
   lists: { correspondents: Correspondent[]; documentTypes: DocumentType[]; tags: Tag[] },
 ): SuggestionRow[] {
+  const known = (list: { name: string }[]) => new Set(list.map((x) => x.name.trim().toLowerCase()));
+  const knownByField: Record<SuggestionField, Set<string> | null> = {
+    title: null,
+    correspondent: known(lists.correspondents),
+    documentType: known(lists.documentTypes),
+    tags: known(lists.tags),
+  };
   const entries: [SuggestionField, string[], string[]][] = [
     ["title", doc.title ? [doc.title] : [], suggestion.title ? [suggestion.title] : []],
     [
@@ -47,6 +56,9 @@ export function buildSuggestionRows(
     field,
     current,
     suggested,
+    newNames: knownByField[field]
+      ? suggested.filter((name) => !knownByField[field]!.has(name.trim().toLowerCase()))
+      : [],
     changed: suggested.length > 0 && !same(current, suggested),
   }));
 }

@@ -106,6 +106,8 @@ export function DocumentDetail({
   onMetadataChanged,
 }: DocumentDetailProps) {
   const { t } = useTranslation();
+  const labelNew = (names: string[], newNames: string[]) =>
+    names.map((name) => (newNames.includes(name) ? `${name} (${t("documentDetail.ai.newEntry")})` : name)).join(", ");
   const [doc, setDoc] = useState<PaperlessDocument | null>(null);
   const [title, setTitle] = useState("");
   const [correspondent, setCorrespondent] = useState<number | null>(null);
@@ -289,9 +291,9 @@ export function DocumentDetail({
                     {row.suggested.length === 0 ? (
                       t("documentDetail.ai.empty")
                     ) : row.changed ? (
-                      <strong>{row.suggested.join(", ")}</strong>
+                      <strong>{labelNew(row.suggested, row.newNames)}</strong>
                     ) : (
-                      `${row.suggested.join(", ")} (${t("documentDetail.ai.unchanged")})`
+                      `${labelNew(row.suggested, row.newNames)} (${t("documentDetail.ai.unchanged")})`
                     )}
                   </td>
                 </tr>

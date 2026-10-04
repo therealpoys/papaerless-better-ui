@@ -31,6 +31,12 @@ describe("buildPrompt", () => {
     expect(p).toContain("scan_001");
   });
 
+  it("erlaubt ausdrücklich neue Einträge, statt Felder leer zu lassen", () => {
+    const p = buildPrompt(input);
+    expect(p).toContain("schlage ausdrücklich einen neuen Eintrag vor");
+    expect(p).toContain("passt keiner, ein neuer Name");
+  });
+
   it("kürzt langen OCR-Text auf 6000 Zeichen", () => {
     const p = buildPrompt({ ...input, content: "a".repeat(10_000) });
     expect(p).toContain("a".repeat(6000));

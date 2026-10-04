@@ -123,6 +123,7 @@
       "requested": "Die Vorschläge warten unter „Neu zu prüfen“ auf Sie.",
       "requestFailed": "Anfrage fehlgeschlagen.",
       "generating": "KI-Vorschlag wird erstellt … das dauert etwa 1 bis 2,5 Minuten. Sie können das Dokument schon ansehen.",
+      "newEntry": "neu",
       "suggestionHeading": "KI-Vorschlag",
       "currentColumn": "Aktuell",
       "suggestedColumn": "Vorschlag",
