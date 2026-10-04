@@ -122,6 +122,7 @@
       "request": "Vorschläge erstellen lassen",
       "requested": "Die Vorschläge warten unter „Neu zu prüfen“ auf Sie.",
       "requestFailed": "Anfrage fehlgeschlagen.",
+      "generating": "KI-Vorschlag wird erstellt … das dauert etwa 1 bis 2,5 Minuten. Sie können das Dokument schon ansehen.",
       "suggestionHeading": "KI-Vorschlag",
       "currentColumn": "Aktuell",
       "suggestedColumn": "Vorschlag",
@@ -252,13 +253,11 @@
       "uploading": "Wird hochgeladen …",
       "done": "Fertig",
       "error": "Das hat leider nicht geklappt.",
-      "reading": "Wird eingelesen – gleich öffnet sich ein Fenster …",
-      "suggesting": "KI liest Ihr Dokument …"
+      "reading": "Wird eingelesen …"
     },
     "stages": {
       "uploading": "Hochladen",
-      "processing": "Einlesen (OCR)",
-      "suggesting": "KI-Vorschlag"
+      "processing": "Einlesen (OCR)"
     },
     "progressBarLabel": "Fortschritt von {{name}}",
     "uploadPercent": "{{percent}} % hochgeladen",
@@ -266,7 +265,6 @@
     "remaining_minutes": "noch ca. {{count}} min",
     "calculating": "Restzeit wird berechnet …",
     "working": "Es wird noch gearbeitet – bisher {{elapsed}} min. Bitte lassen Sie diese Seite geöffnet.",
-    "workingAi": "Die KI arbeitet noch – bisher {{elapsed}} min. Das dauert meist 1 bis 2,5 Minuten. Bitte lassen Sie diese Seite geöffnet.",
     "allDone_one": "Fertig – Ihr Dokument ist angekommen und wird jetzt gelesen.",
     "allDone_other": "Fertig – Ihre {{count}} Dokumente sind angekommen und werden jetzt gelesen.",
     "errors": {

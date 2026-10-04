@@ -32,7 +32,7 @@ interface PendingReview {
   source: "ai" | "auto";
 }
 
-type ItemStatus = "waiting" | "uploading" | "reading" | "suggesting" | "done" | "error";
+type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error";
 
 interface UploadItem {
   id: number;
@@ -64,7 +64,7 @@ export function UploadZone({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [now, setNow] = useState(() => Date.now());
-  const working = items.some((item) => item.status === "reading" || item.status === "suggesting");
+  const working = items.some((item) => item.status === "reading");
 
   // Sekundentakt nur, solange eine Phase ohne Prozentangabe läuft.
   useEffect(() => {
@@ -100,15 +100,19 @@ export function UploadZone({
         try {
           const documentId = await waitForDocumentId(api.getUploadTask, taskId);
           if (documentId) {
-            if (aiEnabled) patch(item.id, { status: "suggesting", phaseStartedAt: Date.now() });
-            const ai = aiEnabled ? await api.suggestMetadata(documentId).catch(() => undefined) : undefined;
-            // Ohne KI (oder ohne KI-Ergebnis) erkennen wir Titel, Absender & Co. selbst aus dem Text.
-            const doc = ai ? null : await api.getDocument(documentId);
-            const suggestion = ai ?? heuristicSuggestion(doc!, item.file.name, { tags, correspondents, documentTypes });
-            setReviews((prev) => [
-              ...prev,
-              { itemId: item.id, documentId, fileName: item.file.name, suggestion, source: ai ? "ai" : "auto" },
-            ]);
+            if (aiEnabled) {
+              // Die KI braucht Minuten: nicht darauf warten. Der Server rechnet weiter, das Dokument
+              // zeigt in der Liste selbst an, dass der Vorschlag noch entsteht.
+              void api.suggestMetadata(documentId).catch(() => undefined);
+            } else {
+              // Ohne KI erkennen wir Titel, Absender & Co. selbst aus dem Text.
+              const doc = await api.getDocument(documentId);
+              const suggestion = heuristicSuggestion(doc, item.file.name, { tags, correspondents, documentTypes });
+              setReviews((prev) => [
+                ...prev,
+                { itemId: item.id, documentId, fileName: item.file.name, suggestion, source: "auto" },
+              ]);
+            }
           }
         } catch {
           // kein Fenster – das Dokument liegt trotzdem in der Liste
@@ -144,10 +148,10 @@ export function UploadZone({
   }
 
   function renderProgress(item: UploadItem) {
-    if (item.status !== "uploading" && item.status !== "reading" && item.status !== "suggesting") return null;
+    if (item.status !== "uploading" && item.status !== "reading") return null;
     const labels: Record<UploadStage, string> = {
       uploading: t("uploadZone.stages.uploading"),
-      processing: item.status === "suggesting" ? t("uploadZone.stages.suggesting") : t("uploadZone.stages.processing"),
+      processing: t("uploadZone.stages.processing"),
       done: t("uploadZone.status.done"),
     };
     const barLabel = t("uploadZone.progressBarLabel", { name: item.file.name });
@@ -172,7 +176,7 @@ export function UploadZone({
         stage="processing"
         labels={labels}
         barLabel={barLabel}
-        detail={t(item.status === "suggesting" ? "uploadZone.workingAi" : "uploadZone.working", { elapsed })}
+        detail={t("uploadZone.working", { elapsed })}
       />
     );
   }

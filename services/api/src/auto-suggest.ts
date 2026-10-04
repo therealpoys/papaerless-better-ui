@@ -11,6 +11,11 @@ const PAGE_SIZE = 25;
 /** Laufende Erzeugungen je Dokument: verhindert doppelte (teure) KI-Läufe, egal ob manuell oder automatisch. */
 const inFlight = new Map<number, Promise<MetadataSuggestion>>();
 
+/** Läuft für dieses Dokument gerade eine KI-Erzeugung? */
+export function isSuggesting(documentId: number): boolean {
+  return inFlight.has(documentId);
+}
+
 /** Liefert den gecachten Vorschlag oder erzeugt ihn (pro Dokument höchstens einmal gleichzeitig). */
 export function suggestFor(documentId: number): Promise<MetadataSuggestion> {
   const running = inFlight.get(documentId);

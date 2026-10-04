@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const paperless = vi.hoisted(() => ({ getDocument: vi.fn(), listTags: vi.fn() }));
 vi.mock("../src/paperless.js", () => ({ paperless }));
 vi.mock("../src/ai.js", () => ({ aiEnabled: false, classifier: null }));
+const autoSuggest = vi.hoisted(() => ({ isSuggesting: vi.fn(), suggestFor: vi.fn() }));
+vi.mock("../src/auto-suggest.js", () => autoSuggest);
 vi.mock("../src/push-sender.js", () => ({ broadcastPush: vi.fn() }));
 
 import { aiStore } from "../src/ai-store.js";
@@ -36,7 +38,7 @@ describe("GET /ai/documents/:id/pending", () => {
   it("liefert null, wenn kein Vorschlag existiert, ohne Paperless/KI anzufragen", async () => {
     const res = await (await build()).inject({ method: "GET", url: "/api/ai/documents/7/pending" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ suggestion: null });
+    expect(res.json()).toEqual({ suggestion: null, generating: false });
     expect(paperless.getDocument).not.toHaveBeenCalled();
   });
 
@@ -45,9 +47,18 @@ describe("GET /ai/documents/:id/pending", () => {
     await aiStore.set(suggestion);
     const app = await build();
     const res = await app.inject({ method: "GET", url: "/api/ai/documents/7/pending" });
-    expect(res.json()).toEqual({ suggestion });
+    expect(res.json()).toEqual({ suggestion, generating: false });
     expect(await aiStore.get(7)).toEqual(suggestion);
     expect(paperless.getDocument).not.toHaveBeenCalled();
+  });
+
+  it("meldet generating, solange für das Dokument eine KI-Erzeugung läuft", async () => {
+    autoSuggest.isSuggesting.mockImplementation((id: number) => id === 7);
+    const app = await build();
+    const running = await app.inject({ method: "GET", url: "/api/ai/documents/7/pending" });
+    expect(running.json()).toEqual({ suggestion: null, generating: true });
+    const other = await app.inject({ method: "GET", url: "/api/ai/documents/8/pending" });
+    expect(other.json()).toEqual({ suggestion: null, generating: false });
   });
 
   it("nach dismiss ist der Vorschlag weg", async () => {
@@ -55,6 +66,6 @@ describe("GET /ai/documents/:id/pending", () => {
     const app = await build();
     await app.inject({ method: "POST", url: "/api/ai/documents/7/dismiss" });
     const res = await app.inject({ method: "GET", url: "/api/ai/documents/7/pending" });
-    expect(res.json()).toEqual({ suggestion: null });
+    expect(res.json()).toEqual({ suggestion: null, generating: false });
   });
 });

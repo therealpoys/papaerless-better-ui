@@ -175,9 +175,10 @@ export const api = {
   aiStatus: () => request<{ enabled: boolean }>("/api/ai/status"),
   suggestMetadata: (documentId: number) =>
     request<MetadataSuggestion>(`/api/ai/documents/${documentId}/suggestion`),
-  getPendingSuggestion: (documentId: number) =>
-    request<{ suggestion: MetadataSuggestion | null }>(`/api/ai/documents/${documentId}/pending`).then(
-      (r) => r.suggestion,
+  /** Vorhandener Vorschlag und ob gerade einer berechnet wird – löst selbst nie eine Berechnung aus. */
+  getPendingState: (documentId: number) =>
+    request<{ suggestion: MetadataSuggestion | null; generating?: boolean }>(
+      `/api/ai/documents/${documentId}/pending`,
     ),
   listSuggestions: () => request<MetadataSuggestion[]>("/api/ai/inbox"),
   applySuggestion: (documentId: number, suggestion: MetadataSuggestion) =>

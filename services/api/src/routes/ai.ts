@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { aiEnabled, classifier } from "../ai.js";
 import { aiStore } from "../ai-store.js";
-import { suggestFor } from "../auto-suggest.js";
+import { isSuggesting, suggestFor } from "../auto-suggest.js";
 import { paperless } from "../paperless.js";
 
 async function resolveId(
@@ -28,8 +28,9 @@ export async function aiRoutes(app: FastifyInstance) {
   // Rein lesend: liefert einen vorhandenen Vorschlag, löst aber nie eine KI-Berechnung aus.
   app.get("/ai/documents/:id/pending", async (request) => {
     const { id } = request.params as { id: string };
-    const suggestion = (await aiStore.get(Number(id))) ?? null;
-    return { suggestion };
+    const documentId = Number(id);
+    const suggestion = (await aiStore.get(documentId)) ?? null;
+    return { suggestion, generating: !suggestion && Boolean(isSuggesting(documentId)) };
   });
 
   app.get("/ai/documents/:id/suggestion", async (request, reply) => {

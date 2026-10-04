@@ -15,6 +15,8 @@ import { friendlyError } from "../lib/errors";
 import { buildSuggestionRows } from "../lib/suggestionCompare";
 import { ConfirmDialog } from "./ConfirmDialog";
 
+const SUGGESTION_POLL_MS = 4000;
+
 interface DocumentDetailProps {
   documentId: number;
   correspondents: Correspondent[];
@@ -119,6 +121,7 @@ export function DocumentDetail({
   const [pending, setPending] = useState<MetadataSuggestion | null>(null);
   const [pendingBusy, setPendingBusy] = useState(false);
   const [pendingError, setPendingError] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
   const [suggestionStatus, setSuggestionStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
 
   function load() {
@@ -127,9 +130,13 @@ export function DocumentDetail({
     setSuggestionStatus("idle");
     setPending(null);
     setPendingError(null);
+    setGenerating(false);
     api
-      .getPendingSuggestion(documentId)
-      .then(setPending)
+      .getPendingState(documentId)
+      .then((state) => {
+        setPending(state.suggestion);
+        setGenerating(Boolean(state.generating));
+      })
       .catch(() => setPending(null));
     api
       .getDocument(documentId)
@@ -144,6 +151,21 @@ export function DocumentDetail({
   }
 
   useEffect(load, [documentId]);
+
+  // Solange die KI rechnet, regelmäßig nachsehen – der Vorschlag erscheint dann von selbst.
+  useEffect(() => {
+    if (!generating) return;
+    const timer = setInterval(() => {
+      api
+        .getPendingState(documentId)
+        .then((state) => {
+          if (state.suggestion) setPending(state.suggestion);
+          if (state.suggestion || !state.generating) setGenerating(false);
+        })
+        .catch(() => setGenerating(false));
+    }, SUGGESTION_POLL_MS);
+    return () => clearInterval(timer);
+  }, [generating, documentId]);
 
   async function handleSave() {
     setIsSaving(true);
@@ -196,11 +218,15 @@ export function DocumentDetail({
 
   async function handleRequestSuggestion() {
     setSuggestionStatus("loading");
+    setGenerating(true);
     try {
-      await api.suggestMetadata(documentId);
+      const suggestion = await api.suggestMetadata(documentId);
+      setPending(suggestion);
       setSuggestionStatus("done");
     } catch {
       setSuggestionStatus("error");
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -228,6 +254,11 @@ export function DocumentDetail({
 
   return (
     <div className="document-detail">
+      {!pending && generating && (
+        <p className="hint suggestion-loading" role="status">
+          {t("documentDetail.ai.generating")}
+        </p>
+      )}
       {pending && (
         <section className="suggestion-card" aria-label={t("documentDetail.ai.suggestionHeading")}>
           <div className="suggestion-card__header">
@@ -383,7 +414,7 @@ export function DocumentDetail({
           <Button
             variant="secondary"
             onClick={handleRequestSuggestion}
-            disabled={suggestionStatus === "loading"}
+            disabled={suggestionStatus === "loading" || generating}
           >
             {suggestionStatus === "loading" ? t("documentDetail.ai.requesting") : t("documentDetail.ai.request")}
           </Button>
