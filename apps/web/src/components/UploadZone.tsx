@@ -1,10 +1,19 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
 import { api } from "../lib/api";
+import { UploadProgress, type UploadStage } from "@papaerless/ui";
 import { UploadReviewDialog } from "./UploadReviewDialog";
 import { heuristicSuggestion } from "../lib/uploadReview";
-import { classifyUploadError, validateFile, waitForDocumentId, type UploadErrorKey } from "../lib/upload";
+import {
+  classifyUploadError,
+  computeUploadProgress,
+  formatElapsed,
+  remainingTimeParts,
+  validateFile,
+  waitForDocumentId,
+  type UploadErrorKey,
+} from "../lib/upload";
 
 interface UploadZoneProps {
   onUploaded: () => void;
@@ -23,13 +32,17 @@ interface PendingReview {
   source: "ai" | "auto";
 }
 
-type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error";
+type ItemStatus = "waiting" | "uploading" | "reading" | "suggesting" | "done" | "error";
 
 interface UploadItem {
   id: number;
   file: File;
   status: ItemStatus;
   error?: UploadErrorKey;
+  percent?: number;
+  remainingSeconds?: number | null;
+  /** Beginn der aktuellen Phase (ms), für die verstrichene Zeit */
+  phaseStartedAt?: number;
 }
 
 const ACCEPT = "application/pdf,image/*,.eml";
@@ -50,6 +63,16 @@ export function UploadZone({
   const [reviews, setReviews] = useState<PendingReview[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [now, setNow] = useState(() => Date.now());
+  const working = items.some((item) => item.status === "reading" || item.status === "suggesting");
+
+  // Sekundentakt nur, solange eine Phase ohne Prozentangabe läuft.
+  useEffect(() => {
+    if (!working) return;
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [working]);
 
   function patch(id: number, changes: Partial<UploadItem>) {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
@@ -64,15 +87,20 @@ export function UploadZone({
         patch(item.id, { status: "error", error: invalid });
         continue;
       }
-      patch(item.id, { status: "uploading", error: undefined });
+      const uploadStart = Date.now();
+      patch(item.id, { status: "uploading", error: undefined, percent: 0, remainingSeconds: null });
       try {
-        const { taskId } = await api.uploadDocument(item.file);
+        const { taskId } = await api.uploadDocument(item.file, (loaded, total) => {
+          const info = computeUploadProgress(loaded, total, Date.now() - uploadStart);
+          patch(item.id, { percent: info.percent, remainingSeconds: info.remainingSeconds });
+        });
         anyDone = true;
         // Danach öffnet sich das Prüf-Fenster. Klappt das Einlesen nicht, ist der Upload trotzdem ok.
-        patch(item.id, { status: "reading" });
+        patch(item.id, { status: "reading", phaseStartedAt: Date.now() });
         try {
           const documentId = await waitForDocumentId(api.getUploadTask, taskId);
           if (documentId) {
+            if (aiEnabled) patch(item.id, { status: "suggesting", phaseStartedAt: Date.now() });
             const ai = aiEnabled ? await api.suggestMetadata(documentId).catch(() => undefined) : undefined;
             // Ohne KI (oder ohne KI-Ergebnis) erkennen wir Titel, Absender & Co. selbst aus dem Text.
             const doc = ai ? null : await api.getDocument(documentId);
@@ -113,6 +141,40 @@ export function UploadZone({
     const reset = failed.map((item): UploadItem => ({ ...item, status: "waiting", error: undefined }));
     setItems((prev) => prev.map((item) => (ids.has(item.id) ? { ...item, status: "waiting", error: undefined } : item)));
     void uploadAll(reset);
+  }
+
+  function renderProgress(item: UploadItem) {
+    if (item.status !== "uploading" && item.status !== "reading" && item.status !== "suggesting") return null;
+    const labels: Record<UploadStage, string> = {
+      uploading: t("uploadZone.stages.uploading"),
+      processing: item.status === "suggesting" ? t("uploadZone.stages.suggesting") : t("uploadZone.stages.processing"),
+      done: t("uploadZone.status.done"),
+    };
+    const barLabel = t("uploadZone.progressBarLabel", { name: item.file.name });
+    if (item.status === "uploading") {
+      const parts = item.remainingSeconds == null ? null : remainingTimeParts(item.remainingSeconds);
+      const remaining = parts
+        ? t(`uploadZone.remaining_${parts.unit}`, { count: parts.value })
+        : t("uploadZone.calculating");
+      return (
+        <UploadProgress
+          stage="uploading"
+          labels={labels}
+          percent={item.percent ?? 0}
+          barLabel={barLabel}
+          detail={`${t("uploadZone.uploadPercent", { percent: item.percent ?? 0 })} – ${remaining}`}
+        />
+      );
+    }
+    const elapsed = formatElapsed(now - (item.phaseStartedAt ?? now));
+    return (
+      <UploadProgress
+        stage="processing"
+        labels={labels}
+        barLabel={barLabel}
+        detail={t(item.status === "suggesting" ? "uploadZone.workingAi" : "uploadZone.working", { elapsed })}
+      />
+    );
   }
 
   const hasError = items.some((item) => item.status === "error");
@@ -183,6 +245,7 @@ export function UploadZone({
                   ? t(`uploadZone.errors.${item.error}`)
                   : t(`uploadZone.status.${item.status}`)}
               </span>
+              {renderProgress(item)}
             </li>
           ))}
         </ul>
