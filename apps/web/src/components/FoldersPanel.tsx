@@ -26,6 +26,8 @@ interface Props {
   documentTypes: DocumentType[];
   aiEnabled: boolean;
   onMetadataChanged: () => void;
+  /** Ordner, der beim Öffnen des Tabs direkt geöffnet wird (z. B. von der Startseite). */
+  initialOpenId?: string | null;
 }
 
 const PREVIEW_COUNT = 3;
@@ -36,7 +38,7 @@ function formatDate(iso: string): string {
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("de-DE");
 }
 
-function FolderTile({
+export function FolderTile({
   folder,
   criterionLabel,
   reloadKey,
@@ -78,12 +80,12 @@ function FolderTile({
   );
 }
 
-export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, onMetadataChanged }: Props) {
+export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, onMetadataChanged, initialOpenId = null }: Props) {
   const { t } = useTranslation();
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialOpenId);
   const [documentId, setDocumentId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<{ folder?: Folder } | null>(null);
   const [deleting, setDeleting] = useState<Folder | null>(null);

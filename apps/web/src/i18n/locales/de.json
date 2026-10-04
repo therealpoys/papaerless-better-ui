@@ -13,6 +13,7 @@
   "app": {
     "regionsAriaLabel": "Bereiche",
     "tabs": {
+      "home": "Start",
       "documents": "Dokumente",
       "inbox": "Neu zu prüfen",
       "inboxDisabledSuffix": "(aus)",
@@ -395,6 +396,29 @@
         "criterionRequired": "Bitte wählen Sie aus, welche Dokumente in den Ordner sollen.",
         "saveFailed": "Der Ordner konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
       }
+    }
+  },
+  "home": {
+    "title": "Startseite",
+    "folders": "Meine Ordner",
+    "allFolders": "Alle Ordner",
+    "recent": "Zuletzt hinzugefügt",
+    "recentEmpty": "Noch keine Dokumente vorhanden.",
+    "upcoming": "Anstehende Fristen",
+    "overdue_one": "{{count}} überfällig",
+    "overdue_other": "{{count}} überfällig",
+    "stats": {
+      "total": "Dokumente gesamt",
+      "month": "Diesen Monat",
+      "week": "Letzte 7 Tage",
+      "inbox": "Neu zu prüfen",
+      "reminders": "Offene Erinnerungen"
+    },
+    "top": {
+      "correspondents": "Häufigste Absender",
+      "documentTypes": "Dokumentarten",
+      "tags": "Häufigste Schlagwörter",
+      "empty": "Noch keine Daten."
     }
   }
 }

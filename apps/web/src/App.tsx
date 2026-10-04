@@ -17,13 +17,14 @@ import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
 import { FoldersPanel } from "./components/FoldersPanel";
+import { HomePanel } from "./components/HomePanel";
 import { HelpPanel } from "./components/HelpPanel";
 
-type Tab = "documents" | "folders" | "inbox" | "reminders" | "help";
+type Tab = "home" | "documents" | "folders" | "inbox" | "reminders" | "help";
 
 export default function App() {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<Tab>("documents");
+  const [tab, setTab] = useState<Tab>("home");
   const [documentsResult, setDocumentsResult] = useState<PaginatedDocuments>({
     results: [],
     count: 0,
@@ -36,6 +37,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [filters, setFilters] = useState<DocumentSearchParams>({});
   const [page, setPage] = useState(1);
+  const [folderToOpen, setFolderToOpen] = useState<string | null>(null);
   const [aiEnabled, setAiEnabled] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,6 +84,14 @@ export default function App() {
         <nav className="app__tabs" aria-label={t("app.regionsAriaLabel")}>
           <button
             type="button"
+            className={tab === "home" ? "app__tab--active" : ""}
+            aria-current={tab === "home" ? "page" : undefined}
+            onClick={() => setTab("home")}
+          >
+            {t("app.tabs.home")}
+          </button>
+          <button
+            type="button"
             className={tab === "documents" ? "app__tab--active" : ""}
             aria-current={tab === "documents" ? "page" : undefined}
             onClick={() => setTab("documents")}
@@ -92,7 +102,10 @@ export default function App() {
             type="button"
             className={tab === "folders" ? "app__tab--active" : ""}
             aria-current={tab === "folders" ? "page" : undefined}
-            onClick={() => setTab("folders")}
+            onClick={() => {
+              setFolderToOpen(null);
+              setTab("folders");
+            }}
           >
             {t("app.tabs.folders")}
           </button>
@@ -124,6 +137,26 @@ export default function App() {
       </header>
 
       {error && <ErrorState message={error} onRetry={reloadDocuments} retryLabel={t("common.retry")} />}
+
+      {tab === "home" && (
+        <main className="app__main app__main--full">
+          <HomePanel
+            tags={tags}
+            correspondents={correspondents}
+            documentTypes={documentTypes}
+            aiEnabled={aiEnabled}
+            onOpenDocument={(id) => {
+              setSelectedId(id);
+              setTab("documents");
+            }}
+            onOpenFolder={(id) => {
+              setFolderToOpen(id);
+              setTab("folders");
+            }}
+            onNavigate={setTab}
+          />
+        </main>
+      )}
 
       {tab === "documents" && (
         <div className="app__body">
@@ -197,6 +230,7 @@ export default function App() {
             documentTypes={documentTypes}
             aiEnabled={aiEnabled}
             onMetadataChanged={reloadMetadata}
+            initialOpenId={folderToOpen}
           />
         </main>
       )}

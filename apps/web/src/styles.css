@@ -921,3 +921,32 @@ body {
   color: var(--color-text);
 }
 .folder-dialog .review-dialog__field > label { font-weight: 500; font-size: var(--font-size-sm); }
+
+/* Startseite */
+.home { padding: var(--space-md); display: flex; flex-direction: column; gap: var(--space-lg, 1.5rem); min-width: 0; }
+.home h2, .home h3 { margin: 0; }
+.home-section { display: flex; flex-direction: column; gap: var(--space-sm); }
+.home-muted { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0; overflow-wrap: anywhere; }
+.home-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); gap: var(--space-md); }
+.home-stat {
+  display: flex; flex-direction: column; gap: 0.2rem; padding: var(--space-md); text-align: left; font: inherit;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); color: var(--color-text);
+}
+.home-stat--link { cursor: pointer; }
+.home-stat--link:hover { border-color: var(--color-accent); }
+.home-stat__value { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.home-stat__label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.home-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--space-md); }
+.home-card {
+  display: flex; flex-direction: column; gap: var(--space-sm); min-width: 0; padding: var(--space-md);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface);
+}
+.home-bars, .home-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.home-bars li { display: grid; grid-template-columns: minmax(0, 8rem) 1fr auto; align-items: center; gap: 0.5rem; }
+.home-bars__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-bars__track { height: 0.6rem; border-radius: 999px; background: var(--color-border); overflow: hidden; }
+.home-bars__fill { display: block; height: 100%; background: var(--color-accent); border-radius: 999px; }
+.home-bars__count { font-variant-numeric: tabular-nums; font-size: var(--font-size-sm); }
+.home-list li { display: flex; flex-direction: column; gap: 0.1rem; }
+.home-link { border: none; background: none; padding: 0; font: inherit; font-weight: 600; text-align: left; color: var(--color-accent); cursor: pointer; overflow-wrap: anywhere; }
+.home-badge { margin-left: 0.5rem; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: var(--font-size-sm); font-weight: 600; background: var(--color-danger, #c0392b); color: #fff; }
