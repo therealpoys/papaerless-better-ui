@@ -950,3 +950,24 @@ body {
 .home-list li { display: flex; flex-direction: column; gap: 0.1rem; }
 .home-link { border: none; background: none; padding: 0; font: inherit; font-weight: 600; text-align: left; color: var(--color-accent); cursor: pointer; overflow-wrap: anywhere; }
 .home-badge { margin-left: 0.5rem; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: var(--font-size-sm); font-weight: 600; background: var(--color-danger, #c0392b); color: #fff; }
+
+.settings-panel {
+  max-width: 40rem;
+}
+
+.settings-panel__option {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.settings-panel__option input {
+  margin-top: 0.3rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.settings-panel__hint {
+  margin: 0.25rem 0 0;
+  color: #555;
+}

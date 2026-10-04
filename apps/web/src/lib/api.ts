@@ -1,4 +1,5 @@
 import type {
+  AppSettings,
   BulkEditAction,
   Correspondent,
   DocumentSearchParams,
@@ -156,6 +157,14 @@ export const api = {
     }),
   dismissSuggestion: (documentId: number) =>
     request<void>(`/api/ai/documents/${documentId}/dismiss`, { method: "POST" }),
+
+  getSettings: () => request<AppSettings & { aiEnabled: boolean }>("/api/settings"),
+  updateSettings: (settings: AppSettings) =>
+    request<AppSettings & { aiEnabled: boolean }>("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
+    }),
 
   listReminders: () => request<Reminder[]>("/api/reminders"),
   createReminder: (input: { documentId: number; kind: Reminder["kind"]; dueDate: string; note?: string }) =>

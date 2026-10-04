@@ -41,6 +41,11 @@ export interface MetadataSuggestion {
   confidence: number;
 }
 
+export interface AppSettings {
+  /** Für jedes neue Dokument automatisch einen KI-Vorschlag erzeugen. */
+  autoSuggest: boolean;
+}
+
 export type UploadJobStatus = "uploading" | "processing" | "needs_review" | "done" | "failed";
 
 export interface UploadJob {
@@ -53,7 +58,7 @@ export interface UploadJob {
 }
 
 /** "score" = Relevanz (nur mit Volltextsuche sinnvoll, Paperless `ordering=score`). */
-export type DocumentSortField = "created" | "title" | "score";
+export type DocumentSortField = "created" | "added" | "title" | "score";
 export type SortOrder = "asc" | "desc";
 
 export interface DocumentSearchParams {
