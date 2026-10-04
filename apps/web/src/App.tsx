@@ -18,9 +18,10 @@ import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
 import { FoldersPanel } from "./components/FoldersPanel";
 import { HomePanel } from "./components/HomePanel";
+import { SettingsPanel } from "./components/SettingsPanel";
 import { HelpPanel } from "./components/HelpPanel";
 
-type Tab = "home" | "documents" | "folders" | "inbox" | "reminders" | "help";
+type Tab = "home" | "documents" | "folders" | "inbox" | "reminders" | "settings" | "help";
 
 export default function App() {
   const { t } = useTranslation();
@@ -124,6 +125,14 @@ export default function App() {
             onClick={() => setTab("reminders")}
           >
             {t("app.tabs.reminders")}
+          </button>
+          <button
+            type="button"
+            className={tab === "settings" ? "app__tab--active" : ""}
+            aria-current={tab === "settings" ? "page" : undefined}
+            onClick={() => setTab("settings")}
+          >
+            {t("app.tabs.settings")}
           </button>
           <button
             type="button"
@@ -244,6 +253,12 @@ export default function App() {
       {tab === "reminders" && (
         <main className="app__main app__main--full">
           <RemindersPanel />
+        </main>
+      )}
+
+      {tab === "settings" && (
+        <main className="app__main app__main--full">
+          <SettingsPanel />
         </main>
       )}
 

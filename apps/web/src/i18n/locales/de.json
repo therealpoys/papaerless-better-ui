@@ -19,7 +19,8 @@
       "inboxDisabledSuffix": "(aus)",
       "reminders": "Erinnerungen",
       "help": "Hilfe",
-      "folders": "Ordner"
+      "folders": "Ordner",
+      "settings": "Einstellungen"
     },
     "noDocumentSelected": {
       "title": "Kein Dokument ausgewählt",
@@ -447,6 +448,16 @@
       "documentTypes": "Dokumentarten",
       "tags": "Häufigste Schlagwörter",
       "empty": "Noch keine Daten."
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "autoSuggest": {
+      "label": "Immer KI-Vorschlag erstellen",
+      "description": "Für jedes neue Dokument (Upload oder E-Mail) wird automatisch ein KI-Vorschlag erzeugt, sobald es fertig verarbeitet ist – auch wenn die Seite nicht geöffnet ist. Bereits vorhandene Dokumente sind nicht betroffen.",
+      "cpuHint": "Hinweis: Bei lokaler KI (Ollama) auf dem Prozessor dauert das etwa 1 bis 2,5 Minuten pro Dokument. Mehrere Dokumente werden nacheinander bearbeitet.",
+      "aiDisabled": "Die KI-Erkennung ist auf dem Server nicht eingerichtet. Der Schalter wirkt erst, wenn sie aktiviert ist.",
+      "saveFailed": "Speichern fehlgeschlagen"
     }
   }
 }

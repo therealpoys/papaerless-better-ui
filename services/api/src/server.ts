@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import { PaperlessError } from "@papaerless/paperless-client";
 import Fastify from "fastify";
 import { aiEnabled } from "./ai.js";
+import { startAutoSuggest } from "./auto-suggest.js";
 import { registerAuth } from "./auth.js";
 import { env, isLocalHost } from "./env.js";
 import { paperless } from "./paperless.js";
@@ -16,6 +17,7 @@ import { documentRoutes } from "./routes/documents.js";
 import { metadataRoutes } from "./routes/metadata.js";
 import { pushRoutes } from "./routes/push.js";
 import { reminderRoutes } from "./routes/reminders.js";
+import { settingsRoutes } from "./routes/settings.js";
 
 const app = Fastify({ logger: true });
 
@@ -72,8 +74,10 @@ await app.register(aiRoutes, { prefix: "/api" });
 await app.register(reminderRoutes, { prefix: "/api" });
 await app.register(pushRoutes, { prefix: "/api" });
 await app.register(backupRoutes, { prefix: "/api" });
+await app.register(settingsRoutes, { prefix: "/api" });
 
 const stopNotifier = startRemindersNotifier();
+const stopAutoSuggest = startAutoSuggest();
 
 let shuttingDown = false;
 async function shutdown(signal: string) {
@@ -81,6 +85,7 @@ async function shutdown(signal: string) {
   shuttingDown = true;
   app.log.info(`${signal} empfangen – fahre herunter`);
   stopNotifier();
+  stopAutoSuggest();
   try {
     await app.close();
     process.exit(0);

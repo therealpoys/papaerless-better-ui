@@ -2,8 +2,8 @@ import type { FastifyInstance } from "fastify";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
 import { aiEnabled, classifier } from "../ai.js";
 import { aiStore } from "../ai-store.js";
+import { suggestFor } from "../auto-suggest.js";
 import { paperless } from "../paperless.js";
-import { broadcastPush } from "../push-sender.js";
 
 async function resolveId(
   name: string | undefined,
@@ -42,35 +42,7 @@ export async function aiRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const documentId = Number(id);
 
-    const cached = await aiStore.get(documentId);
-    if (cached) return cached;
-
-    const [doc, tags, correspondents, documentTypes] = await Promise.all([
-      paperless.getDocument(documentId),
-      paperless.listTags(),
-      paperless.listCorrespondents(),
-      paperless.listDocumentTypes(),
-    ]);
-
-    const suggestion = await classifier.classify({
-      documentId,
-      title: doc.title,
-      content: doc.content,
-      knownTags: tags,
-      knownCorrespondents: correspondents,
-      knownDocumentTypes: documentTypes,
-    });
-
-    await aiStore.set(suggestion);
-
-    // Push darf die Antwort nicht blockieren/kippen, falls z.B. ein Abo abgelaufen ist
-    broadcastPush({
-      title: "Neuer KI-Vorschlag",
-      body: `${doc.title}: KI-Vorschlag verfügbar`,
-      data: { documentId },
-    }).catch((err) => console.error("Push für KI-Vorschlag fehlgeschlagen:", err));
-
-    return suggestion;
+    return suggestFor(documentId);
   });
 
   app.post("/ai/documents/:id/apply", async (request) => {
