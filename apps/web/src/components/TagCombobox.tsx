@@ -65,7 +65,10 @@ export function TagCombobox({ options, values, onChange, onCreate, "aria-label":
       else if (filtered.length === 1) toggle(filtered[0].id);
     } else if (e.key === "Backspace" && query === "" && values.length > 0) {
       onChange(values.slice(0, -1));
-    } else if (e.key === "Escape") {
+    } else if (e.key === "Escape" && isOpen) {
+      // Nur die Liste schließen, nicht den umgebenden Dialog.
+      e.preventDefault();
+      e.stopPropagation();
       setQuery("");
       setIsOpen(false);
       setActiveIndex(-1);

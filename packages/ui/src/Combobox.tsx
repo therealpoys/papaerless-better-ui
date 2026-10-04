@@ -105,7 +105,10 @@ export function Combobox({
       } else if (canCreate) {
         handleCreate();
       }
-    } else if (e.key === "Escape") {
+    } else if (e.key === "Escape" && isOpen) {
+      // Nur die Liste schließen, nicht einen umgebenden Dialog.
+      e.preventDefault();
+      e.stopPropagation();
       setQuery("");
       setIsOpen(false);
       setError(null);
