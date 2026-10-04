@@ -25,6 +25,13 @@ export async function aiRoutes(app: FastifyInstance) {
   // Wichtig: gecachte Vorschläge kommen jetzt aus einer JSON-Datei (services/api/data),
   // nicht mehr nur aus dem Prozessspeicher – überleben also einen Neustart/Redeploy.
 
+  // Rein lesend: liefert einen vorhandenen Vorschlag, löst aber nie eine KI-Berechnung aus.
+  app.get("/ai/documents/:id/pending", async (request) => {
+    const { id } = request.params as { id: string };
+    const suggestion = (await aiStore.get(Number(id))) ?? null;
+    return { suggestion };
+  });
+
   app.get("/ai/documents/:id/suggestion", async (request, reply) => {
     if (!classifier) {
       return reply.code(409).send({

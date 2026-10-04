@@ -120,7 +120,22 @@
       "requesting": "Wird angefragt…",
       "request": "Vorschläge erstellen lassen",
       "requested": "Die Vorschläge warten unter „Neu zu prüfen“ auf Sie.",
-      "requestFailed": "Anfrage fehlgeschlagen."
+      "requestFailed": "Anfrage fehlgeschlagen.",
+      "suggestionHeading": "KI-Vorschlag",
+      "currentColumn": "Aktuell",
+      "suggestedColumn": "Vorschlag",
+      "empty": "–",
+      "unchanged": "unverändert",
+      "apply": "Übernehmen",
+      "applying": "Wird übernommen…",
+      "dismiss": "Verwerfen",
+      "applyFailed": "Vorschlag konnte nicht übernommen werden.",
+      "dismissFailed": "Vorschlag konnte nicht verworfen werden.",
+      "confidence": {
+        "high": "Hohe Sicherheit",
+        "medium": "Mittlere Sicherheit",
+        "low": "Geringe Sicherheit"
+      }
     }
   },
   "searchFilter": {
