@@ -6,7 +6,9 @@ import type {
   DocumentType,
   Folder,
   FolderCriterion,
+  ApplySuggestionRequest,
   MetadataSuggestion,
+  SuggestionField,
   PaginatedDocuments,
   PaperlessDocument,
   Reminder,
@@ -186,6 +188,18 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(suggestion),
+    }),
+  /** Übernimmt nur die genannten Felder (Tags werden hinzugefügt statt ersetzt, optional nur `onlyTags`). */
+  applySuggestionFields: (
+    documentId: number,
+    suggestion: MetadataSuggestion,
+    fields: SuggestionField[],
+    onlyTags?: string[],
+  ) =>
+    request<PaperlessDocument>(`/api/ai/documents/${documentId}/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...suggestion, ...(onlyTags && { tags: onlyTags }), fields } satisfies ApplySuggestionRequest),
     }),
   dismissSuggestion: (documentId: number) =>
     request<void>(`/api/ai/documents/${documentId}/dismiss`, { method: "POST" }),

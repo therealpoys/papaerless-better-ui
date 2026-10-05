@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MetadataSuggestion } from "@papaerless/shared-types";
-import { buildSuggestionRows } from "./suggestionCompare";
+import { buildSuggestionRows, missingTags, withoutApplied } from "./suggestionCompare";
 
 const lists = {
   correspondents: [{ id: 1, name: "Telekom" }],
@@ -49,5 +49,25 @@ describe("buildSuggestionRows", () => {
     expect(rows[0].newNames).toEqual([]);
     expect(rows[1].newNames).toEqual(["Neue GmbH"]);
     expect(rows[3].newNames).toEqual(["Brandneu"]);
+  });
+});
+
+describe("missingTags", () => {
+  it("liefert nur Tags, die das Dokument noch nicht hat", () => {
+    expect(missingTags({ current: ["Steuer"], suggested: ["steuer", "Wohnung"] })).toEqual(["Wohnung"]);
+  });
+});
+
+describe("withoutApplied", () => {
+  const full: MetadataSuggestion = { ...base, title: "T", correspondent: "C", documentType: "D", tags: ["A", "B"] };
+
+  it("entfernt übernommene Felder und einzelne Tags", () => {
+    expect(withoutApplied(full, ["correspondent"])).toMatchObject({ title: "T", documentType: "D", tags: ["A", "B"] });
+    expect(withoutApplied(full, ["correspondent"])?.correspondent).toBeUndefined();
+    expect(withoutApplied(full, ["tags"], ["a"])?.tags).toEqual(["B"]);
+  });
+
+  it("liefert null, wenn nichts mehr offen ist", () => {
+    expect(withoutApplied({ ...base, tags: ["A"] }, ["tags"], ["A"])).toBeNull();
   });
 });

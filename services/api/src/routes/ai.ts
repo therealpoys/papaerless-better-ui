@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import type { MetadataSuggestion } from "@papaerless/shared-types";
+import type { ApplySuggestionRequest, MetadataSuggestion, SuggestionField } from "@papaerless/shared-types";
 import { aiEnabled, classifier } from "../ai.js";
 import { aiStore } from "../ai-store.js";
 import { isSuggesting, suggestFor } from "../auto-suggest.js";
@@ -15,6 +15,23 @@ async function resolveId(
   if (existing) return existing.id;
   const created = await create(name);
   return created.id;
+}
+
+/** Entfernt übernommene Teile aus dem gespeicherten Vorschlag; ist nichts mehr übrig, wird er gelöscht. */
+async function removeApplied(documentId: number, fields: SuggestionField[], appliedTags: string[]) {
+  const stored = await aiStore.get(documentId);
+  if (!stored) return;
+  const next: MetadataSuggestion = { ...stored };
+  if (fields.includes("title")) delete next.title;
+  if (fields.includes("correspondent")) delete next.correspondent;
+  if (fields.includes("documentType")) delete next.documentType;
+  if (fields.includes("tags")) {
+    const done = new Set(appliedTags.map((t) => t.toLowerCase()));
+    next.tags = (next.tags ?? []).filter((t) => !done.has(t.toLowerCase()));
+  }
+  const open = next.title || next.correspondent || next.documentType || next.tags?.length;
+  if (open) await aiStore.set(next);
+  else await aiStore.delete(documentId);
 }
 
 export async function aiRoutes(app: FastifyInstance) {
@@ -49,7 +66,9 @@ export async function aiRoutes(app: FastifyInstance) {
   app.post("/ai/documents/:id/apply", async (request) => {
     const { id } = request.params as { id: string };
     const documentId = Number(id);
-    const suggestion = request.body as MetadataSuggestion;
+    const { fields, ...suggestion } = request.body as ApplySuggestionRequest;
+    const partial = fields !== undefined;
+    const wants = (field: SuggestionField) => !partial || fields.includes(field);
 
     const [tags, correspondents, documentTypes] = await Promise.all([
       paperless.listTags(),
@@ -57,24 +76,35 @@ export async function aiRoutes(app: FastifyInstance) {
       paperless.listDocumentTypes(),
     ]);
 
-    const correspondentId = await resolveId(suggestion.correspondent, correspondents, (name) =>
-      paperless.createCorrespondent(name),
-    );
-    const documentTypeId = await resolveId(suggestion.documentType, documentTypes, (name) =>
-      paperless.createDocumentType(name),
-    );
-    const tagIds = await Promise.all(
-      (suggestion.tags ?? []).map((name) => resolveId(name, tags, (n) => paperless.createTag(n))),
-    );
+    const patch: Parameters<typeof paperless.updateDocument>[1] = {};
+    if (wants("title") && (!partial || suggestion.title)) patch.title = suggestion.title;
+    if (wants("correspondent") && (!partial || suggestion.correspondent)) {
+      patch.correspondent = await resolveId(suggestion.correspondent, correspondents, (name) =>
+        paperless.createCorrespondent(name),
+      );
+    }
+    if (wants("documentType") && (!partial || suggestion.documentType)) {
+      patch.documentType = await resolveId(suggestion.documentType, documentTypes, (name) =>
+        paperless.createDocumentType(name),
+      );
+    }
+    if (wants("tags") && (!partial || suggestion.tags?.length)) {
+      const tagIds = (
+        await Promise.all((suggestion.tags ?? []).map((name) => resolveId(name, tags, (n) => paperless.createTag(n))))
+      ).filter((tagId): tagId is number => tagId !== null);
+      // Teilweises Übernehmen fügt Tags hinzu, statt die vorhandenen zu ersetzen.
+      patch.tags = partial
+        ? [...new Set([...(await paperless.getDocument(documentId)).tags, ...tagIds])]
+        : tagIds;
+    }
 
-    const updated = await paperless.updateDocument(documentId, {
-      title: suggestion.title,
-      correspondent: correspondentId,
-      documentType: documentTypeId,
-      tags: tagIds.filter((tagId): tagId is number => tagId !== null),
-    });
+    const updated = await paperless.updateDocument(documentId, patch);
 
-    await aiStore.delete(documentId);
+    if (partial) {
+      await removeApplied(documentId, fields, suggestion.tags ?? []);
+    } else {
+      await aiStore.delete(documentId);
+    }
     return updated;
   });
 

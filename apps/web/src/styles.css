@@ -963,6 +963,22 @@ body {
   vertical-align: top;
 }
 
+.suggestion-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.suggestion-item { display: flex; flex-direction: column; gap: 0.25rem; }
+.suggestion-item__label { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.suggestion-item__row { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.suggestion-item__value { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; overflow-wrap: anywhere; }
+.suggestion-item__current { font-size: var(--font-size-sm); color: var(--color-text-muted); }
+.suggestion-item__tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.suggestion-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  padding: 0.25rem 0.65rem; border: 1px solid var(--color-border); border-radius: 999px;
+  background: var(--color-surface); color: var(--color-text); font: inherit; font-size: var(--font-size-sm); cursor: pointer;
+}
+.suggestion-chip:hover:not(:disabled) { border-color: var(--color-accent); color: var(--color-accent); }
+.suggestion-chip:disabled { opacity: 0.6; cursor: default; }
+.suggestion-badge { margin-left: 0.4rem; padding: 0 0.4rem; border-radius: 999px; font-size: 0.75rem; background: var(--color-border); color: var(--color-text-muted); }
+
 .settings-panel {
   max-width: 40rem;
 }

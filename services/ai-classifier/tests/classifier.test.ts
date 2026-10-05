@@ -23,18 +23,24 @@ const reply = (text: string) => ({ content: [{ type: "text", text }] });
 beforeEach(() => create.mockReset());
 
 describe("buildPrompt", () => {
-  it("enthält bekannte Namen, Titel und Platzhalter für leere Listen", () => {
+  it("enthält Titel sowie bekannte Absender und Dokumenttypen (leere Liste als Platzhalter)", () => {
     const p = buildPrompt(input);
-    expect(p).toContain("Bekannte Tags: Rechnung");
-    expect(p).toContain("Bekannte Korrespondenten: EnBW");
+    expect(p).toContain("Bekannte Absender: EnBW");
     expect(p).toContain("Bekannte Dokumenttypen: (keine)");
     expect(p).toContain("scan_001");
   });
 
-  it("erlaubt ausdrücklich neue Einträge, statt Felder leer zu lassen", () => {
+  it("fragt bei Tags offen, was man geben könnte, ohne bekannte Tags vorzugeben", () => {
     const p = buildPrompt(input);
-    expect(p).toContain("schlage ausdrücklich einen neuen Eintrag vor");
-    expect(p).toContain("passt keiner, ein neuer Name");
+    expect(p).toContain("Was für Tags könnte man diesem Dokument geben?");
+    expect(p).not.toContain("Bekannte Tags");
+  });
+
+  it("Absender: aus der Liste wählen oder neuen vorschlagen", () => {
+    const p = buildPrompt(input);
+    expect(p).toContain("aus dieser Liste");
+    expect(p).toContain("schlage einen neuen Namen vor");
+    expect(p).toContain("Gib immer einen Absender an");
   });
 
   it("kürzt langen OCR-Text auf 6000 Zeichen", () => {

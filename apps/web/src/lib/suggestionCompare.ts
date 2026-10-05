@@ -1,6 +1,13 @@
-import type { Correspondent, DocumentType, MetadataSuggestion, PaperlessDocument, Tag } from "@papaerless/shared-types";
+import type {
+  Correspondent,
+  DocumentType,
+  MetadataSuggestion,
+  PaperlessDocument,
+  SuggestionField,
+  Tag,
+} from "@papaerless/shared-types";
 
-export type SuggestionField = "title" | "correspondent" | "documentType" | "tags";
+export type { SuggestionField };
 
 export interface SuggestionRow {
   field: SuggestionField;
@@ -61,4 +68,30 @@ export function buildSuggestionRows(
       : [],
     changed: suggested.length > 0 && !same(current, suggested),
   }));
+}
+
+const norm = (x: string) => x.trim().toLowerCase();
+
+/** Vorgeschlagene Tags, die das Dokument noch nicht hat (Schreibweise egal). */
+export function missingTags(row: Pick<SuggestionRow, "current" | "suggested">): string[] {
+  const have = new Set(row.current.map(norm));
+  return row.suggested.filter((name) => !have.has(norm(name)));
+}
+
+/** Zieht übernommene Teile vom Vorschlag ab; `null`, wenn nichts mehr übrig ist (spiegelt die API). */
+export function withoutApplied(
+  suggestion: MetadataSuggestion,
+  fields: SuggestionField[],
+  appliedTags: string[] = [],
+): MetadataSuggestion | null {
+  const next: MetadataSuggestion = { ...suggestion };
+  if (fields.includes("title")) delete next.title;
+  if (fields.includes("correspondent")) delete next.correspondent;
+  if (fields.includes("documentType")) delete next.documentType;
+  if (fields.includes("tags")) {
+    const done = new Set(appliedTags.map(norm));
+    next.tags = (next.tags ?? []).filter((t) => !done.has(norm(t)));
+  }
+  const open = next.title || next.correspondent || next.documentType || next.tags?.length;
+  return open ? next : null;
 }

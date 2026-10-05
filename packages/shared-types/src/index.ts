@@ -41,6 +41,17 @@ export interface MetadataSuggestion {
   confidence: number;
 }
 
+export type SuggestionField = "title" | "correspondent" | "documentType" | "tags";
+
+/**
+ * Body für POST /ai/documents/:id/apply. Ohne `fields` wird der ganze Vorschlag übernommen
+ * (Tags ersetzen die bisherigen). Mit `fields` werden nur diese Felder geändert, Tags werden
+ * zu den vorhandenen hinzugefügt, und das Übernommene verschwindet aus dem gespeicherten Vorschlag.
+ */
+export interface ApplySuggestionRequest extends MetadataSuggestion {
+  fields?: SuggestionField[];
+}
+
 export interface AppSettings {
   /** Für jedes neue Dokument automatisch einen KI-Vorschlag erzeugen. */
   autoSuggest: boolean;

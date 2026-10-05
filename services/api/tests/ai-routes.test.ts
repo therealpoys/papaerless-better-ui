@@ -4,7 +4,16 @@ import path from "node:path";
 import Fastify from "fastify";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const paperless = vi.hoisted(() => ({ getDocument: vi.fn(), listTags: vi.fn() }));
+const paperless = vi.hoisted(() => ({
+  getDocument: vi.fn(),
+  listTags: vi.fn(),
+  listCorrespondents: vi.fn(),
+  listDocumentTypes: vi.fn(),
+  createTag: vi.fn(),
+  createCorrespondent: vi.fn(),
+  createDocumentType: vi.fn(),
+  updateDocument: vi.fn(),
+}));
 vi.mock("../src/paperless.js", () => ({ paperless }));
 vi.mock("../src/ai.js", () => ({ aiEnabled: false, classifier: null }));
 const autoSuggest = vi.hoisted(() => ({ isSuggesting: vi.fn(), suggestFor: vi.fn() }));
@@ -67,5 +76,75 @@ describe("GET /ai/documents/:id/pending", () => {
     await app.inject({ method: "POST", url: "/api/ai/documents/7/dismiss" });
     const res = await app.inject({ method: "GET", url: "/api/ai/documents/7/pending" });
     expect(res.json()).toEqual({ suggestion: null, generating: false });
+  });
+});
+
+describe("POST /ai/documents/:id/apply", () => {
+  const full = {
+    documentId: 7,
+    title: "Rechnung Mai",
+    correspondent: "EnBW",
+    documentType: "Rechnung",
+    tags: ["Strom", "Neu"],
+    confidence: 0.8,
+  };
+
+  beforeEach(() => {
+    paperless.listTags.mockResolvedValue([
+      { id: 1, name: "Strom" },
+      { id: 2, name: "Alt" },
+    ]);
+    paperless.listCorrespondents.mockResolvedValue([{ id: 10, name: "EnBW" }]);
+    paperless.listDocumentTypes.mockResolvedValue([]);
+    paperless.createTag.mockResolvedValue({ id: 3 });
+    paperless.createDocumentType.mockResolvedValue({ id: 20 });
+    paperless.getDocument.mockResolvedValue({ id: 7, tags: [2] });
+    paperless.updateDocument.mockResolvedValue({ id: 7 });
+  });
+
+  it("ohne fields wird alles übernommen, Tags ersetzen die alten, Vorschlag verschwindet", async () => {
+    await aiStore.set(full);
+    const res = await (await build()).inject({ method: "POST", url: "/api/ai/documents/7/apply", payload: full });
+    expect(res.statusCode).toBe(200);
+    expect(paperless.updateDocument).toHaveBeenCalledWith(7, {
+      title: "Rechnung Mai",
+      correspondent: 10,
+      documentType: 20,
+      tags: [1, 3],
+    });
+    expect(await aiStore.get(7)).toBeUndefined();
+  });
+
+  it("mit fields wird nur der Absender gesetzt, der Rest des Vorschlags bleibt", async () => {
+    await aiStore.set(full);
+    await (await build()).inject({
+      method: "POST",
+      url: "/api/ai/documents/7/apply",
+      payload: { ...full, fields: ["correspondent"] },
+    });
+    expect(paperless.updateDocument).toHaveBeenCalledWith(7, { correspondent: 10 });
+    const { correspondent, ...rest } = full;
+    expect(await aiStore.get(7)).toEqual(rest);
+  });
+
+  it("einzelner Tag wird zu den vorhandenen hinzugefügt und aus dem Vorschlag entfernt", async () => {
+    await aiStore.set(full);
+    await (await build()).inject({
+      method: "POST",
+      url: "/api/ai/documents/7/apply",
+      payload: { documentId: 7, confidence: 0.8, tags: ["strom"], fields: ["tags"] },
+    });
+    expect(paperless.updateDocument).toHaveBeenCalledWith(7, { tags: [2, 1] });
+    expect((await aiStore.get(7))?.tags).toEqual(["Neu"]);
+  });
+
+  it("löscht den Vorschlag, sobald alles einzeln übernommen wurde", async () => {
+    await aiStore.set({ documentId: 7, tags: ["Strom"], confidence: 0.5 });
+    await (await build()).inject({
+      method: "POST",
+      url: "/api/ai/documents/7/apply",
+      payload: { documentId: 7, confidence: 0.5, tags: ["Strom"], fields: ["tags"] },
+    });
+    expect(await aiStore.get(7)).toBeUndefined();
   });
 });
