@@ -27,7 +27,10 @@ interface Props {
   aiEnabled: boolean;
   onMetadataChanged: () => void;
   /** Ordner, der beim Öffnen des Tabs direkt geöffnet wird (z. B. von der Startseite). */
-  initialOpenId?: string | null;
+  openId: string | null;
+  documentId: number | null;
+  /** Schreibt Ordner/Dokument in die URL, damit F5 und Zurück an derselben Stelle landen. */
+  onNavigate: (folderId: string | null, documentId: number | null) => void;
 }
 
 const PREVIEW_COUNT = 3;
@@ -80,13 +83,11 @@ export function FolderTile({
   );
 }
 
-export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, onMetadataChanged, initialOpenId = null }: Props) {
+export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, onMetadataChanged, openId, documentId, onNavigate }: Props) {
   const { t } = useTranslation();
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [openId, setOpenId] = useState<string | null>(initialOpenId);
-  const [documentId, setDocumentId] = useState<number | null>(null);
   const [dialog, setDialog] = useState<{ folder?: Folder } | null>(null);
   const [deleting, setDeleting] = useState<Folder | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -133,7 +134,7 @@ export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, o
     try {
       await api.deleteFolder(folder.id);
       setFolders((list) => list?.filter((f) => f.id !== folder.id) ?? list);
-      if (openId === folder.id) setOpenId(null);
+      if (openId === folder.id) onNavigate(null, null);
     } catch (err) {
       setActionError(friendlyError(err, t, t("folders.deleteFailed")));
     }
@@ -171,7 +172,7 @@ export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, o
   if (openFolder && documentId !== null) {
     return (
       <div className="folders">
-        <Button variant="secondary" onClick={() => setDocumentId(null)}>
+        <Button variant="secondary" onClick={() => onNavigate(openId, null)}>
           ← {t("folders.backToFolder", { name: openFolder.name })}
         </Button>
         <DocumentDetail
@@ -182,7 +183,7 @@ export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, o
           aiEnabled={aiEnabled}
           onSaved={() => setReloadKey((k) => k + 1)}
           onDeleted={() => {
-            setDocumentId(null);
+            onNavigate(openId, null);
             setReloadKey((k) => k + 1);
           }}
           onMetadataChanged={onMetadataChanged}
@@ -201,10 +202,10 @@ export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, o
           tags={tags}
           documentTypes={documentTypes}
           reloadKey={reloadKey}
-          onBack={() => setOpenId(null)}
+          onBack={() => onNavigate(null, null)}
           onEdit={() => setDialog({ folder: openFolder })}
           onDelete={() => setDeleting(openFolder)}
-          onOpenDocument={setDocumentId}
+          onOpenDocument={(id) => onNavigate(openId, id)}
         />
         {actionError && <ErrorState message={actionError} />}
         {dialogs}
@@ -237,7 +238,7 @@ export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, o
               reloadKey={reloadKey}
               onOpen={() => {
                 setActionError(null);
-                setOpenId(f.id);
+                onNavigate(f.id, null);
               }}
             />
           ))}
