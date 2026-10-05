@@ -3,6 +3,7 @@ import type { ApplySuggestionRequest, MetadataSuggestion, SuggestionField } from
 import { aiEnabled, classifier } from "../ai.js";
 import { aiStore } from "../ai-store.js";
 import { isSuggesting, suggestFor } from "../auto-suggest.js";
+import { PaperlessError } from "@papaerless/paperless-client";
 import { paperless } from "../paperless.js";
 
 async function resolveId(
@@ -37,7 +38,26 @@ async function removeApplied(documentId: number, fields: SuggestionField[], appl
 export async function aiRoutes(app: FastifyInstance) {
   app.get("/ai/status", async () => ({ enabled: aiEnabled }));
 
-  app.get("/ai/inbox", async () => aiStore.list());
+  // Vorschläge zu Dokumenten, die es in Paperless nicht mehr gibt (404), werden hier gleich aufgeräumt.
+  // Andere Paperless-Fehler (z. B. nicht erreichbar) lassen den Vorschlag unangetastet.
+  app.get("/ai/inbox", async () => {
+    const all = await aiStore.list();
+    const alive = await Promise.all(
+      all.map(async (suggestion) => {
+        try {
+          await paperless.getDocument(suggestion.documentId);
+          return true;
+        } catch (err) {
+          if (err instanceof PaperlessError && err.status === 404) {
+            await aiStore.delete(suggestion.documentId);
+            return false;
+          }
+          return true;
+        }
+      }),
+    );
+    return all.filter((_, i) => alive[i]);
+  });
 
   // Wichtig: gecachte Vorschläge kommen jetzt aus einer JSON-Datei (services/api/data),
   // nicht mehr nur aus dem Prozessspeicher – überleben also einen Neustart/Redeploy.

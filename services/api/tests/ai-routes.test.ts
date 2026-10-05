@@ -20,6 +20,7 @@ const autoSuggest = vi.hoisted(() => ({ isSuggesting: vi.fn(), suggestFor: vi.fn
 vi.mock("../src/auto-suggest.js", () => autoSuggest);
 vi.mock("../src/push-sender.js", () => ({ broadcastPush: vi.fn() }));
 
+import { PaperlessError } from "@papaerless/paperless-client";
 import { aiStore } from "../src/ai-store.js";
 import { aiRoutes } from "../src/routes/ai.js";
 
@@ -146,5 +147,28 @@ describe("POST /ai/documents/:id/apply", () => {
       payload: { documentId: 7, confidence: 0.5, tags: ["Strom"], fields: ["tags"] },
     });
     expect(await aiStore.get(7)).toBeUndefined();
+  });
+});
+
+describe("GET /ai/inbox", () => {
+  const suggestion = (documentId: number) => ({ documentId, title: `Doc ${documentId}`, confidence: 0.9 });
+
+  it("entfernt Vorschläge zu Dokumenten, die es in Paperless nicht mehr gibt", async () => {
+    await aiStore.set(suggestion(1));
+    await aiStore.set(suggestion(2));
+    paperless.getDocument.mockImplementation(async (id: number) => {
+      if (id === 2) throw new PaperlessError("weg", 404);
+    });
+    const res = await (await build()).inject({ method: "GET", url: "/api/ai/inbox" });
+    expect(res.json().map((s: { documentId: number }) => s.documentId)).toEqual([1]);
+    expect(await aiStore.get(2)).toBeUndefined();
+  });
+
+  it("behält Vorschläge bei anderen Paperless-Fehlern (z. B. nicht erreichbar)", async () => {
+    await aiStore.set(suggestion(1));
+    paperless.getDocument.mockRejectedValue(new PaperlessError("down", 503));
+    const res = await (await build()).inject({ method: "GET", url: "/api/ai/inbox" });
+    expect(res.json()).toHaveLength(1);
+    expect(await aiStore.get(1)).toBeDefined();
   });
 });
