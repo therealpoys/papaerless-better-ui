@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import type { MetadataSuggestion, SuggestionField } from "@papaerless/shared-types";
-import { Button, Card, ConfidenceBadge, EmptyState, ErrorState, Field } from "@papaerless/ui";
+import type { MetadataSuggestion } from "@papaerless/shared-types";
+import { Button, Card, ConfidenceBadge, EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
-import { isReviewComplete, withoutTags } from "../lib/reviewCard";
+import { buildApply, selectionCount, toggle, type ReviewSelection, type TextField } from "../lib/reviewCard";
+
+const TEXT_FIELDS: TextField[] = ["title", "correspondent", "documentType"];
 
 export function SuggestionCard({
   suggestion,
@@ -15,49 +17,38 @@ export function SuggestionCard({
   onDone: () => void;
 }) {
   const { t } = useTranslation();
-  const [title, setTitle] = useState(suggestion.title ?? "");
-  const [correspondent, setCorrespondent] = useState(suggestion.correspondent ?? "");
-  const [documentType, setDocumentType] = useState(suggestion.documentType ?? "");
-  // Was schon einzeln übernommen wurde, bleibt sichtbar, ist aber gesperrt.
-  const [doneFields, setDoneFields] = useState<SuggestionField[]>([]);
-  const [openTags, setOpenTags] = useState(suggestion.tags ?? []);
+  const [values, setValues] = useState<Record<TextField, string>>({
+    title: suggestion.title ?? "",
+    correspondent: suggestion.correspondent ?? "",
+    documentType: suggestion.documentType ?? "",
+  });
+  // Alles ist vorausgewählt; abgewählte Teile werden beim Übernehmen verworfen.
+  const textFields = TEXT_FIELDS.filter((f) => suggestion[f]);
+  const allTags = suggestion.tags ?? [];
+  const [selection, setSelection] = useState<ReviewSelection>({ fields: textFields, tags: allTags });
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const current = (): MetadataSuggestion => ({
-    ...suggestion,
-    title: title || undefined,
-    correspondent: correspondent || undefined,
-    documentType: documentType || undefined,
-    tags: openTags,
-  });
+  const total = textFields.length + allTags.length;
+  const count = selectionCount(selection);
 
   async function handleApply() {
     setIsSaving(true);
     setError(null);
     try {
-      await api.applySuggestion(suggestion.documentId, current());
+      const { fields, onlyTags } = buildApply(selection);
+      const edited: MetadataSuggestion = {
+        ...suggestion,
+        title: values.title || undefined,
+        correspondent: values.correspondent || undefined,
+        documentType: values.documentType || undefined,
+      };
+      await api.applySuggestionFields(suggestion.documentId, edited, fields, onlyTags);
+      // Abgewähltes ist damit abgelehnt und soll nicht in der Liste hängen bleiben.
+      if (count < total) await api.dismissSuggestion(suggestion.documentId);
       onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("reviewInbox.applyFailed"));
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  async function handleApplyField(field: SuggestionField, onlyTags?: string[]) {
-    setIsSaving(true);
-    setError(null);
-    try {
-      await api.applySuggestionFields(suggestion.documentId, current(), [field], onlyTags);
-      const rest = onlyTags ? withoutTags(openTags, onlyTags) : openTags;
-      const done = field === "tags" ? doneFields : [...doneFields, field];
-      if (field === "tags") setOpenTags(rest);
-      else setDoneFields(done);
-      if (isReviewComplete({ title, correspondent, documentType }, done, rest)) onDone();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("reviewInbox.applyFailed"));
-    } finally {
       setIsSaving(false);
     }
   }
@@ -73,11 +64,11 @@ export function SuggestionCard({
     }
   }
 
-  const textFields: { field: "title" | "correspondent" | "documentType"; label: string; value: string; set: (v: string) => void }[] = [
-    { field: "title", label: t("reviewInbox.titleLabel"), value: title, set: setTitle },
-    { field: "correspondent", label: t("reviewInbox.correspondentLabel"), value: correspondent, set: setCorrespondent },
-    { field: "documentType", label: t("reviewInbox.documentTypeLabel"), value: documentType, set: setDocumentType },
-  ];
+  const labels: Record<TextField, string> = {
+    title: t("reviewInbox.titleLabel"),
+    correspondent: t("reviewInbox.correspondentLabel"),
+    documentType: t("reviewInbox.documentTypeLabel"),
+  };
 
   return (
     <Card className="suggestion-card">
@@ -93,54 +84,58 @@ export function SuggestionCard({
         />
       </div>
 
-      {textFields.filter(({ field }) => suggestion[field]).map(({ field, label, value, set }) => {
-        const done = doneFields.includes(field);
+      {textFields.map((field) => {
+        const checked = selection.fields.includes(field);
         return (
-          <Field key={field} label={label}>
-            <div className="suggestion-card__field">
-              <input value={value} disabled={done || isSaving} onChange={(e) => set(e.target.value)} />
-              {done ? (
-                <span className="hint">{t("reviewInbox.fieldApplied")}</span>
-              ) : (
-                <Button
-                  variant="secondary"
-                  disabled={isSaving || !value.trim()}
-                  onClick={() => void handleApplyField(field)}
-                  aria-label={t("reviewInbox.applyFieldLabel", { field: label })}
-                >
-                  {t("reviewInbox.applyField")}
-                </Button>
-              )}
-            </div>
-          </Field>
+          <div key={field} className="suggestion-pick">
+            <label className="suggestion-pick__label">
+              <input
+                type="checkbox"
+                checked={checked}
+                disabled={isSaving}
+                onChange={() => setSelection((s) => ({ ...s, fields: toggle(s.fields, field) }))}
+              />
+              {labels[field]}
+            </label>
+            <input
+              value={values[field]}
+              disabled={!checked || isSaving}
+              aria-label={labels[field]}
+              onChange={(e) => setValues((v) => ({ ...v, [field]: e.target.value }))}
+            />
+          </div>
         );
       })}
 
-      {openTags.length > 0 && (
-        <Field label={t("reviewInbox.tagsLabel")}>
+      {allTags.length > 0 && (
+        <div className="suggestion-pick">
+          <span className="suggestion-pick__label">{t("reviewInbox.tagsLabel")}</span>
           <div className="suggestion-item__tags">
-            {openTags.map((name) => (
-              <button
-                key={name}
-                type="button"
-                className="suggestion-chip"
-                disabled={isSaving}
-                title={t("reviewInbox.addTag", { name })}
-                aria-label={t("reviewInbox.addTag", { name })}
-                onClick={() => void handleApplyField("tags", [name])}
-              >
-                + {name}
-              </button>
-            ))}
+            {allTags.map((name) => {
+              const on = selection.tags.includes(name);
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  className="suggestion-toggle"
+                  aria-pressed={on}
+                  disabled={isSaving}
+                  onClick={() => setSelection((s) => ({ ...s, tags: toggle(s.tags, name) }))}
+                >
+                  {on ? "✓ " : ""}
+                  {name}
+                </button>
+              );
+            })}
           </div>
-        </Field>
+        </div>
       )}
 
       <div className="suggestion-card__actions">
-        <Button onClick={handleApply} disabled={isSaving}>
-          {t("reviewInbox.apply")}
+        <Button onClick={handleApply} disabled={isSaving || count === 0}>
+          {count === total ? t("reviewInbox.apply") : t("reviewInbox.applySelection", { count, total })}
         </Button>
-        <Button variant="secondary" onClick={handleDismiss} disabled={isSaving}>
+        <Button variant="link" onClick={handleDismiss} disabled={isSaving}>
           {t("reviewInbox.dismiss")}
         </Button>
       </div>

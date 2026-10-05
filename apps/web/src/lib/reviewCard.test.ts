@@ -1,25 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { isReviewComplete, withoutTags } from "./reviewCard";
+import { buildApply, selectionCount, toggle } from "./reviewCard";
 
-const values = { title: "Rechnung", correspondent: "Telekom", documentType: "" };
-
-describe("withoutTags", () => {
-  it("entfernt übernommene Tags unabhängig von der Schreibweise", () => {
-    expect(withoutTags(["Steuer", "Auto", "Haus"], [" steuer "])).toEqual(["Auto", "Haus"]);
+describe("buildApply", () => {
+  it("nimmt nur gewählte Textfelder, wenn keine Tags gewählt sind", () => {
+    expect(buildApply({ fields: ["title"], tags: [] })).toEqual({ fields: ["title"] });
   });
-  it("lässt alles stehen, wenn nichts übernommen wurde", () => {
-    expect(withoutTags(["Steuer"], [])).toEqual(["Steuer"]);
+  it("hängt tags und die gewählten Tags an", () => {
+    expect(buildApply({ fields: ["title", "documentType"], tags: ["Steuer"] })).toEqual({
+      fields: ["title", "documentType", "tags"],
+      onlyTags: ["Steuer"],
+    });
+  });
+  it("funktioniert auch nur mit Tags", () => {
+    expect(buildApply({ fields: [], tags: ["A", "B"] })).toEqual({ fields: ["tags"], onlyTags: ["A", "B"] });
   });
 });
 
-describe("isReviewComplete", () => {
-  it("ist nicht fertig, solange Textfelder offen sind", () => {
-    expect(isReviewComplete(values, ["title"], [])).toBe(false);
+describe("selectionCount", () => {
+  it("zählt Felder und Tags zusammen", () => {
+    expect(selectionCount({ fields: ["title"], tags: ["A", "B"] })).toBe(3);
+    expect(selectionCount({ fields: [], tags: [] })).toBe(0);
   });
-  it("ist nicht fertig, solange Tags offen sind", () => {
-    expect(isReviewComplete(values, ["title", "correspondent"], ["Auto"])).toBe(false);
-  });
-  it("ignoriert leere Felder und ist fertig, wenn alles Befüllte übernommen ist", () => {
-    expect(isReviewComplete(values, ["title", "correspondent"], [])).toBe(true);
+});
+
+describe("toggle", () => {
+  it("fügt hinzu und entfernt wieder", () => {
+    expect(toggle(["a"], "b")).toEqual(["a", "b"]);
+    expect(toggle(["a", "b"], "a")).toEqual(["b"]);
   });
 });
