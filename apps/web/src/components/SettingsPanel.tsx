@@ -39,9 +39,11 @@ export function SettingsPanel() {
   return (
     <section className="settings-panel" aria-labelledby="settings-title">
       <h2 id="settings-title">{t("settings.title")}</h2>
+      <div className="settings-panel__card">
       <label className="settings-panel__option">
         <input
           type="checkbox"
+          role="switch"
           checked={autoSuggest}
           disabled={!loaded || saving}
           onChange={(e) => void handleChange(e.target.checked)}
@@ -49,20 +51,21 @@ export function SettingsPanel() {
         />
         <span>
           <strong>{t("settings.autoSuggest.label")}</strong>
-          <span id="auto-suggest-hint" className="settings-panel__hint" style={{ display: "block" }}>
+          <span id="auto-suggest-hint" className="settings-panel__hint">
             {t("settings.autoSuggest.description")}
           </span>
-          <span className="settings-panel__hint" style={{ display: "block" }}>
+          <span className="settings-panel__hint">
             {t("settings.autoSuggest.cpuHint")}
           </span>
           {!aiEnabled && (
-            <span className="settings-panel__hint" style={{ display: "block" }} role="status">
+            <span className="settings-panel__hint" role="status">
               {t("settings.autoSuggest.aiDisabled")}
             </span>
           )}
         </span>
       </label>
-      {error && loaded && <p role="alert">{error}</p>}
+      </div>
+      {error && loaded && <p className="settings-panel__error" role="alert">{error}</p>}
     </section>
   );
 }

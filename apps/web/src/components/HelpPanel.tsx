@@ -8,15 +8,14 @@ export function HelpPanel() {
   return (
     <section className="help-panel" aria-labelledby="help-title">
       <h2 id="help-title">{t("help.title")}</h2>
-      <p>{t("help.intro")}</p>
+      <p className="help-panel__intro">{t("help.intro")}</p>
 
       <h3>{t("help.stepsHeading")}</h3>
       <ol>
         {STEPS.map((s) => (
           <li key={s}>
             <strong>{t(`help.steps.${s}.title`)}</strong>
-            <br />
-            {t(`help.steps.${s}.text`)}
+            <span>{t(`help.steps.${s}.text`)}</span>
           </li>
         ))}
       </ol>
@@ -25,9 +24,7 @@ export function HelpPanel() {
       <dl>
         {TERMS.map((g) => (
           <div key={g}>
-            <dt>
-              <strong>{t(`help.glossary.${g}.term`)}</strong>
-            </dt>
+            <dt>{t(`help.glossary.${g}.term`)}</dt>
             <dd>{t(`help.glossary.${g}.definition`)}</dd>
           </div>
         ))}

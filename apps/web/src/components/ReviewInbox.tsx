@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import type { MetadataSuggestion } from "@papaerless/shared-types";
+import type { MetadataSuggestion, SuggestionField } from "@papaerless/shared-types";
 import { Button, Card, ConfidenceBadge, EmptyState, ErrorState, Field } from "@papaerless/ui";
 import { api } from "../lib/api";
+import { isReviewComplete, withoutTags } from "../lib/reviewCard";
 
 export function SuggestionCard({
   suggestion,
@@ -17,25 +18,43 @@ export function SuggestionCard({
   const [title, setTitle] = useState(suggestion.title ?? "");
   const [correspondent, setCorrespondent] = useState(suggestion.correspondent ?? "");
   const [documentType, setDocumentType] = useState(suggestion.documentType ?? "");
-  const [tagsInput, setTagsInput] = useState((suggestion.tags ?? []).join(", "));
+  // Was schon einzeln übernommen wurde, bleibt sichtbar, ist aber gesperrt.
+  const [doneFields, setDoneFields] = useState<SuggestionField[]>([]);
+  const [openTags, setOpenTags] = useState(suggestion.tags ?? []);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const current = (): MetadataSuggestion => ({
+    ...suggestion,
+    title: title || undefined,
+    correspondent: correspondent || undefined,
+    documentType: documentType || undefined,
+    tags: openTags,
+  });
 
   async function handleApply() {
     setIsSaving(true);
     setError(null);
     try {
-      await api.applySuggestion(suggestion.documentId, {
-        ...suggestion,
-        title: title || undefined,
-        correspondent: correspondent || undefined,
-        documentType: documentType || undefined,
-        tags: tagsInput
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-      });
+      await api.applySuggestion(suggestion.documentId, current());
       onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("reviewInbox.applyFailed"));
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleApplyField(field: SuggestionField, onlyTags?: string[]) {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await api.applySuggestionFields(suggestion.documentId, current(), [field], onlyTags);
+      const rest = onlyTags ? withoutTags(openTags, onlyTags) : openTags;
+      const done = field === "tags" ? doneFields : [...doneFields, field];
+      if (field === "tags") setOpenTags(rest);
+      else setDoneFields(done);
+      if (isReviewComplete({ title, correspondent, documentType }, done, rest)) onDone();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("reviewInbox.applyFailed"));
     } finally {
@@ -54,6 +73,12 @@ export function SuggestionCard({
     }
   }
 
+  const textFields: { field: "title" | "correspondent" | "documentType"; label: string; value: string; set: (v: string) => void }[] = [
+    { field: "title", label: t("reviewInbox.titleLabel"), value: title, set: setTitle },
+    { field: "correspondent", label: t("reviewInbox.correspondentLabel"), value: correspondent, set: setCorrespondent },
+    { field: "documentType", label: t("reviewInbox.documentTypeLabel"), value: documentType, set: setDocumentType },
+  ];
+
   return (
     <Card className="suggestion-card">
       <div className="suggestion-card__header">
@@ -68,28 +93,47 @@ export function SuggestionCard({
         />
       </div>
 
-      <Field label={t("reviewInbox.titleLabel")}>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      </Field>
+      {textFields.filter(({ field }) => suggestion[field]).map(({ field, label, value, set }) => {
+        const done = doneFields.includes(field);
+        return (
+          <Field key={field} label={label}>
+            <div className="suggestion-card__field">
+              <input value={value} disabled={done || isSaving} onChange={(e) => set(e.target.value)} />
+              {done ? (
+                <span className="hint">{t("reviewInbox.fieldApplied")}</span>
+              ) : (
+                <Button
+                  variant="secondary"
+                  disabled={isSaving || !value.trim()}
+                  onClick={() => void handleApplyField(field)}
+                  aria-label={t("reviewInbox.applyFieldLabel", { field: label })}
+                >
+                  {t("reviewInbox.applyField")}
+                </Button>
+              )}
+            </div>
+          </Field>
+        );
+      })}
 
-      <Field label={t("reviewInbox.correspondentLabel")}>
-        <input value={correspondent} onChange={(e) => setCorrespondent(e.target.value)} />
-      </Field>
-
-      <Field label={t("reviewInbox.documentTypeLabel")}>
-        <input value={documentType} onChange={(e) => setDocumentType(e.target.value)} />
-      </Field>
-
-      <Field label={t("reviewInbox.tagsLabel")}>
-        <input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} />
-      </Field>
-
-      {(suggestion.date || suggestion.amount) && (
-        <p className="suggestion-card__meta">
-          {suggestion.date && t("reviewInbox.dateMeta", { date: suggestion.date })}
-          {suggestion.date && suggestion.amount && " · "}
-          {suggestion.amount && t("reviewInbox.amountMeta", { amount: suggestion.amount.toFixed(2) })}
-        </p>
+      {openTags.length > 0 && (
+        <Field label={t("reviewInbox.tagsLabel")}>
+          <div className="suggestion-item__tags">
+            {openTags.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="suggestion-chip"
+                disabled={isSaving}
+                title={t("reviewInbox.addTag", { name })}
+                aria-label={t("reviewInbox.addTag", { name })}
+                onClick={() => void handleApplyField("tags", [name])}
+              >
+                + {name}
+              </button>
+            ))}
+          </div>
+        </Field>
       )}
 
       <div className="suggestion-card__actions">
@@ -141,10 +185,13 @@ export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
   }
 
   return (
-    <div className="review-inbox">
-      {suggestions.map((s) => (
-        <SuggestionCard key={s.documentId} suggestion={s} onDone={reload} />
-      ))}
-    </div>
+    <section className="review-inbox" aria-labelledby="review-inbox-title">
+      <h2 id="review-inbox-title">{t("reviewInbox.title", { count: suggestions.length })}</h2>
+      <div className="review-inbox__grid">
+        {suggestions.map((s) => (
+          <SuggestionCard key={s.documentId} suggestion={s} onDone={reload} />
+        ))}
+      </div>
+    </section>
   );
 }
