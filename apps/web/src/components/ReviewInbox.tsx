@@ -147,7 +147,7 @@ export function SuggestionCard({
 
 export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
   const { t } = useTranslation();
-  const [suggestions, setSuggestions] = useState<MetadataSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<MetadataSuggestion[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function reload() {
@@ -169,6 +169,8 @@ export function ReviewInbox({ aiEnabled }: { aiEnabled: boolean }) {
   }
 
   if (error) return <ErrorState message={error} onRetry={reload} retryLabel={t("common.retry")} />;
+
+  if (suggestions === null) return <p className="hint" role="status">{t("reviewInbox.loading")}</p>;
 
   if (suggestions.length === 0) {
     return (

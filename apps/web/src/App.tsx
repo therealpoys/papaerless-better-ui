@@ -89,6 +89,11 @@ export default function App() {
     registerWebPush().catch((err) => console.warn("Web Push nicht verfügbar:", err));
   }, [reloadMetadata]);
 
+  // Auf schmalen Bildschirmen scrollt die Reiterzeile; der aktive Reiter soll sichtbar bleiben.
+  useEffect(() => {
+    document.querySelector(".app__tab--active")?.scrollIntoView?.({ inline: "center", block: "nearest" });
+  }, [tab]);
+
   return (
     <div className="app">
       <header className="app__header">

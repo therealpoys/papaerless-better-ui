@@ -1113,3 +1113,35 @@ body {
 }
 .help-panel dt { font-weight: 600; }
 .help-panel dd { margin: var(--space-xs) 0 0; color: var(--color-text-muted); line-height: 1.5; }
+
+@media (max-width: 720px) {
+  .app__header { padding: 0.6rem var(--space-lg); gap: 0.5rem; }
+
+  /* Reiter in einer wischbaren Zeile statt drei Zeilen. */
+  .app__tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: calc(100% + 2 * var(--space-lg));
+    margin: 0 calc(-1 * var(--space-lg));
+    padding: 0 var(--space-lg) 0.2rem;
+    scrollbar-width: none;
+  }
+  .app__tabs::-webkit-scrollbar { display: none; }
+  .app__tabs a { flex: none; }
+
+  .app__main--full { padding: var(--space-lg); }
+
+  .review-inbox h2,
+  .settings-panel h2,
+  .help-panel h2 { margin-bottom: var(--space-md); }
+
+  .settings-panel__card { padding: var(--space-md) var(--space-lg); }
+
+  .help-panel ol li { grid-template-columns: 1.75rem 1fr; column-gap: var(--space-sm); padding: var(--space-md); }
+  .help-panel ol li::before { width: 1.75rem; height: 1.75rem; font-size: var(--font-size-sm); }
+  .help-panel dl { grid-template-columns: 1fr; }
+
+  .suggestion-card__actions .ui-button { min-height: 2.5rem; }
+  .suggestion-pick__label input { width: 1.25rem; height: 1.25rem; }
+  .suggestion-toggle { padding: 0.4rem 0.8rem; }
+}

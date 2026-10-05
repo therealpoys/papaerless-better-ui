@@ -210,6 +210,7 @@
     }
   },
   "reviewInbox": {
+    "loading": "Vorschläge werden geladen …",
     "title_one": "{{count}} Vorschlag zu prüfen",
     "title_other": "{{count}} Vorschläge zu prüfen",
     "documentHeading": "Dokument #{{id}}",
