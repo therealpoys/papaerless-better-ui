@@ -464,5 +464,22 @@
       "aiDisabled": "Die KI-Erkennung ist auf dem Server nicht eingerichtet. Der Schalter wirkt erst, wenn sie aktiviert ist.",
       "saveFailed": "Speichern fehlgeschlagen"
     }
+  },
+  "serverUrl": {
+    "label": "Server-Adresse",
+    "placeholder": "https://dokumente.example.de",
+    "hint": "Adresse des Servers, auf dem diese App läuft (ohne /api am Ende).",
+    "testAndSave": "Verbindung testen und speichern",
+    "testing": "Verbindung wird geprüft …",
+    "saveAnyway": "Trotzdem speichern",
+    "setupTitle": "Server einrichten",
+    "setupIntro": "Bitte geben Sie die Adresse Ihres Servers ein, damit die App Ihre Dokumente laden kann.",
+    "errors": {
+      "empty": "Bitte eine Adresse eingeben.",
+      "invalid": "Das ist keine gültige Adresse. Beispiel: https://dokumente.example.de",
+      "unreachable": "Der Server ist nicht erreichbar. Adresse, Netzwerk und HTTPS prüfen.",
+      "notServer": "Unter dieser Adresse antwortet kein passender Server.",
+      "unauthorized": "Der Server lehnt die Anmeldung ab (Zugangstoken fehlt oder ist falsch)."
+    }
   }
 }

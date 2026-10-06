@@ -1,4 +1,5 @@
 import { api } from "./api";
+import { isNative } from "./platform";
 
 function urlBase64ToUint8Array(base64: string): Uint8Array {
   const padding = "=".repeat((4 - (base64.length % 4)) % 4);
@@ -13,6 +14,8 @@ function urlBase64ToUint8Array(base64: string): Uint8Array {
  * hat (Feature "Später – Push-Benachrichtigungen" ist dann einfach inaktiv).
  */
 export async function registerWebPush(): Promise<void> {
+  // In der Capacitor-WebView gibt es keinen Service Worker/Web Push (native Push wäre ein eigenes Thema).
+  if (isNative()) return;
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
 
   const { publicKey } = await api.webPushPublicKey();

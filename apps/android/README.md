@@ -25,9 +25,9 @@ Die CI (Job `android-apk` in `.github/workflows/ci.yml`) baut die Debug-APK und 
 3. Beim ersten Start Kamera- und Benachrichtigungs-Berechtigung erlauben.
 
 ## Server-URL der API einstellen
-Die App spricht nur `services/api` an (nie Paperless direkt). Die URL steckt zur Build-Zeit im Web-Bundle:
+Die App spricht nur `services/api` an (nie Paperless direkt). Beim ersten Start fragt ein Einrichtungsbildschirm nach der Server-URL (z. B. `http://192.168.1.10:3001`), testet die Verbindung und speichert sie; später änderbar unter Einstellungen. Optional kann ein Token zur Build-Zeit eingebettet werden:
 ```bash
-VITE_API_URL=http://192.168.1.10:3001 VITE_API_TOKEN=<token> pnpm --filter @papaerless/android build:apk
+VITE_API_TOKEN=<token> pnpm --filter @papaerless/android build:apk
 ```
 `localhost` zeigt auf dem Handy auf das Handy selbst – die LAN-IP bzw. den Hostnamen des Servers verwenden.
 Http im LAN ist erlaubt (`usesCleartextTraffic`). Das Token ist im Bundle sichtbar, daher nur für das

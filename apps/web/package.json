@@ -11,6 +11,9 @@
     "lint": "echo \"(noch kein Linter konfiguriert)\""
   },
   "dependencies": {
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/camera": "^8.2.5",
+    "@capacitor/core": "^8.5.2",
     "@papaerless/shared-types": "workspace:*",
     "@papaerless/ui": "workspace:*",
     "i18next": "^26.4.2",

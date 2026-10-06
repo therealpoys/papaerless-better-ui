@@ -3,6 +3,9 @@ import { useTranslation } from "react-i18next";
 import { ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
 import { saveAutoSuggest } from "../lib/settings";
+import { isNative } from "../lib/platform";
+import { getStoredServerUrl } from "../lib/serverUrl";
+import { ServerUrlForm } from "./ServerUrlForm";
 
 export function SettingsPanel() {
   const { t } = useTranslation();
@@ -65,6 +68,11 @@ export function SettingsPanel() {
         </span>
       </label>
       </div>
+      {isNative() && (
+        <div className="settings-panel__card">
+          <ServerUrlForm initialUrl={getStoredServerUrl() ?? ""} onSaved={() => window.location.reload()} />
+        </div>
+      )}
       {error && loaded && <p className="settings-panel__error" role="alert">{error}</p>}
     </section>
   );
