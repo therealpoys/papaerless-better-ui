@@ -27,6 +27,8 @@ TypeScript überall, wie in der vorläufigen Tendenz skizziert:
 | KI | Claude API (Anthropic) | `AI_PROVIDER` bleibt konfigurierbar/austauschbar (`services/ai-classifier` kapselt den Provider) |
 | DB für Vorschläge | keine eigene DB (vorerst) | Vorschläge liegen bis zur Bestätigung im Speicher/Request-Kontext von `services/api`; Persistenz-Frage bleibt in `docs/architecture.md` offen, falls später doch nötig |
 
+> **Update 2026-10-06:** Für Android gilt jetzt Capacitor um `apps/web`, siehe [0008](0008-android-app-mit-capacitor.md). `apps/mobile` (Expo) bleibt bestehen, wird aber nicht weiter ausgebaut.
+
 ## Konsequenzen
 - Node 20 LTS, pnpm als Package-Manager (siehe `packageManager` in der Root-`package.json`).
 - `packages/shared-types` und `packages/paperless-client` werden zuerst gebaut (Phase 1), `apps/mobile` erst in Phase 3.

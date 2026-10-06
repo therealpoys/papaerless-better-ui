@@ -212,3 +212,8 @@ sinnvoll sind.
       i18next-Abhängigkeit bleibt. Bewusst nicht angefasst: `console.warn`/Error-Strings (keine
       UI-Copy), `toLocaleDateString("de-DE")`-Datumsformatierung (eigenes Thema, offener
       Follow-up) und rein dekorative Zeichen (`—`, `·`, `€` etc.).
+- [x] **Android-App via Capacitor** – neues Package `apps/android` verpackt `apps/web` als Android-App
+      (ADR [0008](decisions/0008-android-app-mit-capacitor.md)); Manifest mit Kamera/Push-Berechtigung,
+      "Teilen mit…"-Intent-Filter (PDF/Bilder) und http im LAN, CI-Job `android-apk` baut die Debug-APK.
+      Offen: Verarbeitung geteilter Dateien in der Web-App, echte Icons, Release-Signing. APK-Build
+      lokal nicht verifiziert (kein JDK/Android-SDK in der Entwicklungsumgebung).

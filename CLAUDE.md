@@ -28,3 +28,4 @@ Noch offen, siehe [docs/decisions/0001-tech-stack.md](docs/decisions/0001-tech-s
 - `pnpm dev` – alle Apps/Services im Dev-Modus (Turborepo), u.a. `services/api` auf :3001 und `apps/web` auf :5173
 - `pnpm typecheck` / `pnpm build` / `pnpm lint` / `pnpm test` (vitest) – über alle Packages
 - `docker compose -f infra/paperless/docker-compose.yml up -d` – lokales Paperless-ngx auf :8000 starten
+- `pnpm --filter @papaerless/android sync` / `build:apk` – Android-App (Capacitor um `apps/web`, Node >= 22, APK braucht JDK 17 + Android SDK), siehe `apps/android/README.md`
