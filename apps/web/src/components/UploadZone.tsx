@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, Tag } from "@papaerless/shared-types";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { api } from "../lib/api";
+import { isNative } from "../lib/platform";
+import { fileFromPhotoPath } from "../lib/photo";
 import { UploadProgress, type UploadStage } from "@papaerless/ui";
 import { UploadReviewDialog } from "./UploadReviewDialog";
 import { heuristicSuggestion } from "../lib/uploadReview";
@@ -137,6 +140,26 @@ export function UploadZone({
     void uploadAll(list);
   }
 
+  /** Native App: Kamera-Plugin statt <input capture>; das Foto läuft durch denselben Upload-Flow. */
+  async function takeNativePhoto() {
+    if (busy) return;
+    try {
+      const photo = await Camera.getPhoto({
+        source: CameraSource.Camera,
+        resultType: CameraResultType.Uri,
+        quality: 90,
+        correctOrientation: true,
+      });
+      if (!photo.webPath) return;
+      const file = await fileFromPhotoPath(photo.webPath, photo.format);
+      const list: UploadItem[] = [{ id: nextId++, file, status: "waiting" }];
+      setItems(list);
+      void uploadAll(list);
+    } catch {
+      // Abbruch durch den Nutzer oder fehlende Berechtigung: nichts hochladen
+    }
+  }
+
   function retryFailed() {
     if (busy) return;
     const failed = items.filter((item) => item.status === "error");
@@ -233,7 +256,7 @@ export function UploadZone({
         type="button"
         className="upload-card__camera"
         disabled={busy}
-        onClick={() => cameraInputRef.current?.click()}
+        onClick={() => (isNative() ? void takeNativePhoto() : cameraInputRef.current?.click())}
       >
         {t("uploadZone.cameraButton")}
       </button>

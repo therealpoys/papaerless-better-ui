@@ -11,6 +11,7 @@ import { EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "./lib/api";
 import { registerWebPush } from "./lib/push";
 import { useRoute } from "./lib/useRoute";
+import { useNativeBack } from "./lib/useNativeBack";
 import { buildPath, type Route, type Tab } from "./lib/route";
 import { DocumentList } from "./components/DocumentList";
 import { DocumentDetail } from "./components/DocumentDetail";
@@ -34,6 +35,7 @@ function emptyRoute(tab: Tab): Route {
 export default function App() {
   const { t } = useTranslation();
   const [route, navigate] = useRoute();
+  useNativeBack(route, navigate);
   const tab = route.tab;
   const [documentsResult, setDocumentsResult] = useState<PaginatedDocuments>({
     results: [],

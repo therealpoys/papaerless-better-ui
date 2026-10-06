@@ -15,8 +15,18 @@ import type {
   Tag,
 } from "@papaerless/shared-types";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
+import { isNative } from "./platform";
+import { getStoredServerUrl, resolveApiBase } from "./serverUrl";
+
+/** Browser: wie bisher VITE_API_URL. Native App: die zur Laufzeit gespeicherte Server-URL (kein Proxy, anderes Origin). */
+function apiUrl(): string {
+  return resolveApiBase(isNative(), getStoredServerUrl(), import.meta.env.VITE_API_URL);
+}
 const API_TOKEN = import.meta.env.VITE_API_TOKEN as string | undefined;
+
+export function authHeaders(): Record<string, string> {
+  return API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {};
+}
 
 function withAuth(init?: RequestInit): RequestInit {
   if (!API_TOKEN) return init ?? {};
@@ -27,7 +37,7 @@ function withAuth(init?: RequestInit): RequestInit {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, withAuth(init));
+  const res = await fetch(`${apiUrl()}${path}`, withAuth(init));
   if (!res.ok) {
     throw new Error(`API-Fehler ${res.status} bei ${path}: ${await res.text()}`);
   }
@@ -108,7 +118,7 @@ export const api = {
   uploadDocument: (file: File, onProgress?: (loaded: number, total: number) => void) => {
     const form = new FormData();
     form.append("document", file, file.name);
-    return uploadWithProgress<{ taskId: string }>(`${API_URL}/api/documents/upload`, form, onProgress);
+    return uploadWithProgress<{ taskId: string }>(`${apiUrl()}/api/documents/upload`, form, onProgress);
   },
 
   getUploadTask: (taskId: string) =>
@@ -119,7 +129,7 @@ export const api = {
   deleteDocument: (id: number) => request<void>(`/api/documents/${id}`, { method: "DELETE" }),
 
   downloadDocument: async (id: number): Promise<{ blob: Blob; fileName: string }> => {
-    const res = await fetch(`${API_URL}/api/documents/${id}/download`, withAuth());
+    const res = await fetch(`${apiUrl()}/api/documents/${id}/download`, withAuth());
     if (!res.ok) {
       throw new Error(`Download fehlgeschlagen (${res.status}): ${await res.text()}`);
     }
@@ -145,7 +155,7 @@ export const api = {
 
   /** Vorschaubild per Auth-Fetch (ein <img src> kann keinen Bearer-Token senden). */
   fetchThumbnail: async (id: number, signal?: AbortSignal): Promise<Blob> => {
-    const res = await fetch(`${API_URL}/api/documents/${id}/thumbnail`, withAuth({ signal }));
+    const res = await fetch(`${apiUrl()}/api/documents/${id}/thumbnail`, withAuth({ signal }));
     if (!res.ok) throw new Error(`API-Fehler ${res.status} bei /api/documents/${id}/thumbnail`);
     return res.blob();
   },
