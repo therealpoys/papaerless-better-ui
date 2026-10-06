@@ -5,7 +5,7 @@ Android-App als [Capacitor](https://capacitorjs.com)-Hülle um `apps/web` (Entsc
 
 ## Voraussetzungen
 - Node >= 22 (Capacitor-CLI 8), pnpm
-- JDK 17 und Android SDK (`ANDROID_HOME` gesetzt, oder Android Studio) – nur zum APK-Bauen
+- JDK 21 und Node 22 und Android SDK (`ANDROID_HOME` gesetzt, oder Android Studio) – nur zum APK-Bauen
 
 ## Bauen
 ```bash
