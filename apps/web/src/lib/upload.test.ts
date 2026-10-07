@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { computeUploadProgress, formatElapsed, remainingTimeParts, waitForDocumentId } from "./upload";
+import { computeUploadProgress, formatElapsed, mergeUploadItems, remainingTimeParts, waitForDocumentId } from "./upload";
 
 const fast = { intervalMs: 0 };
 
@@ -82,5 +82,17 @@ describe("formatElapsed", () => {
     expect(formatElapsed(9_400)).toBe("0:09");
     expect(formatElapsed(135_000)).toBe("2:15");
     expect(formatElapsed(-5)).toBe("0:00");
+  });
+});
+
+describe("mergeUploadItems", () => {
+  it("beginnt eine neue Liste, wenn alles fertig ist", () => {
+    const merged = mergeUploadItems([{ status: "done" }, { status: "error" }], [{ status: "waiting" }]);
+    expect(merged).toEqual([{ status: "waiting" }]);
+  });
+
+  it("hängt neue Dateien an, solange noch hochgeladen wird", () => {
+    const merged = mergeUploadItems([{ status: "uploading" }, { status: "waiting" }], [{ status: "waiting" }]);
+    expect(merged).toHaveLength(3);
   });
 });

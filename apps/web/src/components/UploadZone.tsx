@@ -12,6 +12,7 @@ import {
   classifyUploadError,
   computeUploadProgress,
   formatElapsed,
+  mergeUploadItems,
   remainingTimeParts,
   validateFile,
   waitForDocumentId,
@@ -66,6 +67,8 @@ export function UploadZone({
   const [reviews, setReviews] = useState<PendingReview[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const queueRef = useRef<UploadItem[]>([]);
+  const runningRef = useRef(false);
   const [now, setNow] = useState(() => Date.now());
   const working = items.some((item) => item.status === "reading");
 
@@ -81,14 +84,14 @@ export function UploadZone({
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   }
 
-  async function uploadAll(list: UploadItem[]) {
-    setBusy(true);
-    let anyDone = false;
-    for (const item of list) {
+  /** Lädt eine Datei hoch; liefert true, wenn der Upload geklappt hat. */
+  async function processItem(item: UploadItem): Promise<boolean> {
+    let uploaded = false;
+    {
       const invalid = validateFile(item.file);
       if (invalid) {
         patch(item.id, { status: "error", error: invalid });
-        continue;
+        return false;
       }
       const uploadStart = Date.now();
       patch(item.id, { status: "uploading", error: undefined, percent: 0, remainingSeconds: null });
@@ -97,7 +100,7 @@ export function UploadZone({
           const info = computeUploadProgress(loaded, total, Date.now() - uploadStart);
           patch(item.id, { percent: info.percent, remainingSeconds: info.remainingSeconds });
         });
-        anyDone = true;
+        uploaded = true;
         // Danach öffnet sich das Prüf-Fenster. Klappt das Einlesen nicht, ist der Upload trotzdem ok.
         patch(item.id, { status: "reading", phaseStartedAt: Date.now() });
         try {
@@ -125,24 +128,44 @@ export function UploadZone({
         patch(item.id, { status: "error", error: classifyUploadError(err) });
       }
     }
+    return uploaded;
+  }
+
+  // Der Worker läuft mit dem jeweils neuesten processItem (aktuelle Tags, KI-Schalter usw.).
+  const processItemRef = useRef(processItem);
+  processItemRef.current = processItem;
+  const onUploadedRef = useRef(onUploaded);
+  onUploadedRef.current = onUploaded;
+
+  /** Arbeitet die Warteschlange nacheinander ab. Neue Dateien können jederzeit dazukommen. */
+  async function runQueue() {
+    if (runningRef.current) return;
+    runningRef.current = true;
+    setBusy(true);
+    let anyDone = false;
+    let item: UploadItem | undefined;
+    while ((item = queueRef.current.shift())) {
+      if (await processItemRef.current(item)) anyDone = true;
+    }
+    runningRef.current = false;
     setBusy(false);
-    if (anyDone) onUploaded();
+    if (anyDone) onUploadedRef.current();
+  }
+
+  function enqueue(list: UploadItem[]) {
+    if (list.length === 0) return;
+    setItems((prev) => mergeUploadItems(prev, list));
+    queueRef.current.push(...list);
+    void runQueue();
   }
 
   function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0 || busy) return;
-    const list: UploadItem[] = Array.from(files).map((file) => ({
-      id: nextId++,
-      file,
-      status: "waiting",
-    }));
-    setItems(list);
-    void uploadAll(list);
+    if (!files || files.length === 0) return;
+    enqueue(Array.from(files).map((file) => ({ id: nextId++, file, status: "waiting" as const })));
   }
 
   /** Native App: Kamera-Plugin statt <input capture>; das Foto läuft durch denselben Upload-Flow. */
   async function takeNativePhoto() {
-    if (busy) return;
     try {
       const photo = await Camera.getPhoto({
         source: CameraSource.Camera,
@@ -152,22 +175,19 @@ export function UploadZone({
       });
       if (!photo.webPath) return;
       const file = await fileFromPhotoPath(photo.webPath, photo.format);
-      const list: UploadItem[] = [{ id: nextId++, file, status: "waiting" }];
-      setItems(list);
-      void uploadAll(list);
+      enqueue([{ id: nextId++, file, status: "waiting" }]);
     } catch {
       // Abbruch durch den Nutzer oder fehlende Berechtigung: nichts hochladen
     }
   }
 
   function retryFailed() {
-    if (busy) return;
     const failed = items.filter((item) => item.status === "error");
     if (failed.length === 0) return;
     const ids = new Set(failed.map((item) => item.id));
-    const reset = failed.map((item): UploadItem => ({ ...item, status: "waiting", error: undefined }));
     setItems((prev) => prev.map((item) => (ids.has(item.id) ? { ...item, status: "waiting", error: undefined } : item)));
-    void uploadAll(reset);
+    queueRef.current.push(...failed.map((item): UploadItem => ({ ...item, status: "waiting", error: undefined })));
+    void runQueue();
   }
 
   function renderProgress(item: UploadItem) {
@@ -246,7 +266,7 @@ export function UploadZone({
         }}
       />
 
-      <button type="button" className="upload-card__main" disabled={busy} onClick={() => fileInputRef.current?.click()}>
+      <button type="button" className="upload-card__main" onClick={() => fileInputRef.current?.click()}>
         <span className="upload-card__main-icon" aria-hidden="true">
           +
         </span>
@@ -255,7 +275,6 @@ export function UploadZone({
       <button
         type="button"
         className="upload-card__camera"
-        disabled={busy}
         onClick={() => (isNative() ? void takeNativePhoto() : cameraInputRef.current?.click())}
       >
         {t("uploadZone.cameraButton")}

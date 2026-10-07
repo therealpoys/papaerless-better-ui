@@ -82,3 +82,12 @@ export function formatElapsed(ms: number): string {
   const secs = total % 60;
   return `${minutes}:${String(secs).padStart(2, "0")}`;
 }
+
+/**
+ * Hängt neue Dateien an die Liste an. Sind alle bisherigen Einträge fertig (hochgeladen oder
+ * fehlgeschlagen), beginnt eine frische Liste; sonst laufen die neuen hinten in die Warteschlange.
+ */
+export function mergeUploadItems<T extends { status: string }>(prev: T[], added: T[]): T[] {
+  const finished = prev.every((item) => item.status === "done" || item.status === "error");
+  return finished ? added : [...prev, ...added];
+}
