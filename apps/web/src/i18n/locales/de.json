@@ -250,6 +250,15 @@
     "overdue": "überfällig",
     "done": "Erledigt"
   },
+  "crop": {
+    "title": "Bild zuschneiden",
+    "position": "Bild {{current}} von {{total}}",
+    "hint": "Ziehen Sie die Ecken und Kanten des Rahmens, bis nur noch das Dokument zu sehen ist. Den ganzen Rahmen können Sie verschieben.",
+    "imageAlt": "Vorschau von {{name}}",
+    "confirm": "Zuschneiden und hochladen",
+    "useOriginal": "Ohne Zuschneiden hochladen",
+    "discard": "Dieses Bild weglassen"
+  },
   "uploadZone": {
     "sectionAriaLabel": "Dokument hinzufügen",
     "addButton": "Dokument hinzufügen",

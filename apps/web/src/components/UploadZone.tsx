@@ -7,6 +7,8 @@ import { isNative } from "../lib/platform";
 import { fileFromPhotoPath } from "../lib/photo";
 import { UploadProgress, type UploadStage } from "@papaerless/ui";
 import { UploadReviewDialog } from "./UploadReviewDialog";
+import { CropDialog } from "./CropDialog";
+import { isCroppable } from "../lib/crop";
 import { heuristicSuggestion } from "../lib/uploadReview";
 import {
   classifyUploadError,
@@ -67,6 +69,9 @@ export function UploadZone({
   const [reviews, setReviews] = useState<PendingReview[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  /** Bilder, die noch zugeschnitten werden sollen (das erste ist gerade im Dialog) */
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
+  const [cropTotal, setCropTotal] = useState(0);
   const queueRef = useRef<UploadItem[]>([]);
   const runningRef = useRef(false);
   const [now, setNow] = useState(() => Date.now());
@@ -159,9 +164,35 @@ export function UploadZone({
     void runQueue();
   }
 
+  function enqueueFiles(files: File[]) {
+    enqueue(files.map((file) => ({ id: nextId++, file, status: "waiting" as const })));
+  }
+
+  /** Bilder gehen erst durch den Zuschnitt-Dialog, PDFs und E-Mails direkt in den Upload. */
+  function addFiles(files: File[]) {
+    const images = files.filter(isCroppable);
+    enqueueFiles(files.filter((file) => !isCroppable(file)));
+    if (images.length === 0) return;
+    setCropQueue((prev) => {
+      if (prev.length === 0) setCropTotal(images.length);
+      else setCropTotal((total) => total + images.length);
+      return [...prev, ...images];
+    });
+  }
+
   function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    enqueue(Array.from(files).map((file) => ({ id: nextId++, file, status: "waiting" as const })));
+    addFiles(Array.from(files));
+  }
+
+  /** Aktuelles Bild aus dem Zuschnitt nehmen; bei `file` wird es (zugeschnitten) hochgeladen. */
+  function finishCrop(file?: File) {
+    if (file) enqueueFiles([file]);
+    setCropQueue((prev) => {
+      const rest = prev.slice(1);
+      if (rest.length === 0) setCropTotal(0);
+      return rest;
+    });
   }
 
   /** Native App: Kamera-Plugin statt <input capture>; das Foto läuft durch denselben Upload-Flow. */
@@ -175,7 +206,7 @@ export function UploadZone({
       });
       if (!photo.webPath) return;
       const file = await fileFromPhotoPath(photo.webPath, photo.format);
-      enqueue([{ id: nextId++, file, status: "waiting" }]);
+      addFiles([file]);
     } catch {
       // Abbruch durch den Nutzer oder fehlende Berechtigung: nichts hochladen
     }
@@ -306,6 +337,20 @@ export function UploadZone({
         <button type="button" className="upload-card__retry" onClick={retryFailed}>
           {t("uploadZone.retry")}
         </button>
+      )}
+      {cropQueue[0] && (
+        <CropDialog
+          key={`${cropQueue[0].name}-${cropQueue[0].lastModified}-${cropQueue[0].size}-${cropTotal - cropQueue.length}`}
+          file={cropQueue[0]}
+          position={
+            cropTotal > 1
+              ? t("crop.position", { current: cropTotal - cropQueue.length + 1, total: cropTotal })
+              : undefined
+          }
+          onConfirm={(file) => finishCrop(file)}
+          onUseOriginal={() => finishCrop(cropQueue[0])}
+          onDiscard={() => finishCrop()}
+        />
       )}
       {reviews[0] && (
         <UploadReviewDialog

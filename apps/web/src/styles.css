@@ -1186,3 +1186,99 @@ body {
   .suggestion-pick__label input { width: 1.25rem; height: 1.25rem; }
   .suggestion-toggle { padding: 0.4rem 0.8rem; }
 }
+
+/* Zuschnitt-Dialog */
+.crop-dialog {
+  width: min(48rem, calc(100vw - 1rem));
+  max-height: calc(100dvh - 1rem);
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  overflow: auto;
+}
+
+.crop-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.crop-dialog__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+}
+
+.crop-dialog__position {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.crop-dialog__hint {
+  margin: 0 0 0.75rem;
+}
+
+.crop-dialog__stage {
+  display: flex;
+  justify-content: center;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
+}
+
+.crop-dialog__frame {
+  position: relative;
+  line-height: 0;
+  user-select: none;
+  touch-action: none;
+}
+
+.crop-dialog__image {
+  display: block;
+  max-width: 100%;
+  max-height: 55dvh;
+  -webkit-user-drag: none;
+}
+
+.crop-dialog__box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #fff;
+  outline: 2px solid var(--color-accent);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  cursor: move;
+  touch-action: none;
+}
+
+.crop-dialog__handle {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  touch-action: none;
+}
+
+.crop-dialog__handle--nw { left: 0; top: 0; cursor: nwse-resize; }
+.crop-dialog__handle--n { left: 50%; top: 0; cursor: ns-resize; }
+.crop-dialog__handle--ne { left: 100%; top: 0; cursor: nesw-resize; }
+.crop-dialog__handle--e { left: 100%; top: 50%; cursor: ew-resize; }
+.crop-dialog__handle--se { left: 100%; top: 100%; cursor: nwse-resize; }
+.crop-dialog__handle--s { left: 50%; top: 100%; cursor: ns-resize; }
+.crop-dialog__handle--sw { left: 0; top: 100%; cursor: nesw-resize; }
+.crop-dialog__handle--w { left: 0; top: 50%; cursor: ew-resize; }
+
+.crop-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.crop-dialog__actions .ui-button {
+  min-height: 48px;
+  padding-inline: 1.25rem;
+  font-size: 1.05rem;
+}
