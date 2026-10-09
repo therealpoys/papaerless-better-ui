@@ -10,6 +10,7 @@ import type {
 import { EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "./lib/api";
 import { registerWebPush } from "./lib/push";
+import { listenForSharedFiles } from "./lib/shareTarget";
 import { useRoute } from "./lib/useRoute";
 import { useNativeBack } from "./lib/useNativeBack";
 import { buildPath, type Route, type Tab } from "./lib/route";
@@ -58,6 +59,8 @@ export default function App() {
   const setPage = (next: number) =>
     navigate({ tab: "documents", documentId: selectedId, filters, page: next });
   const [aiEnabled, setAiEnabled] = useState(false);
+  /** Per "Teilen mit…" angekommene Dateien; der UploadZone übergeben, sobald sie sichtbar ist. */
+  const [sharedFiles, setSharedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -90,6 +93,17 @@ export default function App() {
     api.aiStatus().then((s) => setAiEnabled(s.enabled)).catch(() => setAiEnabled(false));
     registerWebPush().catch((err) => console.warn("Web Push nicht verfügbar:", err));
   }, [reloadMetadata]);
+
+  useEffect(
+    () =>
+      listenForSharedFiles((files) => {
+        setSharedFiles((prev) => [...prev, ...files]);
+        navigate({ tab: "documents", documentId: null, filters: {}, page: 1 });
+      }),
+    // navigate ist nur zum Wechseln auf "Dokumente" nötig; das Abo soll nicht neu aufgebaut werden
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
 
   // Auf schmalen Bildschirmen scrollt die Reiterzeile; der aktive Reiter soll sichtbar bleiben.
   useEffect(() => {
@@ -147,6 +161,8 @@ export default function App() {
               correspondents={correspondents}
               documentTypes={documentTypes}
               onMetadataChanged={reloadMetadata}
+              incomingFiles={sharedFiles}
+              onIncomingTaken={() => setSharedFiles([])}
             />
             <SearchFilter
               value={filters}

@@ -28,6 +28,9 @@ interface UploadZoneProps {
   correspondents: Correspondent[];
   documentTypes: DocumentType[];
   onMetadataChanged: () => void;
+  /** Von außen angelieferte Dateien (z. B. "Teilen mit…"); laufen durch denselben Flow wie ausgewählte. */
+  incomingFiles?: File[];
+  onIncomingTaken?: () => void;
 }
 
 interface PendingReview {
@@ -61,6 +64,8 @@ export function UploadZone({
   correspondents,
   documentTypes,
   onMetadataChanged,
+  incomingFiles,
+  onIncomingTaken,
 }: UploadZoneProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
@@ -211,6 +216,14 @@ export function UploadZone({
       // Abbruch durch den Nutzer oder fehlende Berechtigung: nichts hochladen
     }
   }
+
+  const addFilesRef = useRef(addFiles);
+  addFilesRef.current = addFiles;
+  useEffect(() => {
+    if (!incomingFiles || incomingFiles.length === 0) return;
+    addFilesRef.current(incomingFiles);
+    onIncomingTaken?.();
+  }, [incomingFiles, onIncomingTaken]);
 
   function retryFailed() {
     const failed = items.filter((item) => item.status === "error");

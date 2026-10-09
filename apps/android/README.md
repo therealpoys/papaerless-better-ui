@@ -35,7 +35,9 @@ eigene Gerät/Netz bauen.
 
 ## Teilen mit…
 Das Manifest nimmt `ACTION_SEND`/`ACTION_SEND_MULTIPLE` für PDF und Bilder an, sodass die App im
-Android-Teilen-Menü erscheint. Die Verarbeitung der geteilten Dateien passiert in der Web-App.
+Android-Teilen-Menü erscheint. Das Plugin `ShareTargetPlugin` kopiert die geteilten Dateien in den App-Cache
+und reicht sie per `getSharedFiles()`/Event `sharedFiles` an die Web-App (`lib/shareTarget.ts`) weiter; dort
+laufen sie durch denselben Flow wie ausgewählte Dateien (Bilder: Zuschnitt, dann Upload und Prüf-Fenster).
 
 ## Icons und Splash
 Icons sind Capacitor-Platzhalter (`android/app/src/main/res/mipmap-*`), vor einem Release ersetzen.

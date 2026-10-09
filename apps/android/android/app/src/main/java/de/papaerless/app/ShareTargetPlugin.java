@@ -1,0 +1,119 @@
+package de.papaerless.app;
+
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.OpenableColumns;
+import com.getcapacitor.JSArray;
+import com.getcapacitor.JSObject;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Nimmt "Teilen mit…" (ACTION_SEND / ACTION_SEND_MULTIPLE) an: kopiert die geteilten Dateien in den
+ * App-Cache und gibt sie der Web-App über getSharedFiles() bzw. das Event "sharedFiles" weiter.
+ */
+@CapacitorPlugin(name = "ShareTarget")
+public class ShareTargetPlugin extends Plugin {
+
+    private final List<JSObject> pending = new ArrayList<>();
+
+    /** Wird von MainActivity für den Start-Intent und jeden neuen Intent aufgerufen. */
+    public void handleIntent(Intent intent) {
+        if (intent == null) return;
+        String action = intent.getAction();
+        List<Uri> uris = new ArrayList<>();
+        if (Intent.ACTION_SEND.equals(action)) {
+            Uri uri = getParcelableUri(intent);
+            if (uri != null) uris.add(uri);
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+            ArrayList<Uri> list = Build.VERSION.SDK_INT >= 33
+                ? intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri.class)
+                : intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+            if (list != null) uris.addAll(list);
+        } else {
+            return;
+        }
+        // Den Intent entwerten, damit ein Neustart der Activity die Dateien nicht erneut einliest.
+        intent.setAction(Intent.ACTION_MAIN);
+
+        boolean added = false;
+        for (Uri uri : uris) {
+            JSObject file = copyToCache(uri);
+            if (file != null) {
+                synchronized (pending) {
+                    pending.add(file);
+                }
+                added = true;
+            }
+        }
+        if (added) notifyListeners("sharedFiles", new JSObject(), true);
+    }
+
+    @PluginMethod
+    public void getSharedFiles(PluginCall call) {
+        JSArray files = new JSArray();
+        synchronized (pending) {
+            for (JSObject f : pending) files.put(f);
+            pending.clear();
+        }
+        JSObject result = new JSObject();
+        result.put("files", files);
+        call.resolve(result);
+    }
+
+    private Uri getParcelableUri(Intent intent) {
+        return Build.VERSION.SDK_INT >= 33
+            ? intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri.class)
+            : intent.getParcelableExtra(Intent.EXTRA_STREAM);
+    }
+
+    private JSObject copyToCache(Uri uri) {
+        ContentResolver resolver = getContext().getContentResolver();
+        String name = queryName(resolver, uri);
+        String type = resolver.getType(uri);
+        File dir = new File(getContext().getCacheDir(), "shared");
+        if (!dir.exists() && !dir.mkdirs()) return null;
+        // Eigenes Unterverzeichnis je Datei, damit gleiche Namen sich nicht überschreiben.
+        File sub = new File(dir, String.valueOf(System.nanoTime()));
+        if (!sub.mkdirs()) return null;
+        File target = new File(sub, name);
+        try (InputStream in = resolver.openInputStream(uri);
+             OutputStream out = new FileOutputStream(target)) {
+            if (in == null) return null;
+            byte[] buf = new byte[64 * 1024];
+            int n;
+            while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+        } catch (Exception e) {
+            return null;
+        }
+        JSObject file = new JSObject();
+        file.put("path", target.getAbsolutePath());
+        file.put("name", name);
+        file.put("type", type == null ? "" : type);
+        return file;
+    }
+
+    private String queryName(ContentResolver resolver, Uri uri) {
+        String name = null;
+        try (Cursor c = resolver.query(uri, new String[] { OpenableColumns.DISPLAY_NAME }, null, null, null)) {
+            if (c != null && c.moveToFirst()) name = c.getString(0);
+        } catch (Exception ignored) {
+            // Name ergibt sich dann aus dem Pfad
+        }
+        if (name == null || name.isEmpty()) name = uri.getLastPathSegment();
+        if (name == null || name.isEmpty()) name = "geteilt";
+        // Pfadtrenner entfernen, damit nichts außerhalb des Cache-Ordners landet.
+        return name.replaceAll("[/\\\\]", "_");
+    }
+}
