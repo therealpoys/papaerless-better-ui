@@ -80,7 +80,7 @@ public class ShareTargetPlugin extends Plugin {
             failed = errors.size();
         }
         Log.i(TAG, "Teilen verarbeitet: ok=" + ok + " fehler=" + failed);
-        toast(failed > 0 ? "Teilen fehlgeschlagen: " + errors.get(0) : "Geteilt: " + ok + " Datei(en) empfangen");
+        if (failed > 0) toast("Teilen fehlgeschlagen: " + errors.get(0));
         notifyListeners("sharedFiles", new JSObject(), true);
     }
 

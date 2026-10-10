@@ -36,6 +36,17 @@ describe("takeSharedFiles", () => {
     expect(errors).toEqual(["kaputt.pdf: weg"]);
   });
 
+  it("ruft toFile nur mit der Datei auf (kein Index als toUrl)", async () => {
+    const plugin = { getSharedFiles: async () => ({ files: [info(), info({ name: "b.pdf" })] }) };
+    const calls: unknown[][] = [];
+    const toFile = async (...args: unknown[]) => {
+      calls.push(args);
+      return new File(["x"], "a.pdf");
+    };
+    await takeSharedFiles(plugin, toFile as unknown as (i: SharedFileInfo) => Promise<File>);
+    expect(calls.map((c) => c.length)).toEqual([1, 1]);
+  });
+
   it("reicht Fehler des nativen Teils durch", async () => {
     const plugin = { getSharedFiles: async () => ({ files: [], errors: ["IOException: x"] }) };
     expect((await takeSharedFiles(plugin)).errors).toEqual(["IOException: x"]);

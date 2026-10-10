@@ -40,7 +40,8 @@ export async function takeSharedFiles(
   toFile: (info: SharedFileInfo) => Promise<File> = fileFromShared,
 ): Promise<SharedResult> {
   const { files: infos, errors = [] } = await plugin.getSharedFiles();
-  const settled = await Promise.allSettled(infos.map(toFile));
+  // Nur die Datei übergeben: map() würde sonst Index und Array als toUrl/fetchFn von fileFromShared mitgeben.
+  const settled = await Promise.allSettled(infos.map((info) => toFile(info)));
   const files: File[] = [];
   const failed = [...errors];
   settled.forEach((r, i) => {
@@ -62,7 +63,6 @@ export function listenForSharedFiles(
       .then(({ files, errors }) => {
         if (!active) return;
         if (files.length > 0) {
-          void ShareTarget.notify({ message: `Datei(en) in der App geladen: ${files.length}` }).catch(() => undefined);
           onFiles(files);
         }
         if (errors.length > 0) onError(errors.join("; "));

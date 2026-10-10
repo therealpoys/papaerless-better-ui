@@ -13,7 +13,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ShareTargetPlugin.class);
         registerPlugin(AppLockPlugin.class);
         super.onCreate(savedInstanceState);
-        Toast.makeText(this, "Build: Teilen-Diagnose 3", Toast.LENGTH_LONG).show();
         Log.i("ShareTarget", "onCreate action=" + (getIntent() == null ? null : getIntent().getAction()));
         handleShare(getIntent());
     }
