@@ -43,6 +43,9 @@ export const env = {
   apiHost: process.env.API_HOST || "0.0.0.0",
   paperlessUrl,
   paperlessApiToken: required("PAPERLESS_API_TOKEN"),
+  // Muss zu PAPERLESS_EMPTY_TRASH_DELAY in Paperless passen (Default dort: 30 Tage); Paperless
+  // verrät den Wert nicht über die API, wir zeigen ihn nur an.
+  trashRetentionDays: num("TRASH_RETENTION_DAYS", 30, 1),
   paperlessTimeoutMs: num("PAPERLESS_TIMEOUT_MS", 15_000, 1),
 
   // Optional, aber dringend empfohlen sobald das Backend nicht mehr nur auf localhost läuft:

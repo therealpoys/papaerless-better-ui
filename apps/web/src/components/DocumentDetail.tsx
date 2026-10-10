@@ -26,7 +26,8 @@ interface DocumentDetailProps {
   tags: Tag[];
   aiEnabled: boolean;
   onSaved: () => void;
-  onDeleted: () => void;
+  onDeleted: (id: number) => void;
+  trashRetentionDays: number;
   onMetadataChanged: () => void;
 }
 
@@ -105,6 +106,7 @@ export function DocumentDetail({
   aiEnabled,
   onSaved,
   onDeleted,
+  trashRetentionDays,
   onMetadataChanged,
 }: DocumentDetailProps) {
   const { t } = useTranslation();
@@ -211,7 +213,7 @@ export function DocumentDetail({
     setDeleteError(null);
     try {
       await api.deleteDocument(documentId);
-      onDeleted();
+      onDeleted(documentId);
     } catch (err) {
       setDeleteError(friendlyError(err, t, t("documentDetail.deleteFailed")));
       setIsDeleting(false);
@@ -389,7 +391,7 @@ export function DocumentDetail({
         onConfirm={handleDelete}
       >
         <p className="confirm-dialog__doc">{doc.title || t("documentDetail.untitledFallback")}</p>
-        <p>{t("documentDetail.confirmDelete.warning")}</p>
+        <p>{t("trash.confirmWarning", { count: trashRetentionDays })}</p>
       </ConfirmDialog>
 
       <ReminderForm documentId={documentId} />

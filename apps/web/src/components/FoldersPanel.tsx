@@ -26,6 +26,9 @@ interface Props {
   documentTypes: DocumentType[];
   aiEnabled: boolean;
   onMetadataChanged: () => void;
+  trashRetentionDays: number;
+  /** Nach dem Löschen eines Dokuments (landet im Papierkorb) – zeigt dort den Rückgängig-Hinweis. */
+  onDocumentDeleted: (id: number) => void;
   /** Ordner, der beim Öffnen des Tabs direkt geöffnet wird (z. B. von der Startseite). */
   openId: string | null;
   documentId: number | null;
@@ -83,7 +86,7 @@ export function FolderTile({
   );
 }
 
-export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, onMetadataChanged, openId, documentId, onNavigate }: Props) {
+export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, onMetadataChanged, openId, documentId, onNavigate, trashRetentionDays, onDocumentDeleted }: Props) {
   const { t } = useTranslation();
   const [folders, setFolders] = useState<Folder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -182,7 +185,9 @@ export function FoldersPanel({ tags, correspondents, documentTypes, aiEnabled, o
           tags={tags}
           aiEnabled={aiEnabled}
           onSaved={() => setReloadKey((k) => k + 1)}
-          onDeleted={() => {
+          trashRetentionDays={trashRetentionDays}
+          onDeleted={(id) => {
+            onDocumentDeleted(id);
             onNavigate(openId, null);
             setReloadKey((k) => k + 1);
           }}

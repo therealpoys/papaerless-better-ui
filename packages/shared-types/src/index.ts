@@ -30,6 +30,17 @@ export interface PaperlessDocument {
   tags: number[];
 }
 
+/** Ein Dokument im Paperless-Papierkorb. `deletedAt` ist ein ISO-Zeitstempel. */
+export interface TrashedDocument extends PaperlessDocument {
+  deletedAt: string;
+}
+
+export interface TrashList {
+  results: TrashedDocument[];
+  /** Nach so vielen Tagen leert Paperless den Papierkorb selbst (PAPERLESS_EMPTY_TRASH_DELAY). */
+  retentionDays: number;
+}
+
 export interface MetadataSuggestion {
   documentId: number;
   title?: string;

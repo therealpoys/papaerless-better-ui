@@ -31,6 +31,8 @@ interface DocumentListProps {
   /** Ist irgendein Suchbegriff/Filter aktiv? */
   hasActiveFilters?: boolean;
   onResetFilters?: () => void;
+
+  trashRetentionDays: number;
 }
 
 const MAX_LISTED_TITLES = 5;
@@ -63,6 +65,8 @@ export function DocumentList({
   isLoading = false,
   hasActiveFilters = false,
   onResetFilters,
+
+  trashRetentionDays,
 }: DocumentListProps) {
   const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -281,7 +285,7 @@ export function DocumentList({
         {selectedDocuments.length > MAX_LISTED_TITLES && (
           <p>{t("documentList.bulkActions.confirmDelete.more", { count: selectedDocuments.length - MAX_LISTED_TITLES })}</p>
         )}
-        <p>{t("documentList.bulkActions.confirmDelete.warning")}</p>
+        <p>{t("trash.confirmWarning", { count: trashRetentionDays })}</p>
       </ConfirmDialog>
 
       {bulkError && (
