@@ -273,6 +273,9 @@
     "hint": "Ziehen Sie die Ecken und Kanten des Rahmens, bis nur noch das Dokument zu sehen ist. Den ganzen Rahmen können Sie verschieben.",
     "imageAlt": "Vorschau von {{name}}",
     "confirm": "Zuschneiden und hochladen",
+    "autoDetect": "Automatisch erkennen",
+    "detected": "Das Dokument wurde automatisch erkannt. Sie können den Rahmen noch anpassen; unverändert wird das Bild begradigt.",
+    "notDetected": "Es wurde kein Dokument erkannt. Bitte ziehen Sie den Rahmen selbst auf das Dokument.",
     "useOriginal": "Ohne Zuschneiden hochladen",
     "discard": "Dieses Bild weglassen"
   },
