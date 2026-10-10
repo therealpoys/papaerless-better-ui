@@ -21,6 +21,7 @@ import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
 import { FoldersPanel } from "./components/FoldersPanel";
+import { ExpensesPanel } from "./components/ExpensesPanel";
 import { HomePanel } from "./components/HomePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { HelpPanel } from "./components/HelpPanel";
@@ -28,7 +29,7 @@ import { TrashPanel } from "./components/TrashPanel";
 import { UndoToast, type UndoToastData } from "./components/UndoToast";
 import { DEFAULT_TRASH_RETENTION_DAYS, UNDO_TOAST_MS, uniqueIds } from "./lib/trash";
 
-const TABS: Tab[] = ["home", "documents", "folders", "inbox", "reminders", "trash", "settings", "help"];
+const TABS: Tab[] = ["home", "documents", "folders", "inbox", "reminders", "expenses", "trash", "settings", "help"];
 
 function emptyRoute(tab: Tab): Route {
   if (tab === "documents") return { tab, documentId: null, filters: {}, page: 1 };
@@ -299,6 +300,16 @@ export default function App() {
       )}
 
       <UndoToast toast={toast} durationMs={UNDO_TOAST_MS} onDismiss={dismissToast} />
+
+      {tab === "expenses" && (
+        <main className="app__main app__main--full">
+          <ExpensesPanel
+            correspondents={correspondents}
+            documentTypes={documentTypes}
+            onOpenDocuments={(next) => navigate({ tab: "documents", documentId: null, filters: next, page: 1 })}
+          />
+        </main>
+      )}
 
       {tab === "settings" && (
         <main className="app__main app__main--full">

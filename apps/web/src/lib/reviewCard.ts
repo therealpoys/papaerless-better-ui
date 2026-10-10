@@ -1,6 +1,7 @@
 import type { SuggestionField } from "@papaerless/shared-types";
 
-export type TextField = Exclude<SuggestionField, "tags">;
+/** Felder der Review-Karte, die als Text bearbeitet werden (Datum/Betrag nur in der Detailansicht). */
+export type TextField = "title" | "correspondent" | "documentType";
 
 export interface ReviewSelection {
   /** Angehakte Textfelder (Titel, Absender, Art). */

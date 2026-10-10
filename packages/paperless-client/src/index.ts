@@ -3,6 +3,7 @@ import type {
   Correspondent,
   DocumentSearchParams,
   DocumentType,
+  ExpenseDocument,
   PaginatedDocuments,
   PaperlessDocument,
   Tag,
@@ -54,9 +55,39 @@ interface RawDocument {
   correspondent: number | null;
   document_type: number | null;
   tags: number[];
+  custom_fields?: RawCustomFieldValue[] | null;
 }
 
-function toDocument(raw: RawDocument): PaperlessDocument {
+interface RawCustomFieldValue {
+  field: number;
+  value: unknown;
+}
+
+interface RawCustomField {
+  id: number;
+  name: string;
+  data_type: string;
+}
+
+/** Name des Custom Fields, in dem wir den Betrag eines Dokuments ablegen. */
+export const AMOUNT_FIELD_NAME = "Betrag";
+
+/** Paperless speichert Geldbeträge als "EUR12.50" (Währungscode + Zahl mit Punkt). */
+export function formatMonetary(amount: number, currency = "EUR"): string {
+  return `${currency}${amount.toFixed(2)}`;
+}
+
+/** Gegenstück zu formatMonetary; akzeptiert auch eine nackte Zahl. `null` bei leer/ungültig. */
+export function parseMonetary(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value !== "string") return null;
+  const n = Number(value.replace(/[^0-9.\-]/g, ""));
+  return value.trim() !== "" && Number.isFinite(n) && /\d/.test(value) ? n : null;
+}
+
+function toDocument(raw: RawDocument, amountFieldId: number | null = null): PaperlessDocument {
+  const entry = amountFieldId === null ? undefined : raw.custom_fields?.find((f) => f.field === amountFieldId);
+  const amount = entry ? parseMonetary(entry.value) : null;
   return {
     id: raw.id,
     title: raw.title,
@@ -65,11 +96,66 @@ function toDocument(raw: RawDocument): PaperlessDocument {
     correspondent: raw.correspondent,
     documentType: raw.document_type,
     tags: raw.tags,
+    ...(amount !== null && { amount }),
   };
 }
 
 export class PaperlessClient {
   constructor(private readonly config: PaperlessClientConfig) {}
+
+  /** undefined = noch nicht nachgesehen, null = Feld existiert (noch) nicht. */
+  private amountFieldId: number | null | undefined;
+
+  private async lookupAmountField(): Promise<number | null> {
+    const data = await this.request<PaginatedResponse<RawCustomField>>(`/api/custom_fields/?page_size=100`);
+    const found = data.results.find((f) => f.name.toLowerCase() === AMOUNT_FIELD_NAME.toLowerCase());
+    return found ? found.id : null;
+  }
+
+  /**
+   * Stellt das Custom Field "Betrag" (monetary, EUR) sicher und liefert seine ID.
+   * Idempotent: ein vorhandenes Feld wird wiederverwendet, nie ein zweites angelegt.
+   */
+  async ensureAmountField(): Promise<number> {
+    if (typeof this.amountFieldId === "number") return this.amountFieldId;
+    const existing = await this.lookupAmountField();
+    if (existing !== null) return (this.amountFieldId = existing);
+    try {
+      const created = await this.request<RawCustomField>(`/api/custom_fields/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: AMOUNT_FIELD_NAME,
+          data_type: "monetary",
+          extra_data: { default_currency: "EUR" },
+        }),
+      });
+      return (this.amountFieldId = created.id);
+    } catch (err) {
+      // Parallel angelegt (Namen sind eindeutig)? Dann das neue Feld nehmen.
+      const raced = await this.lookupAmountField().catch(() => null);
+      if (raced !== null) return (this.amountFieldId = raced);
+      throw err;
+    }
+  }
+
+  /** Feld-ID nur nachschlagen (nie anlegen); Fehler lesen wir als "kein Betrag". */
+  private async knownAmountFieldId(): Promise<number | null> {
+    if (this.amountFieldId !== undefined && this.amountFieldId !== null) return this.amountFieldId;
+    try {
+      const id = await this.lookupAmountField();
+      if (id !== null) this.amountFieldId = id;
+      return id;
+    } catch {
+      return null;
+    }
+  }
+
+  private async toDocuments(raws: RawDocument[]): Promise<PaperlessDocument[]> {
+    const needsField = raws.some((r) => r.custom_fields && r.custom_fields.length > 0);
+    const fieldId = needsField ? await this.knownAmountFieldId() : null;
+    return raws.map((r) => toDocument(r, fieldId));
+  }
 
   /**
    * fetch mit Timeout; GETs werden bei Netzwerkfehlern, Timeouts und 502/503/504 mit
@@ -162,7 +248,46 @@ export class PaperlessClient {
     const data = await this.request<PaginatedResponse<RawDocument>>(
       `/api/documents/?${search.toString()}`,
     );
-    return { results: data.results.map(toDocument), count: data.count, page, pageSize };
+    return { results: await this.toDocuments(data.results), count: data.count, page, pageSize };
+  }
+
+  /**
+   * Alle Dokumente mit Betrag (für die Ausgaben-Übersicht), optional auf einen Zeitraum
+   * (`created`, YYYY-MM-DD) begrenzt. Holt seitenweise bis zu `maxPages` * 100 Dokumente.
+   */
+  async listExpenseDocuments(
+    range: { dateFrom?: string; dateTo?: string } = {},
+    maxPages = 50,
+  ): Promise<ExpenseDocument[]> {
+    const fieldId = await this.knownAmountFieldId();
+    if (fieldId === null) return [];
+    const out: ExpenseDocument[] = [];
+    for (let page = 1; page <= maxPages; page++) {
+      const search = new URLSearchParams({
+        page_size: "100",
+        page: String(page),
+        ordering: "-created",
+        custom_fields__id__all: String(fieldId),
+      });
+      if (range.dateFrom) search.set("created__date__gte", range.dateFrom);
+      if (range.dateTo) search.set("created__date__lte", range.dateTo);
+      const data = await this.request<PaginatedResponse<RawDocument>>(`/api/documents/?${search.toString()}`);
+      for (const raw of data.results) {
+        const doc = toDocument(raw, fieldId);
+        if (typeof doc.amount === "number") {
+          out.push({
+            id: doc.id,
+            title: doc.title,
+            created: doc.created,
+            correspondent: doc.correspondent,
+            documentType: doc.documentType,
+            amount: doc.amount,
+          });
+        }
+      }
+      if (!data.next) break;
+    }
+    return out;
   }
 
   /** Sucht ein Dokument mit dieser Prüfsumme der Originaldatei (SHA-256 ab Paperless 2.x/3.x, früher MD5). */
@@ -175,25 +300,34 @@ export class PaperlessClient {
 
   async getDocument(id: number): Promise<PaperlessDocument> {
     const raw = await this.request<RawDocument>(`/api/documents/${id}/`);
-    return toDocument(raw);
+    return (await this.toDocuments([raw]))[0];
   }
 
   async updateDocument(
     id: number,
-    patch: Partial<Pick<PaperlessDocument, "title" | "correspondent" | "documentType" | "tags">>,
+    patch: Partial<Pick<PaperlessDocument, "title" | "correspondent" | "documentType" | "tags" | "created" | "amount">>,
   ): Promise<PaperlessDocument> {
     const body: Record<string, unknown> = {};
     if (patch.title !== undefined) body.title = patch.title;
     if (patch.correspondent !== undefined) body.correspondent = patch.correspondent;
     if (patch.documentType !== undefined) body.document_type = patch.documentType;
     if (patch.tags !== undefined) body.tags = patch.tags;
+    if (patch.created !== undefined) body.created = patch.created;
+    if (patch.amount !== undefined) {
+      // PATCH ersetzt die ganze custom_fields-Liste: andere Felder des Dokuments müssen erhalten bleiben.
+      const fieldId = await this.ensureAmountField();
+      const current = await this.request<RawDocument>(`/api/documents/${id}/`);
+      const others = (current.custom_fields ?? []).filter((f) => f.field !== fieldId);
+      body.custom_fields =
+        patch.amount === null ? others : [...others, { field: fieldId, value: formatMonetary(patch.amount) }];
+    }
 
     const raw = await this.request<RawDocument>(`/api/documents/${id}/`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    return toDocument(raw);
+    return (await this.toDocuments([raw]))[0];
   }
 
   async uploadDocument(file: Blob, fileName: string): Promise<string> {
