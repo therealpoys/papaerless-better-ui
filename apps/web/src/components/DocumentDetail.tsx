@@ -15,6 +15,7 @@ import { friendlyError } from "../lib/errors";
 import { withoutApplied, type SuggestionField } from "../lib/suggestionCompare";
 import { DocumentSuggestion } from "./DocumentSuggestion";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { DocumentPreview } from "./DocumentPreview";
 
 const SUGGESTION_POLL_MS = 4000;
 
@@ -276,6 +277,7 @@ export function DocumentDetail({
 
   return (
     <div className="document-detail">
+      <DocumentPreview documentId={documentId} title={doc.title || t("documentDetail.untitledFallback")} />
       {!pending && generating && (
         <p className="hint suggestion-loading" role="status">
           {t("documentDetail.ai.generating")}

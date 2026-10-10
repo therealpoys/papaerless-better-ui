@@ -10,6 +10,7 @@ const paperless = vi.hoisted(() => ({
   createTag: vi.fn(),
   getTask: vi.fn(),
   getThumbnail: vi.fn(),
+  getPreview: vi.fn(),
 }));
 vi.mock("../src/paperless.js", () => ({ paperless }));
 
@@ -186,6 +187,17 @@ describe("documentRoutes: Thumbnail", () => {
     expect(res.headers["cache-control"]).toBe("private, max-age=3600");
     expect([...res.rawPayload]).toEqual([1, 2, 3]);
     expect(paperless.getThumbnail).toHaveBeenCalledWith(5);
+  });
+});
+
+describe("documentRoutes: Vorschau", () => {
+  it("liefert die Vorschau mit Original-Content-Type", async () => {
+    paperless.getPreview.mockResolvedValue({ buffer: new Uint8Array([4, 5]).buffer, contentType: "application/pdf" });
+    const res = await (await build()).inject({ method: "GET", url: "/api/documents/7/preview" });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toBe("application/pdf");
+    expect([...res.rawPayload]).toEqual([4, 5]);
+    expect(paperless.getPreview).toHaveBeenCalledWith(7);
   });
 });
 

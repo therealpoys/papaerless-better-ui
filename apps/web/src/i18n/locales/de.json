@@ -67,6 +67,19 @@
     }
   },
   "documentDetail": {
+    "preview": {
+      "alt": "Vorschau des Dokuments",
+      "loading": "Vorschau wird geladen …",
+      "failed": "Vorschau konnte nicht geladen werden.",
+      "open": "Vollansicht öffnen",
+      "openTab": "In neuem Tab öffnen",
+      "dialogTitle": "Dokument-Vorschau",
+      "close": "Schließen",
+      "zoomIn": "Vergrößern",
+      "zoomOut": "Verkleinern",
+      "pdfPages": "Alle Seiten ansehen",
+      "pdfFallback": "Das PDF kann hier nicht angezeigt werden. Bitte in neuem Tab öffnen."
+    },
     "reminderKind": {
       "due_date": "Fälligkeit",
       "cancellation_deadline": "Kündigungsfrist"

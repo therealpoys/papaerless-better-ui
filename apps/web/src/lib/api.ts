@@ -160,6 +160,13 @@ export const api = {
     return res.blob();
   },
 
+  /** Vollansicht (PDF oder Bild) per Auth-Fetch. */
+  fetchPreview: async (id: number, signal?: AbortSignal): Promise<Blob> => {
+    const res = await fetch(`${apiUrl()}/api/documents/${id}/preview`, withAuth({ signal }));
+    if (!res.ok) throw new Error(`API-Fehler ${res.status} bei /api/documents/${id}/preview`);
+    return res.blob();
+  },
+
   listTags: () => request<Tag[]>("/api/tags"),
   listCorrespondents: () => request<Correspondent[]>("/api/correspondents"),
   listDocumentTypes: () => request<DocumentType[]>("/api/document-types"),
