@@ -165,6 +165,14 @@ export class PaperlessClient {
     return { results: data.results.map(toDocument), count: data.count, page, pageSize };
   }
 
+  /** Sucht ein Dokument mit dieser MD5-Prüfsumme (Paperless speichert die Prüfsumme der Originaldatei). */
+  async findDocumentByChecksum(checksum: string): Promise<{ id: number; title: string } | null> {
+    const search = new URLSearchParams({ checksum__iexact: checksum, page_size: "1" });
+    const data = await this.request<PaginatedResponse<RawDocument>>(`/api/documents/?${search.toString()}`);
+    const first = data.results[0];
+    return first ? { id: first.id, title: first.title } : null;
+  }
+
   async getDocument(id: number): Promise<PaperlessDocument> {
     const raw = await this.request<RawDocument>(`/api/documents/${id}/`);
     return toDocument(raw);

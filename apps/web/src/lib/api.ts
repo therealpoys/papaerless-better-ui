@@ -20,7 +20,7 @@ import { isNative } from "./platform";
 import { getStoredServerUrl, resolveApiBase } from "./serverUrl";
 
 /** Browser: wie bisher VITE_API_URL. Native App: die zur Laufzeit gespeicherte Server-URL (kein Proxy, anderes Origin). */
-function apiUrl(): string {
+export function apiUrl(): string {
   return resolveApiBase(isNative(), getStoredServerUrl(), import.meta.env.VITE_API_URL);
 }
 const API_TOKEN = import.meta.env.VITE_API_TOKEN as string | undefined;
@@ -96,6 +96,12 @@ export const api = {
     const qs = toSearchString(params);
     return request<PaginatedDocuments>(`/api/documents${qs ? `?${qs}` : ""}`);
   },
+
+  /** Vorhandenes Dokument mit identischer Datei (MD5 wie in Paperless) oder null. */
+  findDuplicate: async (checksum: string) =>
+    (await request<{ duplicate: { id: number; title: string } | null }>(
+      `/api/documents/duplicate?checksum=${encodeURIComponent(checksum)}`,
+    )).duplicate,
 
   getDocument: (id: number) => request<PaperlessDocument>(`/api/documents/${id}`),
 

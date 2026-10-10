@@ -11,6 +11,8 @@ const paperless = vi.hoisted(() => ({
   getTask: vi.fn(),
   getThumbnail: vi.fn(),
   getPreview: vi.fn(),
+  ping: vi.fn(),
+  findDocumentByChecksum: vi.fn(),
 }));
 vi.mock("../src/paperless.js", () => ({ paperless }));
 
@@ -211,5 +213,31 @@ describe("backupRoutes", () => {
     });
     const res = await app.inject({ method: "GET", url: "/api/backup/export" });
     expect(res.json().folders).toMatchObject([{ name: "Auto", criterion: { kind: "tag", id: 3 } }]);
+  });
+});
+
+describe("statusRoutes und Duplikat-Suche", () => {
+  it("meldet Backend und Paperless getrennt", async () => {
+    const { statusRoutes } = await import("../src/routes/status.js");
+    const app = Fastify();
+    await app.register(statusRoutes, { prefix: "/api" });
+    paperless.ping.mockResolvedValue(false);
+    const res = await app.inject({ method: "GET", url: "/api/status" });
+    expect(res.json()).toEqual({ backend: "ok", paperless: "unreachable" });
+    paperless.ping.mockResolvedValue(true);
+    expect((await app.inject({ method: "GET", url: "/api/status" })).json().paperless).toBe("ok");
+  });
+
+  it("sucht Duplikate per MD5 und lehnt ungültige Prüfsummen ab", async () => {
+    const app = await build();
+    paperless.findDocumentByChecksum.mockResolvedValue({ id: 7, title: "Rechnung" });
+    const bad = await app.inject({ method: "GET", url: "/api/documents/duplicate?checksum=xyz" });
+    expect(bad.statusCode).toBe(400);
+    const ok = await app.inject({
+      method: "GET",
+      url: "/api/documents/duplicate?checksum=D41D8CD98F00B204E9800998ECF8427E",
+    });
+    expect(ok.json()).toEqual({ duplicate: { id: 7, title: "Rechnung" } });
+    expect(paperless.findDocumentByChecksum).toHaveBeenCalledWith("d41d8cd98f00b204e9800998ecf8427e");
   });
 });

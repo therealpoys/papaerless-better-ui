@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ErrorState } from "@papaerless/ui";
-import { api } from "../lib/api";
+import { api, apiUrl, authHeaders } from "../lib/api";
+import { checkConnection, type ConnectionStatus } from "../lib/connection";
+import { getStoredTheme, setTheme, THEME_PREFERENCES, type ThemePreference } from "../lib/theme";
 import { saveAutoSuggest } from "../lib/settings";
 import { isNative } from "../lib/platform";
 import { getStoredServerUrl } from "../lib/serverUrl";
@@ -14,6 +16,17 @@ export function SettingsPanel() {
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [theme, setThemeState] = useState<ThemePreference>(() => getStoredTheme());
+  const [connection, setConnection] = useState<ConnectionStatus | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  async function handleTest() {
+    setTesting(true);
+    setConnection(null);
+    setConnection(await checkConnection(apiUrl(), fetch, authHeaders()));
+    setTesting(false);
+  }
 
   function load() {
     setError(null);
@@ -67,6 +80,44 @@ export function SettingsPanel() {
           )}
         </span>
       </label>
+      </div>
+      <div className="settings-panel__card" role="group" aria-labelledby="appearance-title">
+        <strong id="appearance-title">{t("settings.appearance.title")}</strong>
+        <div className="settings-panel__segmented" role="radiogroup" aria-labelledby="appearance-title">
+          {THEME_PREFERENCES.map((pref) => (
+            <label key={pref} className="settings-panel__segment">
+              <input
+                type="radio"
+                name="theme"
+                value={pref}
+                checked={theme === pref}
+                onChange={() => {
+                  setTheme(pref);
+                  setThemeState(pref);
+                }}
+              />
+              <span>{t(`settings.appearance.${pref}`)}</span>
+            </label>
+          ))}
+        </div>
+        <span className="settings-panel__hint">{t("settings.appearance.hint")}</span>
+      </div>
+      <div className="settings-panel__card" role="group" aria-labelledby="connection-title">
+        <strong id="connection-title">{t("settings.connection.title")}</strong>
+        <span className="settings-panel__hint">
+          {t("settings.connection.serverLabel")}: <code>{apiUrl() || "–"}</code>
+        </span>
+        <button type="button" className="server-url__submit" disabled={testing} onClick={() => void handleTest()}>
+          {testing ? t("settings.connection.testing") : t("settings.connection.test")}
+        </button>
+        {connection && (
+          <p
+            className={connection === "ok" ? "settings-panel__ok" : "settings-panel__error"}
+            role={connection === "ok" ? "status" : "alert"}
+          >
+            {t(`settings.connection.results.${connection}`)}
+          </p>
+        )}
       </div>
       {isNative() && (
         <div className="settings-panel__card">
