@@ -17,6 +17,8 @@
     "@papaerless/shared-types": "workspace:*",
     "@papaerless/ui": "workspace:*",
     "i18next": "^26.4.2",
+    "jsqr": "1.4.0",
+    "qrcode-generator": "1.4.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^17.0.15"

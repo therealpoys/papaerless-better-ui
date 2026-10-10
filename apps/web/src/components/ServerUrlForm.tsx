@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { normalizeServerUrl, saveServerUrl, testConnection, type ConnectionResult } from "../lib/serverUrl";
 import { authHeaders } from "../lib/api";
+import { applyScannedSetup, type QrSetupResult } from "../lib/qrSetup";
+import { QrScanner } from "./QrScanner";
 
 interface Props {
   initialUrl: string;
@@ -15,6 +17,16 @@ export function ServerUrlForm({ initialUrl, onSaved }: Props) {
   const { t } = useTranslation();
   const [value, setValue] = useState(initialUrl);
   const [status, setStatus] = useState<Status>(null);
+  const [scanning, setScanning] = useState(false);
+  const [qrStatus, setQrStatus] = useState<QrSetupResult | "testing" | null>(null);
+
+  async function handleScanned(raw: string) {
+    setScanning(false);
+    setQrStatus("testing");
+    const result = await applyScannedSetup(raw);
+    setQrStatus(result);
+    if (result === "ok") onSaved();
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +81,23 @@ export function ServerUrlForm({ initialUrl, onSaved }: Props) {
       {status && status !== "testing" && status !== "ok" && (
         <p className="settings-panel__error" role="alert">
           {t(`serverUrl.errors.${status}`)}
+        </p>
+      )}
+      <button
+        type="button"
+        className="server-url__force"
+        disabled={scanning || qrStatus === "testing"}
+        onClick={() => {
+          setQrStatus(null);
+          setScanning(true);
+        }}
+      >
+        {qrStatus === "testing" ? t("qr.testing") : t("qr.scan")}
+      </button>
+      {scanning && <QrScanner onCode={(c) => void handleScanned(c)} onCancel={() => setScanning(false)} />}
+      {qrStatus && qrStatus !== "testing" && qrStatus !== "ok" && (
+        <p className="settings-panel__error" role="alert">
+          {t(`qr.errors.${qrStatus}`)}
         </p>
       )}
       {canForce && (
