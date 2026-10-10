@@ -464,6 +464,31 @@
       "empty": "Noch keine Daten."
     }
   },
+  "appLock": {
+    "title": "App gesperrt",
+    "description": "Entsperre die App mit Fingerabdruck, Gesicht oder deiner Geräte-PIN.",
+    "unlock": "Entsperren",
+    "promptTitle": "Paperless entsperren",
+    "promptReason": "Entsperre die App, um deine Dokumente zu sehen.",
+    "promptCancel": "Abbrechen",
+    "failedHint": "Mehrere Versuche sind fehlgeschlagen. Du kannst alternativ die Geräte-PIN verwenden.",
+    "lockedOut": "Die Entsperrung ist vorübergehend gesperrt. Bitte warte kurz und versuche es dann erneut.",
+    "error": "Entsperren ist fehlgeschlagen. Bitte versuche es erneut.",
+    "settings": {
+      "label": "App sperren",
+      "description": "Beim Start und nach einer Zeit im Hintergrund musst du die App per Fingerabdruck, Gesicht oder Geräte-PIN entsperren. Der Inhalt wird dann auch in der App-Übersicht und auf Screenshots verborgen.",
+      "timeoutLabel": "Sperren nach",
+      "timeout": {
+        "0": "Sofort",
+        "60000": "1 Minute",
+        "300000": "5 Minuten",
+        "900000": "15 Minuten"
+      },
+      "unavailable": "Auf diesem Gerät ist keine Bildschirmsperre oder Biometrie eingerichtet. Richte zuerst eine ein.",
+      "denied": "Die Authentifizierung wurde nicht bestätigt. Die Sperre bleibt ausgeschaltet.",
+      "storageFailed": "Die Einstellung konnte nicht gespeichert werden."
+    }
+  },
   "settings": {
     "title": "Einstellungen",
     "autoSuggest": {

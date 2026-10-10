@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { AppLockGate } from "./components/AppLockGate";
 import { ServerSetup } from "./components/ServerSetup";
 import { isNative } from "./lib/platform";
 import { getStoredServerUrl, needsServerSetup } from "./lib/serverUrl";
@@ -14,7 +15,9 @@ createRoot(document.getElementById("root")!).render(
     {needsServerSetup(isNative(), getStoredServerUrl()) ? (
       <ServerSetup onDone={() => window.location.reload()} />
     ) : (
-      <App />
+      <AppLockGate>
+        <App />
+      </AppLockGate>
     )}
   </StrictMode>,
 );

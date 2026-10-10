@@ -6,6 +6,8 @@ import { saveAutoSuggest } from "../lib/settings";
 import { isNative } from "../lib/platform";
 import { getStoredServerUrl } from "../lib/serverUrl";
 import { ServerUrlForm } from "./ServerUrlForm";
+import { activateAppLock, deactivateAppLock, readAppLockSettings, setAppLockTimeout } from "../lib/appLockRuntime";
+import { TIMEOUT_OPTIONS_MS } from "../lib/appLock";
 
 export function SettingsPanel() {
   const { t } = useTranslation();
@@ -14,6 +16,23 @@ export function SettingsPanel() {
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lock, setLock] = useState(readAppLockSettings);
+  const [lockBusy, setLockBusy] = useState(false);
+  const [lockMessage, setLockMessage] = useState<string | null>(null);
+
+  async function handleLockChange(next: boolean) {
+    setLockMessage(null);
+    if (!next) {
+      deactivateAppLock();
+      setLock(readAppLockSettings());
+      return;
+    }
+    setLockBusy(true);
+    const result = await activateAppLock();
+    setLock(readAppLockSettings());
+    setLockMessage(result === "enabled" ? null : t(`appLock.settings.${result}`));
+    setLockBusy(false);
+  }
 
   function load() {
     setError(null);
@@ -68,6 +87,45 @@ export function SettingsPanel() {
         </span>
       </label>
       </div>
+      {isNative() && (
+        <div className="settings-panel__card">
+          <label className="settings-panel__option">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={lock.enabled}
+              disabled={lockBusy}
+              onChange={(e) => void handleLockChange(e.target.checked)}
+              aria-describedby="app-lock-hint"
+            />
+            <span>
+              <strong>{t("appLock.settings.label")}</strong>
+              <span id="app-lock-hint" className="settings-panel__hint">
+                {t("appLock.settings.description")}
+              </span>
+            </span>
+          </label>
+          {lock.enabled && (
+            <label className="settings-panel__field">
+              <span>{t("appLock.settings.timeoutLabel")}</span>
+              <select
+                value={lock.timeoutMs}
+                onChange={(e) => {
+                  setAppLockTimeout(Number(e.target.value));
+                  setLock(readAppLockSettings());
+                }}
+              >
+                {TIMEOUT_OPTIONS_MS.map((ms) => (
+                  <option key={ms} value={ms}>
+                    {t(`appLock.settings.timeout.${ms}`)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {lockMessage && <p className="settings-panel__error" role="alert">{lockMessage}</p>}
+        </div>
+      )}
       {isNative() && (
         <div className="settings-panel__card">
           <ServerUrlForm initialUrl={getStoredServerUrl() ?? ""} onSaved={() => window.location.reload()} />

@@ -1282,3 +1282,25 @@ body {
   padding-inline: 1.25rem;
   font-size: 1.05rem;
 }
+
+.settings-panel__field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+}
+
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  background: var(--color-bg);
+  color: var(--color-text);
+  text-align: center;
+}
+.lock-screen__box { max-width: 24rem; display: flex; flex-direction: column; gap: var(--space-lg); align-items: center; }

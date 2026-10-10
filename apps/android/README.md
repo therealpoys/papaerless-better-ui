@@ -39,6 +39,13 @@ Android-Teilen-Menü erscheint. Das Plugin `ShareTargetPlugin` kopiert die getei
 und reicht sie per `getSharedFiles()`/Event `sharedFiles` an die Web-App (`lib/shareTarget.ts`) weiter; dort
 laufen sie durch denselben Flow wie ausgewählte Dateien (Bilder: Zuschnitt, dann Upload und Prüf-Fenster).
 
+## App-Sperre (Biometrie / Geräte-PIN)
+Unter Einstellungen (nur in der App) lässt sich eine Sperre aktivieren: beim Start und nach einer wählbaren Zeit im
+Hintergrund (Standard 1 Minute) erscheint ein Sperrbildschirm; entsperrt wird per Fingerabdruck/Gesicht oder
+Geräte-PIN (`@aparajita/capacitor-biometric-auth` 10.0.0, Capacitor 8). Aktivieren geht nur nach erfolgreicher
+Authentifizierung; ohne eingerichtete Bildschirmsperre bleibt die App offen. Solange die Sperre aktiv ist, setzt
+`AppLockPlugin` `FLAG_SECURE` (kein Inhalt in der App-Übersicht, keine Screenshots). Logik: `apps/web/src/lib/appLock.ts`.
+
 ## Icons und Splash
 Icons sind Capacitor-Platzhalter (`android/app/src/main/res/mipmap-*`), vor einem Release ersetzen.
 Der Splash-Hintergrund folgt Hell/Dunkel (`res/values/colors_splash.xml`, `res/values-night/`).
