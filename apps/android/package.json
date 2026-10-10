@@ -13,6 +13,7 @@
     "build:apk": "pnpm run sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "10.0.0",
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.1.2",
     "@capacitor/camera": "^8.2.5",
