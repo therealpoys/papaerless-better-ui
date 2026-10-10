@@ -27,6 +27,7 @@ import java.util.List;
 public class ShareTargetPlugin extends Plugin {
 
     private final List<JSObject> pending = new ArrayList<>();
+    private final List<String> errors = new ArrayList<>();
 
     /** Wird von MainActivity für den Start-Intent und jeden neuen Intent aufgerufen. */
     public void handleIntent(Intent intent) {
@@ -47,28 +48,39 @@ public class ShareTargetPlugin extends Plugin {
         // Den Intent entwerten, damit ein Neustart der Activity die Dateien nicht erneut einliest.
         intent.setAction(Intent.ACTION_MAIN);
 
-        boolean added = false;
+        if (uris.isEmpty()) {
+            synchronized (pending) {
+                errors.add("Die App hat keine Datei vom Teilen-Menü erhalten.");
+            }
+        }
         for (Uri uri : uris) {
-            JSObject file = copyToCache(uri);
-            if (file != null) {
+            try {
+                JSObject file = copyToCache(uri);
                 synchronized (pending) {
                     pending.add(file);
                 }
-                added = true;
+            } catch (Exception e) {
+                synchronized (pending) {
+                    errors.add(e.getClass().getSimpleName() + ": " + e.getMessage());
+                }
             }
         }
-        if (added) notifyListeners("sharedFiles", new JSObject(), true);
+        notifyListeners("sharedFiles", new JSObject(), true);
     }
 
     @PluginMethod
     public void getSharedFiles(PluginCall call) {
         JSArray files = new JSArray();
+        JSArray errs = new JSArray();
         synchronized (pending) {
             for (JSObject f : pending) files.put(f);
+            for (String e : errors) errs.put(e);
             pending.clear();
+            errors.clear();
         }
         JSObject result = new JSObject();
         result.put("files", files);
+        result.put("errors", errs);
         call.resolve(result);
     }
 
@@ -78,26 +90,24 @@ public class ShareTargetPlugin extends Plugin {
             : intent.getParcelableExtra(Intent.EXTRA_STREAM);
     }
 
-    private JSObject copyToCache(Uri uri) {
+    private JSObject copyToCache(Uri uri) throws Exception {
         ContentResolver resolver = getContext().getContentResolver();
         String name = queryName(resolver, uri);
         String type = resolver.getType(uri);
         File dir = new File(getContext().getCacheDir(), "shared");
-        if (!dir.exists() && !dir.mkdirs()) return null;
+        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Cache-Ordner nicht anlegbar");
         // Eigenes Unterverzeichnis je Datei, damit gleiche Namen sich nicht überschreiben.
         File sub = new File(dir, String.valueOf(System.nanoTime()));
-        if (!sub.mkdirs()) return null;
+        if (!sub.mkdirs()) throw new Exception("Cache-Unterordner nicht anlegbar");
         // Auf der Platte ein einfacher Name (die WebView lädt die Datei per URL, Sonderzeichen würden stören);
         // der echte Name geht separat an die Web-App.
         File target = new File(sub, "datei" + safeExtension(name));
         try (InputStream in = resolver.openInputStream(uri);
              OutputStream out = new FileOutputStream(target)) {
-            if (in == null) return null;
+            if (in == null) throw new Exception("Datei nicht lesbar (" + uri + ")");
             byte[] buf = new byte[64 * 1024];
             int n;
             while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
-        } catch (Exception e) {
-            return null;
         }
         JSObject file = new JSObject();
         file.put("path", target.getAbsolutePath());

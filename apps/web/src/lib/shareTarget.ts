@@ -9,7 +9,7 @@ export interface SharedFileInfo {
 }
 
 interface ShareTargetPlugin {
-  getSharedFiles(): Promise<{ files: SharedFileInfo[] }>;
+  getSharedFiles(): Promise<{ files: SharedFileInfo[]; errors?: string[] }>;
   addListener(event: "sharedFiles", cb: () => void): Promise<PluginListenerHandle>;
 }
 
@@ -27,29 +27,49 @@ export async function fileFromShared(
   return new File([blob], info.name, { type });
 }
 
-/** Holt alle bisher geteilten Dateien ab (leer im Browser). Fehlerhafte Dateien werden übersprungen. */
+/** Geteilte Dateien samt Fehlern, die beim Einlesen aufgetreten sind (nichts geht mehr still verloren). */
+export interface SharedResult {
+  files: File[];
+  errors: string[];
+}
+
+/** Holt alle bisher geteilten Dateien ab (leer im Browser). Fehlerhafte Dateien landen in `errors`. */
 export async function takeSharedFiles(
   plugin: Pick<ShareTargetPlugin, "getSharedFiles"> = ShareTarget,
   toFile: (info: SharedFileInfo) => Promise<File> = fileFromShared,
-): Promise<File[]> {
-  const { files } = await plugin.getSharedFiles();
-  const settled = await Promise.allSettled(files.map(toFile));
-  return settled.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+): Promise<SharedResult> {
+  const { files: infos, errors = [] } = await plugin.getSharedFiles();
+  const settled = await Promise.allSettled(infos.map(toFile));
+  const files: File[] = [];
+  const failed = [...errors];
+  settled.forEach((r, i) => {
+    if (r.status === "fulfilled") files.push(r.value);
+    else failed.push(`${infos[i].name}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`);
+  });
+  return { files, errors: failed };
 }
 
 /** Meldet sich für geteilte Dateien an (Start per Teilen und neue Teilen-Aktion bei laufender App). */
-export function listenForSharedFiles(onFiles: (files: File[]) => void): () => void {
+export function listenForSharedFiles(
+  onFiles: (files: File[]) => void,
+  onError: (message: string) => void = () => undefined,
+): () => void {
   if (!isNative()) return () => undefined;
   let active = true;
   const check = () => {
     takeSharedFiles()
-      .then((files) => active && files.length > 0 && onFiles(files))
-      .catch(() => undefined);
+      .then(({ files, errors }) => {
+        if (!active) return;
+        if (files.length > 0) onFiles(files);
+        if (errors.length > 0) onError(errors.join("; "));
+      })
+      .catch((err) => active && onError(err instanceof Error ? err.message : String(err)));
   };
   check();
   const handle = ShareTarget.addListener("sharedFiles", check);
+  handle.catch((err) => active && onError(err instanceof Error ? err.message : String(err)));
   return () => {
     active = false;
-    void handle.then((h) => h.remove());
+    void handle.then((h) => h.remove()).catch(() => undefined);
   };
 }

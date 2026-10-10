@@ -281,7 +281,8 @@
     "title_other": "Diese {{count}} Dateien hochladen?",
     "confirm_one": "Hochladen",
     "confirm_other": "Alle hochladen",
-    "cancel": "Abbrechen"
+    "cancel": "Abbrechen",
+    "error": "Das Teilen hat nicht geklappt: {{detail}}"
   },
   "crop": {
     "title": "Bild zuschneiden",

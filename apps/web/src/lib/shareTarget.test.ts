@@ -25,17 +25,23 @@ describe("fileFromShared", () => {
 });
 
 describe("takeSharedFiles", () => {
-  it("liefert die Dateien und überspringt fehlgeschlagene", async () => {
+  it("liefert die Dateien und meldet fehlgeschlagene als Fehler", async () => {
     const plugin = { getSharedFiles: async () => ({ files: [info(), info({ name: "kaputt.pdf" })] }) };
     const toFile = async (i: SharedFileInfo) => {
       if (i.name === "kaputt.pdf") throw new Error("weg");
       return new File(["x"], i.name, { type: i.type });
     };
-    const files = await takeSharedFiles(plugin, toFile);
+    const { files, errors } = await takeSharedFiles(plugin, toFile);
     expect(files.map((f) => f.name)).toEqual(["rechnung.pdf"]);
+    expect(errors).toEqual(["kaputt.pdf: weg"]);
+  });
+
+  it("reicht Fehler des nativen Teils durch", async () => {
+    const plugin = { getSharedFiles: async () => ({ files: [], errors: ["IOException: x"] }) };
+    expect((await takeSharedFiles(plugin)).errors).toEqual(["IOException: x"]);
   });
 
   it("liefert nichts, wenn nichts geteilt wurde", async () => {
-    expect(await takeSharedFiles({ getSharedFiles: async () => ({ files: [] }) })).toEqual([]);
+    expect(await takeSharedFiles({ getSharedFiles: async () => ({ files: [] }) })).toEqual({ files: [], errors: [] });
   });
 });

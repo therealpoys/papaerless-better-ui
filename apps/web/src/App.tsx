@@ -137,9 +137,10 @@ export default function App() {
 
   useEffect(
     () =>
-      listenForSharedFiles((files) => {
-        setShareToConfirm((prev) => [...prev, ...files]);
-      }),
+      listenForSharedFiles(
+        (files) => setShareToConfirm((prev) => [...prev, ...files]),
+        (detail) => setError(t("share.error", { detail })),
+      ),
     // navigate ist nur zum Wechseln auf "Dokumente" nötig; das Abo soll nicht neu aufgebaut werden
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
