@@ -91,6 +91,10 @@ describe("mergeUploadItems", () => {
     expect(merged).toEqual([{ status: "waiting" }]);
   });
 
+  it("zählt übersprungene Dateien als abgeschlossen", () => {
+    expect(mergeUploadItems([{ status: "skipped" }], [{ status: "waiting" }])).toEqual([{ status: "waiting" }]);
+  });
+
   it("hängt neue Dateien an, solange noch hochgeladen wird", () => {
     const merged = mergeUploadItems([{ status: "uploading" }, { status: "waiting" }], [{ status: "waiting" }]);
     expect(merged).toHaveLength(3);

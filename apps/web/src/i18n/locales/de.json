@@ -268,6 +268,7 @@
       "waiting": "Wartet …",
       "uploading": "Wird hochgeladen …",
       "done": "Fertig",
+      "skipped": "Übersprungen (gibt es schon)",
       "error": "Das hat leider nicht geklappt.",
       "reading": "Wird eingelesen …"
     },
@@ -472,7 +473,35 @@
       "cpuHint": "Hinweis: Bei lokaler KI (Ollama) auf dem Prozessor dauert das etwa 1 bis 2,5 Minuten pro Dokument. Mehrere Dokumente werden nacheinander bearbeitet.",
       "aiDisabled": "Die KI-Erkennung ist auf dem Server nicht eingerichtet. Der Schalter wirkt erst, wenn sie aktiviert ist.",
       "saveFailed": "Speichern fehlgeschlagen"
+    },
+    "connection": {
+      "title": "Verbindung",
+      "serverLabel": "Server",
+      "serverSameOrigin": "Standard (lokaler Server)",
+      "test": "Verbindung testen",
+      "testing": "Verbindung wird geprüft …",
+      "results": {
+        "ok": "Alles in Ordnung: Server und Paperless sind erreichbar.",
+        "serverUnreachable": "Server nicht erreichbar. Adresse, Netzwerk und HTTPS prüfen.",
+        "unauthorized": "Zugangstoken falsch: Der Server lehnt die Anmeldung ab.",
+        "paperlessUnreachable": "Der Server antwortet, aber Paperless ist nicht erreichbar.",
+        "notServer": "Unter dieser Adresse antwortet kein passender Server."
+      }
+    },
+    "appearance": {
+      "title": "Darstellung",
+      "system": "System",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "hint": "„System“ folgt der Einstellung Ihres Geräts."
     }
+  },
+  "duplicate": {
+    "title": "Dieses Dokument gibt es schon",
+    "message": "Dieses Dokument gibt es schon: {{title}}",
+    "addAnyway": "Trotzdem hinzufügen",
+    "skip": "Überspringen",
+    "openExisting": "Vorhandenes öffnen"
   },
   "serverUrl": {
     "label": "Server-Adresse",

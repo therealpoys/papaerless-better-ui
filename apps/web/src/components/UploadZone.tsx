@@ -10,6 +10,8 @@ import { UploadReviewDialog } from "./UploadReviewDialog";
 import { CropDialog } from "./CropDialog";
 import { isCroppable } from "../lib/crop";
 import { heuristicSuggestion } from "../lib/uploadReview";
+import { findDuplicate, type DuplicateChoice, type DuplicateHit } from "../lib/duplicates";
+import { DuplicateDialog } from "./DuplicateDialog";
 import {
   classifyUploadError,
   computeUploadProgress,
@@ -31,6 +33,8 @@ interface UploadZoneProps {
   /** Von außen angelieferte Dateien (z. B. "Teilen mit…"); laufen durch denselben Flow wie ausgewählte. */
   incomingFiles?: File[];
   onIncomingTaken?: () => void;
+  /** "Vorhandenes öffnen" in der Duplikat-Warnung. */
+  onOpenDocument?: (id: number) => void;
 }
 
 interface PendingReview {
@@ -41,7 +45,7 @@ interface PendingReview {
   source: "ai" | "auto";
 }
 
-type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error";
+type ItemStatus = "waiting" | "uploading" | "reading" | "done" | "error" | "skipped";
 
 interface UploadItem {
   id: number;
@@ -66,6 +70,7 @@ export function UploadZone({
   onMetadataChanged,
   incomingFiles,
   onIncomingTaken,
+  onOpenDocument,
 }: UploadZoneProps) {
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
@@ -94,6 +99,18 @@ export function UploadZone({
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...changes } : item)));
   }
 
+  const [duplicatePrompt, setDuplicatePrompt] = useState<{
+    fileName: string;
+    existing: DuplicateHit;
+    resolve: (choice: DuplicateChoice) => void;
+  } | null>(null);
+  const onOpenDocumentRef = useRef(onOpenDocument);
+  onOpenDocumentRef.current = onOpenDocument;
+
+  function askDuplicate(fileName: string, existing: DuplicateHit): Promise<DuplicateChoice> {
+    return new Promise((resolve) => setDuplicatePrompt({ fileName, existing, resolve }));
+  }
+
   /** Lädt eine Datei hoch; liefert true, wenn der Upload geklappt hat. */
   async function processItem(item: UploadItem): Promise<boolean> {
     let uploaded = false;
@@ -102,6 +119,16 @@ export function UploadZone({
       if (invalid) {
         patch(item.id, { status: "error", error: invalid });
         return false;
+      }
+      // Dieselbe Datei schon in Paperless? Dann erst fragen (die Warteschlange wartet auf die Antwort).
+      const existing = await findDuplicate(item.file, { lookup: api.findDuplicate });
+      if (existing) {
+        const choice = await askDuplicate(item.file.name, existing);
+        if (choice !== "add") {
+          patch(item.id, { status: "skipped" });
+          if (choice === "open") onOpenDocumentRef.current?.(existing.id);
+          return false;
+        }
       }
       const uploadStart = Date.now();
       patch(item.id, { status: "uploading", error: undefined, percent: 0, remainingSeconds: null });
@@ -270,7 +297,10 @@ export function UploadZone({
 
   const hasError = items.some((item) => item.status === "error");
   const allDone =
-    items.length > 0 && !busy && items.every((item) => item.status === "done");
+    items.length > 0 &&
+    !busy &&
+    items.some((item) => item.status === "done") &&
+    items.every((item) => item.status === "done" || item.status === "skipped");
 
   return (
     <section
@@ -363,6 +393,16 @@ export function UploadZone({
           onConfirm={(file) => finishCrop(file)}
           onUseOriginal={() => finishCrop(cropQueue[0])}
           onDiscard={() => finishCrop()}
+        />
+      )}
+      {duplicatePrompt && (
+        <DuplicateDialog
+          fileName={duplicatePrompt.fileName}
+          existing={duplicatePrompt.existing}
+          onChoose={(choice) => {
+            duplicatePrompt.resolve(choice);
+            setDuplicatePrompt(null);
+          }}
         />
       )}
       {reviews[0] && (

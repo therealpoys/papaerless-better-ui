@@ -88,6 +88,6 @@ export function formatElapsed(ms: number): string {
  * fehlgeschlagen), beginnt eine frische Liste; sonst laufen die neuen hinten in die Warteschlange.
  */
 export function mergeUploadItems<T extends { status: string }>(prev: T[], added: T[]): T[] {
-  const finished = prev.every((item) => item.status === "done" || item.status === "error");
+  const finished = prev.every((item) => item.status === "done" || item.status === "error" || item.status === "skipped");
   return finished ? added : [...prev, ...added];
 }

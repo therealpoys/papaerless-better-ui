@@ -1104,6 +1104,25 @@ body {
   color: var(--color-text-muted);
 }
 .settings-panel__error { color: var(--color-danger); }
+.settings-panel__ok { color: var(--color-success); }
+
+.settings-panel__card[role="group"] { display: flex; flex-direction: column; gap: var(--space-sm); align-items: flex-start; }
+.settings-panel__segmented { display: flex; gap: var(--space-xs); flex-wrap: wrap; }
+.settings-panel__segment { position: relative; cursor: pointer; }
+.settings-panel__segment input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.settings-panel__segment span {
+  display: inline-block;
+  padding: var(--space-sm) var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-muted);
+}
+.settings-panel__segment input:checked + span {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+.settings-panel__segment input:focus-visible + span { box-shadow: var(--focus-ring); }
 
 .help-panel__intro { margin: 0 0 var(--space-xl); color: var(--color-text-muted); }
 .help-panel h3 { margin: var(--space-xl) 0 var(--space-md); font-size: var(--font-size-lg); }

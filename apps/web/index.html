@@ -3,6 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <script>
+      // Vor dem ersten Rendern, sonst blitzt das falsche Theme kurz auf. Schlüssel siehe src/lib/theme.ts.
+      try {
+        var t = localStorage.getItem("papaerless.theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    </script>
     <title>Meine Dokumente</title>
   </head>
   <body>

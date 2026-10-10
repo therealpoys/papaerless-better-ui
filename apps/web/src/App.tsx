@@ -163,6 +163,7 @@ export default function App() {
               onMetadataChanged={reloadMetadata}
               incomingFiles={sharedFiles}
               onIncomingTaken={() => setSharedFiles([])}
+              onOpenDocument={(id) => navigate({ tab: "documents", documentId: id, filters: {}, page: 1 })}
             />
             <SearchFilter
               value={filters}

@@ -18,6 +18,7 @@ import { metadataRoutes } from "./routes/metadata.js";
 import { pushRoutes } from "./routes/push.js";
 import { reminderRoutes } from "./routes/reminders.js";
 import { settingsRoutes } from "./routes/settings.js";
+import { statusRoutes } from "./routes/status.js";
 
 const app = Fastify({ logger: true });
 
@@ -75,6 +76,7 @@ await app.register(reminderRoutes, { prefix: "/api" });
 await app.register(pushRoutes, { prefix: "/api" });
 await app.register(backupRoutes, { prefix: "/api" });
 await app.register(settingsRoutes, { prefix: "/api" });
+await app.register(statusRoutes, { prefix: "/api" });
 
 const stopNotifier = startRemindersNotifier();
 const stopAutoSuggest = startAutoSuggest();
