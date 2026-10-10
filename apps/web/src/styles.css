@@ -1467,3 +1467,8 @@ body {
   text-decoration: underline;
   cursor: pointer;
 }
+
+.expenses__intro {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm);
+}

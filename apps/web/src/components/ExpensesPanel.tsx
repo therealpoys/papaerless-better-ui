@@ -110,7 +110,7 @@ export function ExpensesPanel({ correspondents, documentTypes, onOpenDocuments }
   return (
     <div className="expenses">
       <h2>{t("expenses.heading")}</h2>
-      <p className="hint">{t("expenses.intro")}</p>
+      <p className="expenses__intro">{t("expenses.intro")}</p>
 
       <div className="expenses__filter" role="group" aria-label={t("expenses.rangeLabel")}>
         <div className="expenses__presets">

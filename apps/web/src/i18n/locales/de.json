@@ -659,7 +659,8 @@
       "last12Months": "Letzte 12 Monate"
     },
     "total": "Gesamt",
-    "documents": "{{count}} Dokumente",
+    "documents_one": "{{count}} Dokument",
+    "documents_other": "{{count}} Dokumente",
     "timeGrouping": "Zeitraum gruppieren",
     "byMonth": "Pro Monat",
     "byYear": "Pro Jahr",
