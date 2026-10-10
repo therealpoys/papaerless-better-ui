@@ -236,16 +236,22 @@ export function CropDialog({ file, position, onConfirm, onUseOriginal, onDiscard
         onDiscard();
       }}
     >
-      <h2 id={titleId} className="crop-dialog__title">
-        {t("crop.title")}
-        {position && <span className="crop-dialog__position"> – {position}</span>}
-      </h2>
-      <p className="crop-dialog__hint">{t("crop.hint")}</p>
-      {detection !== "none" && (
-        <p className="crop-dialog__hint" role="status" data-testid="crop-detection">
-          {t(detection === "found" ? "crop.detected" : "crop.notDetected")}
-        </p>
-      )}
+      <header className="crop-dialog__header">
+        <h2 id={titleId} className="crop-dialog__title">
+          {t("crop.title")}
+          {position && <span className="crop-dialog__position">{position}</span>}
+        </h2>
+        <p className="crop-dialog__hint">{t("crop.hint")}</p>
+        {detection !== "none" && (
+          <p
+            className={`crop-dialog__status crop-dialog__status--${detection}`}
+            role="status"
+            data-testid="crop-detection"
+          >
+            {t(detection === "found" ? "crop.detected" : "crop.notDetected")}
+          </p>
+        )}
+      </header>
 
       <div className="crop-dialog__stage">
         <div className="crop-dialog__frame">
@@ -290,25 +296,27 @@ export function CropDialog({ file, position, onConfirm, onUseOriginal, onDiscard
         </div>
       </div>
 
-      <div className="crop-dialog__actions">
+      <footer className="crop-dialog__actions">
         <button
           type="button"
-          className="ui-button ui-button--primary"
+          className="ui-button ui-button--primary crop-dialog__primary"
           disabled={!rect || working}
           onClick={() => void confirm()}
         >
-          {t("crop.confirm")}
+          {working ? t("crop.working") : t("crop.confirm")}
         </button>
-        <button type="button" className="ui-button" disabled={!rect || working} onClick={autoDetect}>
-          {t("crop.autoDetect")}
-        </button>
-        <button type="button" className="ui-button" disabled={working} onClick={onUseOriginal}>
-          {t("crop.useOriginal")}
-        </button>
-        <button type="button" className="ui-button" disabled={working} onClick={onDiscard}>
-          {t("crop.discard")}
-        </button>
-      </div>
+        <div className="crop-dialog__secondary">
+          <button type="button" className="ui-button" disabled={!rect || working} onClick={autoDetect}>
+            {t("crop.autoDetect")}
+          </button>
+          <button type="button" className="ui-button" disabled={working} onClick={onUseOriginal}>
+            {t("crop.useOriginal")}
+          </button>
+          <button type="button" className="ui-button" disabled={working} onClick={onDiscard}>
+            {t("crop.discard")}
+          </button>
+        </div>
+      </footer>
     </dialog>
   );
 }

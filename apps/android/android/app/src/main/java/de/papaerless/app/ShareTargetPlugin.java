@@ -87,7 +87,9 @@ public class ShareTargetPlugin extends Plugin {
         // Eigenes Unterverzeichnis je Datei, damit gleiche Namen sich nicht überschreiben.
         File sub = new File(dir, String.valueOf(System.nanoTime()));
         if (!sub.mkdirs()) return null;
-        File target = new File(sub, name);
+        // Auf der Platte ein einfacher Name (die WebView lädt die Datei per URL, Sonderzeichen würden stören);
+        // der echte Name geht separat an die Web-App.
+        File target = new File(sub, "datei" + safeExtension(name));
         try (InputStream in = resolver.openInputStream(uri);
              OutputStream out = new FileOutputStream(target)) {
             if (in == null) return null;
@@ -102,6 +104,13 @@ public class ShareTargetPlugin extends Plugin {
         file.put("name", name);
         file.put("type", type == null ? "" : type);
         return file;
+    }
+
+    private String safeExtension(String name) {
+        int dot = name.lastIndexOf('.');
+        if (dot < 0 || name.length() - dot > 8) return "";
+        String ext = name.substring(dot).replaceAll("[^A-Za-z0-9.]", "");
+        return ext.length() > 1 ? ext : "";
     }
 
     private String queryName(ContentResolver resolver, Uri uri) {

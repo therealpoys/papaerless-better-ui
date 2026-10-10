@@ -1213,40 +1213,78 @@ body {
 
 /* Zuschnitt-Dialog */
 .crop-dialog {
-  width: min(48rem, calc(100vw - 1rem));
-  max-height: calc(100dvh - 1rem);
-  padding: 1rem;
-  border: 1px solid var(--color-border);
+  width: min(52rem, 100vw);
+  max-width: 100vw;
+  height: min(52rem, 100dvh);
+  max-height: 100dvh;
+  padding: 0;
+  border: 0;
   border-radius: var(--radius-md);
   background: var(--color-surface);
   color: var(--color-text);
-  overflow: auto;
+  overflow: hidden;
+}
+
+.crop-dialog[open] {
+  display: flex;
+  flex-direction: column;
 }
 
 .crop-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.crop-dialog__header {
+  padding: 0.9rem 1rem 0.6rem;
 }
 
 .crop-dialog__title {
-  margin: 0 0 0.5rem;
-  font-size: 1.3rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
 }
 
 .crop-dialog__position {
-  font-weight: 400;
+  font-size: 0.9rem;
+  font-weight: 500;
   color: var(--color-text-muted);
 }
 
 .crop-dialog__hint {
-  margin: 0 0 0.75rem;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.crop-dialog__status {
+  display: inline-block;
+  margin: 0.5rem 0 0;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: var(--color-border);
+}
+
+.crop-dialog__status--found {
+  background: rgba(34, 160, 90, 0.18);
+}
+
+.crop-dialog__status--missing {
+  background: rgba(230, 160, 20, 0.2);
 }
 
 .crop-dialog__stage {
+  flex: 1;
+  min-height: 0;
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 14px;
-  background: rgba(0, 0, 0, 0.08);
-  border-radius: var(--radius-md);
+  padding: 26px;
+  background: #15181d;
+  overflow: hidden; /* der abdunkelnde Schatten des Rahmens bleibt auf der Bühne */
 }
 
 .crop-dialog__frame {
@@ -1259,7 +1297,7 @@ body {
 .crop-dialog__image {
   display: block;
   max-width: 100%;
-  max-height: 55dvh;
+  max-height: calc(100dvh - 17rem);
   -webkit-user-drag: none;
 }
 
@@ -1267,22 +1305,52 @@ body {
   position: absolute;
   box-sizing: border-box;
   border: 2px solid #fff;
-  outline: 2px solid var(--color-accent);
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.6);
+  background-image:
+    linear-gradient(to right, transparent calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% - 0.5px), rgba(255, 255, 255, 0.45) calc(33.33% + 0.5px), transparent calc(33.33% + 0.5px), transparent calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% - 0.5px), rgba(255, 255, 255, 0.45) calc(66.66% + 0.5px), transparent calc(66.66% + 0.5px));
   cursor: move;
   touch-action: none;
 }
 
+/* Große, unsichtbare Trefferfläche (44px) mit sichtbarem Punkt in der Mitte */
 .crop-dialog__handle {
   position: absolute;
-  width: 28px;
-  height: 28px;
-  margin: -14px 0 0 -14px;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  touch-action: none;
+}
+
+.crop-dialog__handle::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  box-sizing: border-box;
   border-radius: 50%;
   background: var(--color-accent);
   border: 2px solid #fff;
-  box-sizing: border-box;
-  touch-action: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Kantenmitten kleiner und nur als Strich, damit die Ecken im Vordergrund stehen */
+.crop-dialog__handle--n::after,
+.crop-dialog__handle--s::after {
+  width: 28px;
+  height: 8px;
+  margin: -4px 0 0 -14px;
+  border-radius: 4px;
+}
+
+.crop-dialog__handle--e::after,
+.crop-dialog__handle--w::after {
+  width: 8px;
+  height: 28px;
+  margin: -14px 0 0 -4px;
+  border-radius: 4px;
 }
 
 .crop-dialog__handle--nw { left: 0; top: 0; cursor: nwse-resize; }
@@ -1296,15 +1364,34 @@ body {
 
 .crop-dialog__actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
-.crop-dialog__actions .ui-button {
-  min-height: 48px;
-  padding-inline: 1.25rem;
-  font-size: 1.05rem;
+.crop-dialog__primary {
+  width: 100%;
+  min-height: 52px;
+  font-size: 1.1rem;
+}
+
+.crop-dialog__secondary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.crop-dialog__secondary .ui-button {
+  min-height: 44px;
+  padding-inline: 0.5rem;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 30rem) {
+  .crop-dialog { border-radius: 0; }
+  .crop-dialog__stage { padding: 24px; }
 }
 
 /* ===== Dokument-Vorschau ===== */

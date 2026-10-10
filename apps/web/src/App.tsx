@@ -17,6 +17,7 @@ import { buildPath, type Route, type Tab } from "./lib/route";
 import { DocumentList } from "./components/DocumentList";
 import { DocumentDetail } from "./components/DocumentDetail";
 import { UploadZone } from "./components/UploadZone";
+import { ShareConfirmDialog } from "./components/ShareConfirmDialog";
 import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
@@ -77,6 +78,8 @@ export default function App() {
   const dismissToast = useCallback(() => setToast(null), []);
   /** Per "Teilen mit…" angekommene Dateien; der UploadZone übergeben, sobald sie sichtbar ist. */
   const [sharedFiles, setSharedFiles] = useState<File[]>([]);
+  /** Geteilte Dateien, die erst nach Rückfrage in den Upload gehen. */
+  const [shareToConfirm, setShareToConfirm] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -135,8 +138,7 @@ export default function App() {
   useEffect(
     () =>
       listenForSharedFiles((files) => {
-        setSharedFiles((prev) => [...prev, ...files]);
-        navigate({ tab: "documents", documentId: null, filters: {}, page: 1 });
+        setShareToConfirm((prev) => [...prev, ...files]);
       }),
     // navigate ist nur zum Wechseln auf "Dokumente" nötig; das Abo soll nicht neu aufgebaut werden
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,6 +174,18 @@ export default function App() {
           ))}
         </nav>
       </header>
+
+      {shareToConfirm.length > 0 && (
+        <ShareConfirmDialog
+          files={shareToConfirm}
+          onCancel={() => setShareToConfirm([])}
+          onConfirm={() => {
+            setSharedFiles((prev) => [...prev, ...shareToConfirm]);
+            setShareToConfirm([]);
+            navigate({ tab: "documents", documentId: null, filters: {}, page: 1 });
+          }}
+        />
+      )}
 
       {error && <ErrorState message={error} onRetry={reloadDocuments} retryLabel={t("common.retry")} />}
 
