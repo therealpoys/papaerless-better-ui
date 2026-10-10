@@ -490,5 +490,41 @@
       "notServer": "Unter dieser Adresse antwortet kein passender Server.",
       "unauthorized": "Der Server lehnt die Anmeldung ab (Zugangstoken fehlt oder ist falsch)."
     }
+  },
+  "qr": {
+    "scan": "QR-Code scannen",
+    "testing": "Verbindung wird geprüft …",
+    "errors": {
+      "notSetupCode": "Das ist kein Einrichtungs-Code dieser App.",
+      "invalid": "Der Einrichtungs-Code ist ungültig oder beschädigt.",
+      "unsupportedVersion": "Dieser Code stammt von einer anderen App-Version. Bitte App und Server aktualisieren.",
+      "unreachable": "Der Server aus dem Code ist nicht erreichbar. Netzwerk und HTTPS prüfen.",
+      "notServer": "Unter der Adresse aus dem Code antwortet kein passender Server.",
+      "unauthorized": "Der Server lehnt das Zugangstoken aus dem Code ab. Bitte einen neuen Code erzeugen.",
+      "storageFailed": "Die Einstellungen konnten nicht gespeichert werden."
+    },
+    "scanner": {
+      "preview": "Kamera-Vorschau",
+      "hint": "Halten Sie den QR-Code in das Bild.",
+      "close": "Scannen abbrechen",
+      "denied": "Kein Zugriff auf die Kamera. Bitte die Kamera-Berechtigung in den Systemeinstellungen erlauben.",
+      "unsupported": "Die Kamera ist auf diesem Gerät nicht verfügbar."
+    },
+    "generator": {
+      "title": "App per QR-Code einrichten",
+      "intro": "Erzeugt einen QR-Code mit Server-Adresse und Zugangstoken. In der App unter \"QR-Code scannen\" einlesen.",
+      "warning": "Achtung: Der Code enthält Ihr Zugangstoken und ist wie ein Passwort zu behandeln. Nicht teilen, nicht fotografieren lassen, nach dem Scannen ausblenden.",
+      "urlLabel": "Server-Adresse",
+      "tokenLabel": "Zugangstoken (API_AUTH_TOKEN)",
+      "tokenHint": "Das Gateway-Token aus der .env des Servers, nicht das Paperless-Token.",
+      "show": "QR-Code anzeigen",
+      "hide": "QR-Code ausblenden",
+      "alt": "QR-Code zur App-Einrichtung",
+      "errors": {
+        "url": "Bitte eine gültige Server-Adresse eingeben.",
+        "token": "Bitte ein Zugangstoken ohne Leerzeichen eingeben.",
+        "render": "Der QR-Code konnte nicht erzeugt werden."
+      }
+    }
   }
 }

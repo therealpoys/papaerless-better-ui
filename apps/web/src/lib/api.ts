@@ -17,22 +17,28 @@ import type {
 
 import { isNative } from "./platform";
 import { getStoredServerUrl, resolveApiBase } from "./serverUrl";
+import { getStoredToken, resolveToken } from "./serverToken";
 
 /** Browser: wie bisher VITE_API_URL. Native App: die zur Laufzeit gespeicherte Server-URL (kein Proxy, anderes Origin). */
 function apiUrl(): string {
   return resolveApiBase(isNative(), getStoredServerUrl(), import.meta.env.VITE_API_URL);
 }
-const API_TOKEN = import.meta.env.VITE_API_TOKEN as string | undefined;
+/** Gespeichertes (QR-)Token vor dem Build-Token VITE_API_TOKEN. */
+function apiToken(): string | undefined {
+  return resolveToken(getStoredToken(), import.meta.env.VITE_API_TOKEN as string | undefined);
+}
 
 export function authHeaders(): Record<string, string> {
-  return API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {};
+  const token = apiToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 function withAuth(init?: RequestInit): RequestInit {
-  if (!API_TOKEN) return init ?? {};
+  const token = apiToken();
+  if (!token) return init ?? {};
   return {
     ...init,
-    headers: { ...init?.headers, Authorization: `Bearer ${API_TOKEN}` },
+    headers: { ...init?.headers, Authorization: `Bearer ${token}` },
   };
 }
 
@@ -54,7 +60,8 @@ function uploadWithProgress<T>(
   return new Promise<T>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", url);
-    if (API_TOKEN) xhr.setRequestHeader("Authorization", `Bearer ${API_TOKEN}`);
+    const token = apiToken();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress?.(e.loaded, e.total);
     };
