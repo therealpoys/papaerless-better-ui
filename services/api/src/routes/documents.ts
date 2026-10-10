@@ -84,6 +84,14 @@ export async function documentRoutes(app: FastifyInstance) {
     return reply.send(Buffer.from(buffer));
   });
 
+  app.get("/documents/:id/preview", async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { buffer, contentType } = await paperless.getPreview(Number(id));
+    reply.header("Content-Type", contentType);
+    reply.header("Cache-Control", "private, max-age=3600");
+    return reply.send(Buffer.from(buffer));
+  });
+
   app.post("/documents/upload", async (request, reply) => {
     const file = await request.file();
     if (!file) {
