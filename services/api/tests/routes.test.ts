@@ -239,5 +239,9 @@ describe("statusRoutes und Duplikat-Suche", () => {
     });
     expect(ok.json()).toEqual({ duplicate: { id: 7, title: "Rechnung" } });
     expect(paperless.findDocumentByChecksum).toHaveBeenCalledWith("d41d8cd98f00b204e9800998ecf8427e");
+    const sha = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
+    const okSha = await app.inject({ method: "GET", url: `/api/documents/duplicate?checksum=${sha}` });
+    expect(okSha.statusCode).toBe(200);
+    expect(paperless.findDocumentByChecksum).toHaveBeenLastCalledWith(sha);
   });
 });

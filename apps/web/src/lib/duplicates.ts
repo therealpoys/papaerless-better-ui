@@ -1,6 +1,7 @@
 /**
- * Duplikaterkennung vor dem Upload. Paperless speichert pro Dokument die MD5-Prüfsumme der
- * Originaldatei (`checksum`); Web Crypto kann kein MD5, daher hier eine kleine eigene Berechnung.
+ * Duplikaterkennung vor dem Upload. Paperless speichert pro Dokument die Prüfsumme der Originaldatei:
+ * SHA-256 in aktuellen Versionen (3.x), MD5 in älteren. Web Crypto kann kein MD5, daher hier eine
+ * kleine eigene Berechnung als Rückfall.
  */
 
 const S = [7, 12, 17, 22, 5, 9, 14, 20, 4, 11, 16, 23, 6, 10, 15, 21];
@@ -61,6 +62,11 @@ export function md5Hex(data: Uint8Array): string {
   return Array.from(new Uint8Array(out.buffer), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+export async function sha256Hex(data: Uint8Array): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", data as BufferSource);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export interface DuplicateHit {
   id: number;
   title: string;
@@ -79,8 +85,9 @@ export async function findDuplicate(
   deps: DuplicateDeps,
 ): Promise<DuplicateHit | null> {
   try {
-    const checksum = md5Hex(new Uint8Array(await file.arrayBuffer()));
-    return await deps.lookup(checksum);
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const hit = await deps.lookup(await sha256Hex(bytes));
+    return hit ?? (await deps.lookup(md5Hex(bytes)));
   } catch {
     return null;
   }

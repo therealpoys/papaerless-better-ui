@@ -48,8 +48,8 @@ export async function documentRoutes(app: FastifyInstance) {
 
   app.get("/documents/duplicate", async (request, reply) => {
     const { checksum } = request.query as { checksum?: string };
-    if (!checksum || !/^[0-9a-f]{32}$/i.test(checksum)) {
-      return reply.code(400).send({ error: "checksum muss eine MD5-Prüfsumme (32 Hex-Zeichen) sein" });
+    if (!checksum || !/^([0-9a-f]{32}|[0-9a-f]{64})$/i.test(checksum)) {
+      return reply.code(400).send({ error: "checksum muss eine SHA-256- (64) oder MD5-Prüfsumme (32 Hex-Zeichen) sein" });
     }
     return { duplicate: await paperless.findDocumentByChecksum(checksum.toLowerCase()) };
   });
