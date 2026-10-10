@@ -24,8 +24,11 @@ import { FoldersPanel } from "./components/FoldersPanel";
 import { HomePanel } from "./components/HomePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { HelpPanel } from "./components/HelpPanel";
+import { TrashPanel } from "./components/TrashPanel";
+import { UndoToast, type UndoToastData } from "./components/UndoToast";
+import { DEFAULT_TRASH_RETENTION_DAYS, UNDO_TOAST_MS, uniqueIds } from "./lib/trash";
 
-const TABS: Tab[] = ["home", "documents", "folders", "inbox", "reminders", "settings", "help"];
+const TABS: Tab[] = ["home", "documents", "folders", "inbox", "reminders", "trash", "settings", "help"];
 
 function emptyRoute(tab: Tab): Route {
   if (tab === "documents") return { tab, documentId: null, filters: {}, page: 1 };
@@ -59,6 +62,10 @@ export default function App() {
   const setPage = (next: number) =>
     navigate({ tab: "documents", documentId: selectedId, filters, page: next });
   const [aiEnabled, setAiEnabled] = useState(false);
+  const [trashRetentionDays, setTrashRetentionDays] = useState(DEFAULT_TRASH_RETENTION_DAYS);
+  const [toast, setToast] = useState<UndoToastData | null>(null);
+  const toastSeq = useRef(0);
+  const dismissToast = useCallback(() => setToast(null), []);
   /** Per "Teilen mit…" angekommene Dateien; der UploadZone übergeben, sobald sie sichtbar ist. */
   const [sharedFiles, setSharedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +85,27 @@ export default function App() {
       .finally(() => seq === requestSeq.current && setIsLoading(false));
   }, [tab, filters, page]);
 
+  /** Nach dem Löschen: Hinweis mit "Rückgängig", der die Dokumente aus dem Papierkorb zurückholt. */
+  const showDeleted = useCallback(
+    (deletedIds: number[]) => {
+      const ids = uniqueIds(deletedIds);
+      if (ids.length === 0) return;
+      setToast({
+        id: ++toastSeq.current,
+        message: t("trash.toast.deleted", { count: ids.length }),
+        actionLabel: t("trash.toast.undo"),
+        onAction: () => {
+          setToast(null);
+          api
+            .restoreFromTrash(ids)
+            .then(() => reloadDocuments())
+            .catch((err) => setError(err.message));
+        },
+      });
+    },
+    [t, reloadDocuments],
+  );
+
   const reloadMetadata = useCallback(() => {
     api.listTags().then(setTags).catch((err) => setError(err.message));
     api.listCorrespondents().then(setCorrespondents).catch((err) => setError(err.message));
@@ -90,6 +118,7 @@ export default function App() {
 
   useEffect(() => {
     reloadMetadata();
+    api.trashInfo().then((i) => setTrashRetentionDays(i.retentionDays)).catch(() => {});
     api.aiStatus().then((s) => setAiEnabled(s.enabled)).catch(() => setAiEnabled(false));
     registerWebPush().catch((err) => console.warn("Web Push nicht verfügbar:", err));
   }, [reloadMetadata]);
@@ -183,10 +212,12 @@ export default function App() {
               page={documentsResult.page}
               pageCount={Math.max(1, Math.ceil(documentsResult.count / documentsResult.pageSize))}
               onPageChange={setPage}
+              trashRetentionDays={trashRetentionDays}
               onBulkActionDone={(deletedIds) => {
                 if (selectedId !== null && deletedIds?.includes(selectedId)) {
                   setSelectedId(null);
                 }
+                if (deletedIds) showDeleted(deletedIds);
                 reloadDocuments();
               }}
             />
@@ -201,8 +232,10 @@ export default function App() {
                 tags={tags}
                 aiEnabled={aiEnabled}
                 onSaved={reloadDocuments}
-                onDeleted={() => {
+                trashRetentionDays={trashRetentionDays}
+                onDeleted={(id) => {
                   setSelectedId(null);
+                  showDeleted([id]);
                   reloadDocuments();
                 }}
                 onMetadataChanged={reloadMetadata}
@@ -225,6 +258,8 @@ export default function App() {
             documentTypes={documentTypes}
             aiEnabled={aiEnabled}
             onMetadataChanged={reloadMetadata}
+            trashRetentionDays={trashRetentionDays}
+            onDocumentDeleted={(id) => showDeleted([id])}
             openId={route.tab === "folders" ? route.folderId : null}
             documentId={route.tab === "folders" ? route.documentId : null}
             onNavigate={(folderId, documentId) => navigate({ tab: "folders", folderId, documentId })}
@@ -243,6 +278,14 @@ export default function App() {
           <RemindersPanel />
         </main>
       )}
+
+      {tab === "trash" && (
+        <main className="app__main app__main--full">
+          <TrashPanel />
+        </main>
+      )}
+
+      <UndoToast toast={toast} durationMs={UNDO_TOAST_MS} onDismiss={dismissToast} />
 
       {tab === "settings" && (
         <main className="app__main app__main--full">

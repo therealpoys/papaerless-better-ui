@@ -25,6 +25,7 @@ interface DocumentListProps {
   pageCount: number;
   onPageChange: (page: number) => void;
   onBulkActionDone: (deletedIds?: number[]) => void;
+  trashRetentionDays: number;
 }
 
 const MAX_LISTED_TITLES = 5;
@@ -73,6 +74,7 @@ export function DocumentList({
   pageCount,
   onPageChange,
   onBulkActionDone,
+  trashRetentionDays,
 }: DocumentListProps) {
   const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -274,7 +276,7 @@ export function DocumentList({
         {selectedDocuments.length > MAX_LISTED_TITLES && (
           <p>{t("documentList.bulkActions.confirmDelete.more", { count: selectedDocuments.length - MAX_LISTED_TITLES })}</p>
         )}
-        <p>{t("documentList.bulkActions.confirmDelete.warning")}</p>
+        <p>{t("trash.confirmWarning", { count: trashRetentionDays })}</p>
       </ConfirmDialog>
 
       {bulkError && (

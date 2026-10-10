@@ -153,4 +153,58 @@ describe("PaperlessClient", () => {
       await expect(client.getTask("t")).resolves.toEqual({ status: "UNKNOWN", documentId: undefined });
     });
   });
+
+  describe("Papierkorb", () => {
+    const raw = (id: number) => ({
+      id,
+      title: `T${id}`,
+      content: "",
+      created: "2026-01-01",
+      correspondent: null,
+      document_type: null,
+      tags: [],
+      deleted_at: "2026-02-01T10:00:00+01:00",
+    });
+
+    it("listet alle Seiten und mappt deleted_at", async () => {
+      fetchMock
+        .mockResolvedValueOnce(json({ count: 2, next: "x", previous: null, results: [raw(1)] }))
+        .mockResolvedValueOnce(json({ count: 2, next: null, previous: null, results: [raw(2)] }));
+      const res = await client.listTrash();
+      expect(res.map((d) => [d.id, d.deletedAt])).toEqual([
+        [1, "2026-02-01T10:00:00+01:00"],
+        [2, "2026-02-01T10:00:00+01:00"],
+      ]);
+      expect(new URL(fetchMock.mock.calls[1][0]).searchParams.get("page")).toBe("2");
+    });
+
+    it("stellt wieder her und löscht endgültig per POST /api/trash/", async () => {
+      fetchMock.mockImplementation(async () => new Response(null, { status: 200 }));
+      await client.restoreFromTrash([5, 6]);
+      await client.deleteFromTrash([7]);
+      const [url, init] = fetchMock.mock.calls[0];
+      expect(new URL(url).pathname).toBe("/api/trash/");
+      expect(JSON.parse(init.body)).toEqual({ documents: [5, 6], action: "restore" });
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ documents: [7], action: "empty" });
+    });
+
+    it("sendet bei leerer ID-Liste nichts (Paperless würde sonst 'alle' verstehen)", async () => {
+      await client.deleteFromTrash([]);
+      await client.restoreFromTrash([]);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("leert den Papierkorb über explizite IDs und meldet die Anzahl", async () => {
+      fetchMock
+        .mockResolvedValueOnce(json({ count: 2, next: null, previous: null, results: [raw(1), raw(2)] }))
+        .mockResolvedValueOnce(new Response(null, { status: 200 }));
+      await expect(client.emptyTrash()).resolves.toBe(2);
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ documents: [1, 2], action: "empty" });
+    });
+
+    it("wirft bei Fehlern einen PaperlessError", async () => {
+      fetchMock.mockResolvedValue(new Response("nope", { status: 403 }));
+      await expect(client.restoreFromTrash([1])).rejects.toMatchObject({ status: 403 });
+    });
+  });
 });

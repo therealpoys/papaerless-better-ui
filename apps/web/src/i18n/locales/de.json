@@ -20,7 +20,8 @@
       "reminders": "Erinnerungen",
       "help": "Hilfe",
       "folders": "Ordner",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "trash": "Papierkorb"
     },
     "noDocumentSelected": {
       "title": "Kein Dokument ausgewählt",
@@ -46,7 +47,6 @@
       "delete": "Löschen",
       "confirmDelete": {
         "title": "{{count}} Dokument(e) löschen?",
-        "warning": "Das kann nicht rückgängig gemacht werden.",
         "more": "… und {{count}} weitere",
         "cancel": "Abbrechen",
         "confirm": "Ja, löschen"
@@ -105,7 +105,6 @@
     "delete": "Löschen",
     "confirmDelete": {
       "title": "Dokument löschen?",
-      "warning": "Das kann nicht rückgängig gemacht werden.",
       "cancel": "Abbrechen",
       "confirm": "Ja, löschen"
     },
@@ -489,6 +488,42 @@
       "unreachable": "Der Server ist nicht erreichbar. Adresse, Netzwerk und HTTPS prüfen.",
       "notServer": "Unter dieser Adresse antwortet kein passender Server.",
       "unauthorized": "Der Server lehnt die Anmeldung ab (Zugangstoken fehlt oder ist falsch)."
+    }
+  },
+  "trash": {
+    "confirmWarning_one": "Landet {{count}} Tag im Papierkorb und kann dort wiederhergestellt werden.",
+    "confirmWarning_other": "Landet {{count}} Tage im Papierkorb und kann dort wiederhergestellt werden.",
+    "toast": {
+      "deleted_one": "Dokument gelöscht",
+      "deleted_other": "{{count}} Dokumente gelöscht",
+      "undo": "Rückgängig"
+    },
+    "loading": "Lädt…",
+    "loadFailed": "Der Papierkorb konnte nicht geladen werden.",
+    "actionFailed": "Die Aktion hat nicht geklappt.",
+    "hint_one": "Gelöschte Dokumente bleiben {{count}} Tag im Papierkorb, danach entfernt Paperless sie endgültig.",
+    "hint_other": "Gelöschte Dokumente bleiben {{count}} Tage im Papierkorb, danach entfernt Paperless sie endgültig.",
+    "empty": {
+      "title": "Der Papierkorb ist leer",
+      "description": "Gelöschte Dokumente erscheinen hier."
+    },
+    "emptyAll": "Papierkorb leeren",
+    "deletedOn": "Gelöscht am {{date}}",
+    "daysLeft_zero": "wird heute endgültig entfernt",
+    "daysLeft_one": "noch {{count}} Tag",
+    "daysLeft_other": "noch {{count}} Tage",
+    "restore": "Wiederherstellen",
+    "deleteForever": "Endgültig löschen",
+    "cancel": "Abbrechen",
+    "irreversible": "Das kann nicht rückgängig gemacht werden.",
+    "confirmDelete": {
+      "title": "Endgültig löschen?",
+      "confirm": "Ja, endgültig löschen"
+    },
+    "confirmEmpty": {
+      "title_one": "Papierkorb leeren? {{count}} Dokument wird endgültig gelöscht.",
+      "title_other": "Papierkorb leeren? {{count}} Dokumente werden endgültig gelöscht.",
+      "confirm": "Ja, Papierkorb leeren"
     }
   }
 }

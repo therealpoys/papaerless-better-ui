@@ -6,6 +6,7 @@ import type {
   PaginatedDocuments,
   PaperlessDocument,
   Tag,
+  TrashedDocument,
 } from "@papaerless/shared-types";
 
 export interface PaperlessClientConfig {
@@ -39,6 +40,10 @@ interface PaginatedResponse<T> {
   next: string | null;
   previous: string | null;
   results: T[];
+}
+
+interface RawTrashed extends RawDocument {
+  deleted_at: string;
 }
 
 interface RawDocument {
@@ -230,6 +235,51 @@ export class PaperlessClient {
     if (!res.ok) {
       throw await this.failure("Löschen fehlgeschlagen", res);
     }
+  }
+
+  // Papierkorb (Paperless >= 2.x). `deleteDocument`/bulk `delete` verschieben dorthin; erst
+  // "empty" löscht endgültig. Live gegen 3.2.1 geprüft: POST /api/trash/ {documents, action}.
+
+  async listTrash(): Promise<TrashedDocument[]> {
+    const all: TrashedDocument[] = [];
+    for (let page = 1; page <= 50; page++) {
+      const data = await this.request<PaginatedResponse<RawTrashed>>(`/api/trash/?page_size=100&page=${page}`);
+      all.push(...data.results.map((raw) => ({ ...toDocument(raw), deletedAt: raw.deleted_at })));
+      if (!data.next) break;
+    }
+    return all;
+  }
+
+  private async trashAction(action: "restore" | "empty", ids: number[]): Promise<void> {
+    // Leere Liste würde in Paperless "alle" bedeuten – das lösen wir nie implizit aus.
+    if (ids.length === 0) return;
+    const res = await this.fetchPaperless(`/api/trash/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documents: ids, action }),
+    });
+    if (!res.ok) {
+      throw await this.failure(
+        action === "restore" ? "Wiederherstellen fehlgeschlagen" : "Endgültiges Löschen fehlgeschlagen",
+        res,
+      );
+    }
+    await res.body?.cancel();
+  }
+
+  restoreFromTrash(ids: number[]): Promise<void> {
+    return this.trashAction("restore", ids);
+  }
+
+  deleteFromTrash(ids: number[]): Promise<void> {
+    return this.trashAction("empty", ids);
+  }
+
+  /** Leert den ganzen Papierkorb; gibt die Anzahl endgültig gelöschter Dokumente zurück. */
+  async emptyTrash(): Promise<number> {
+    const ids = (await this.listTrash()).map((d) => d.id);
+    await this.trashAction("empty", ids);
+    return ids.length;
   }
 
   // Nutzt Paperless' `POST /api/documents/bulk_edit/` statt N Einzel-Requests – gegen die

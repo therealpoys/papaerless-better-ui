@@ -1282,3 +1282,50 @@ body {
   padding-inline: 1.25rem;
   font-size: 1.05rem;
 }
+
+.trash__hint {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-sm, 0.9rem);
+}
+
+.trash__toolbar {
+  margin-bottom: var(--space-md);
+}
+
+.trash__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.trash__error {
+  color: var(--color-danger);
+}
+
+.undo-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  max-width: calc(100vw - 2rem);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-text);
+  color: var(--color-bg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.undo-toast__action {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}

@@ -13,6 +13,7 @@ import type {
   PaperlessDocument,
   Reminder,
   Tag,
+  TrashList,
 } from "@papaerless/shared-types";
 
 import { isNative } from "./platform";
@@ -125,6 +126,22 @@ export const api = {
     request<{ status: "PENDING" | "STARTED" | "SUCCESS" | "FAILURE" | "UNKNOWN"; documentId?: number }>(
       `/api/documents/tasks/${encodeURIComponent(taskId)}`,
     ),
+
+  listTrash: () => request<TrashList>("/api/trash"),
+  trashInfo: () => request<{ retentionDays: number }>("/api/trash/info"),
+  restoreFromTrash: (documentIds: number[]) =>
+    request<void>("/api/trash/restore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documentIds }),
+    }),
+  deleteFromTrash: (documentIds: number[]) =>
+    request<void>("/api/trash/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ documentIds }),
+    }),
+  emptyTrash: () => request<{ deleted: number }>("/api/trash/empty", { method: "POST" }),
 
   deleteDocument: (id: number) => request<void>(`/api/documents/${id}`, { method: "DELETE" }),
 

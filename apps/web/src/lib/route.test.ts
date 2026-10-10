@@ -11,6 +11,8 @@ describe("parseRoute", () => {
     expect(parseRoute("/", "")).toEqual({ tab: "home" });
     expect(parseRoute("/inbox", "")).toEqual({ tab: "inbox" });
     expect(parseRoute("/help", "")).toEqual({ tab: "help" });
+    expect(parseRoute("/trash", "")).toEqual({ tab: "trash" });
+    expect(buildPath({ tab: "trash" })).toBe("/trash");
   });
 
   it("fällt bei unbekannten Pfaden auf die Startseite zurück", () => {
