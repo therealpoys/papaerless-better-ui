@@ -57,6 +57,11 @@
       "title": "Noch keine Dokumente",
       "description": "Füge links ein Dokument hinzu – Foto, PDF oder Scan."
     },
+    "noResults": {
+      "title": "Keine Treffer",
+      "description": "Zu dieser Suche oder diesen Filtern gibt es kein Dokument. Prüfen Sie die Schreibweise oder lockern Sie die Filter.",
+      "reset": "Filter zurücksetzen"
+    },
     "selectDocumentAriaLabel": "{{title}} auswählen",
     "untitledFallback": "Dokument",
     "noTitle": "(ohne Titel)",

@@ -52,6 +52,14 @@ export default function App() {
   // Per Schlüssel stabil halten, sonst lädt jede Navigation die Liste neu.
   const filtersKey = JSON.stringify(route.tab === "documents" ? route.filters : {});
   const filters = useMemo<DocumentSearchParams>(() => JSON.parse(filtersKey), [filtersKey]);
+  const hasActiveFilters = Boolean(
+    filters.query ||
+      filters.tags?.length ||
+      filters.correspondent ||
+      filters.documentType ||
+      filters.dateFrom ||
+      filters.dateTo,
+  );
   const setSelectedId = (id: number | null) =>
     navigate({ tab: "documents", documentId: id, filters, page });
   const setFilters = (next: DocumentSearchParams) =>
@@ -63,7 +71,7 @@ export default function App() {
   const [sharedFiles, setSharedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const requestSeq = useRef(0);
 
   const reloadDocuments = useCallback(() => {
@@ -183,6 +191,9 @@ export default function App() {
               page={documentsResult.page}
               pageCount={Math.max(1, Math.ceil(documentsResult.count / documentsResult.pageSize))}
               onPageChange={setPage}
+              isLoading={isLoading}
+              hasActiveFilters={hasActiveFilters}
+              onResetFilters={() => setFilters({})}
               onBulkActionDone={(deletedIds) => {
                 if (selectedId !== null && deletedIds?.includes(selectedId)) {
                   setSelectedId(null);
