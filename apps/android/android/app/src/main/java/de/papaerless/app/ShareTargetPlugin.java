@@ -2,10 +2,13 @@ package de.papaerless.app;
 
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.ClipData;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.OpenableColumns;
+import android.util.Log;
+import android.widget.Toast;
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -26,6 +29,8 @@ import java.util.List;
 @CapacitorPlugin(name = "ShareTarget")
 public class ShareTargetPlugin extends Plugin {
 
+    private static final String TAG = "ShareTarget";
+
     private final List<JSObject> pending = new ArrayList<>();
     private final List<String> errors = new ArrayList<>();
 
@@ -37,14 +42,17 @@ public class ShareTargetPlugin extends Plugin {
         if (Intent.ACTION_SEND.equals(action)) {
             Uri uri = getParcelableUri(intent);
             if (uri != null) uris.add(uri);
+            else addClipUris(intent, uris);
         } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
             ArrayList<Uri> list = Build.VERSION.SDK_INT >= 33
                 ? intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM, Uri.class)
                 : intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
             if (list != null) uris.addAll(list);
+            if (uris.isEmpty()) addClipUris(intent, uris);
         } else {
             return;
         }
+        Log.i(TAG, "Teilen empfangen: action=" + action + " type=" + intent.getType() + " uris=" + uris.size());
         // Den Intent entwerten, damit ein Neustart der Activity die Dateien nicht erneut einliest.
         intent.setAction(Intent.ACTION_MAIN);
 
@@ -65,7 +73,36 @@ public class ShareTargetPlugin extends Plugin {
                 }
             }
         }
+        int ok;
+        int failed;
+        synchronized (pending) {
+            ok = pending.size();
+            failed = errors.size();
+        }
+        Log.i(TAG, "Teilen verarbeitet: ok=" + ok + " fehler=" + failed);
+        toast(failed > 0 ? "Teilen fehlgeschlagen: " + errors.get(0) : "Geteilt: " + ok + " Datei(en) empfangen");
         notifyListeners("sharedFiles", new JSObject(), true);
+    }
+
+    /** Kurze Einblendung aus der Web-App (zeigt, dass geteilte Dateien dort angekommen sind). */
+    @PluginMethod
+    public void notify(PluginCall call) {
+        toast(call.getString("message", ""));
+        call.resolve();
+    }
+
+    private void toast(String message) {
+        if (getActivity() == null || message == null || message.isEmpty()) return;
+        getActivity().runOnUiThread(() -> Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show());
+    }
+
+    private void addClipUris(Intent intent, List<Uri> uris) {
+        ClipData clip = intent.getClipData();
+        if (clip == null) return;
+        for (int i = 0; i < clip.getItemCount(); i++) {
+            Uri uri = clip.getItemAt(i).getUri();
+            if (uri != null) uris.add(uri);
+        }
     }
 
     @PluginMethod

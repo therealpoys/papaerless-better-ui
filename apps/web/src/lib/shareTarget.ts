@@ -9,6 +9,7 @@ export interface SharedFileInfo {
 }
 
 interface ShareTargetPlugin {
+  notify(options: { message: string }): Promise<void>;
   getSharedFiles(): Promise<{ files: SharedFileInfo[]; errors?: string[] }>;
   addListener(event: "sharedFiles", cb: () => void): Promise<PluginListenerHandle>;
 }
@@ -60,7 +61,10 @@ export function listenForSharedFiles(
     takeSharedFiles()
       .then(({ files, errors }) => {
         if (!active) return;
-        if (files.length > 0) onFiles(files);
+        if (files.length > 0) {
+          void ShareTarget.notify({ message: `Datei(en) in der App geladen: ${files.length}` }).catch(() => undefined);
+          onFiles(files);
+        }
         if (errors.length > 0) onError(errors.join("; "));
       })
       .catch((err) => active && onError(err instanceof Error ? err.message : String(err)));
