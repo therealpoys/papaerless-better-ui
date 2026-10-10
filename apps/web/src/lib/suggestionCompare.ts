@@ -1,10 +1,12 @@
-import type {
-  Correspondent,
-  DocumentType,
-  MetadataSuggestion,
-  PaperlessDocument,
-  SuggestionField,
-  Tag,
+import {
+  normalizeDate,
+  parseAmount,
+  type Correspondent,
+  type DocumentType,
+  type MetadataSuggestion,
+  type PaperlessDocument,
+  type SuggestionField,
+  type Tag,
 } from "@papaerless/shared-types";
 
 export type { SuggestionField };
@@ -44,6 +46,8 @@ export function buildSuggestionRows(
     correspondent: known(lists.correspondents),
     documentType: known(lists.documentTypes),
     tags: known(lists.tags),
+    date: null,
+    amount: null,
   };
   const entries: [SuggestionField, string[], string[]][] = [
     ["title", doc.title ? [doc.title] : [], suggestion.title ? [suggestion.title] : []],
@@ -70,6 +74,31 @@ export function buildSuggestionRows(
   }));
 }
 
+/** Zusätzliche Zeilen für Dokumentdatum und Betrag (Werte als YYYY-MM-DD bzw. "12.50"); nur wenn vorgeschlagen. */
+export function buildExtraRows(
+  doc: Partial<Pick<PaperlessDocument, "created" | "amount">>,
+  suggestion: MetadataSuggestion,
+): SuggestionRow[] {
+  const rows: SuggestionRow[] = [];
+  const date = normalizeDate(suggestion.date);
+  if (date) {
+    const current = doc.created ? normalizeDate(doc.created) : null;
+    rows.push({ field: "date", current: current ? [current] : [], suggested: [date], newNames: [], changed: current !== date });
+  }
+  const amount = parseAmount(suggestion.amount);
+  if (amount !== null) {
+    const current = doc.amount ?? null;
+    rows.push({
+      field: "amount",
+      current: current !== null ? [current.toFixed(2)] : [],
+      suggested: [amount.toFixed(2)],
+      newNames: [],
+      changed: current === null || Math.round(current * 100) !== Math.round(amount * 100),
+    });
+  }
+  return rows;
+}
+
 const norm = (x: string) => x.trim().toLowerCase();
 
 /** Vorgeschlagene Tags, die das Dokument noch nicht hat (Schreibweise egal). */
@@ -88,10 +117,13 @@ export function withoutApplied(
   if (fields.includes("title")) delete next.title;
   if (fields.includes("correspondent")) delete next.correspondent;
   if (fields.includes("documentType")) delete next.documentType;
+  if (fields.includes("date")) delete next.date;
+  if (fields.includes("amount")) delete next.amount;
   if (fields.includes("tags")) {
     const done = new Set(appliedTags.map(norm));
     next.tags = (next.tags ?? []).filter((t) => !done.has(norm(t)));
   }
-  const open = next.title || next.correspondent || next.documentType || next.tags?.length;
+  const open =
+    next.title || next.correspondent || next.documentType || next.tags?.length || next.date || next.amount != null;
   return open ? next : null;
 }

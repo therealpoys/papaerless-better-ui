@@ -4,6 +4,7 @@ import type {
   Correspondent,
   DocumentSearchParams,
   DocumentType,
+  ExpenseDocument,
   Folder,
   FolderCriterion,
   ApplySuggestionRequest,
@@ -98,6 +99,15 @@ export const api = {
 
   getDocument: (id: number) => request<PaperlessDocument>(`/api/documents/${id}`),
 
+  /** Alle Dokumente mit Betrag (für die Ausgaben-Übersicht), optional im Zeitraum (YYYY-MM-DD). */
+  listExpenses: (range: { dateFrom?: string; dateTo?: string } = {}) => {
+    const search = new URLSearchParams();
+    if (range.dateFrom) search.set("dateFrom", range.dateFrom);
+    if (range.dateTo) search.set("dateTo", range.dateTo);
+    const qs = search.toString();
+    return request<ExpenseDocument[]>(`/api/expenses${qs ? `?${qs}` : ""}`);
+  },
+
   bulkEditDocuments: (documentIds: number[], action: BulkEditAction) =>
     request<void>("/api/documents/bulk-edit", {
       method: "POST",
@@ -107,7 +117,7 @@ export const api = {
 
   updateDocument: (
     id: number,
-    patch: Partial<Pick<PaperlessDocument, "title" | "correspondent" | "documentType" | "tags">>,
+    patch: Partial<Pick<PaperlessDocument, "title" | "correspondent" | "documentType" | "tags" | "created" | "amount">>,
   ) =>
     request<PaperlessDocument>(`/api/documents/${id}`, {
       method: "PATCH",

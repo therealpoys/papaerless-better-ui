@@ -20,7 +20,8 @@
       "reminders": "Erinnerungen",
       "help": "Hilfe",
       "folders": "Ordner",
-      "settings": "Einstellungen"
+      "settings": "Einstellungen",
+      "expenses": "Ausgaben"
     },
     "noDocumentSelected": {
       "title": "Kein Dokument ausgewählt",
@@ -143,7 +144,15 @@
         "medium": "Mittlere Sicherheit",
         "low": "Geringe Sicherheit"
       }
-    }
+    },
+    "dateLabel": "Datum",
+    "dateAriaLabel": "Dokumentdatum",
+    "amountLabel": "Betrag",
+    "amountAriaLabel": "Betrag in Euro",
+    "amountPlaceholder": "z. B. 1.234,56",
+    "amountHint": "In Euro. Leer lassen, wenn das Dokument keinen Betrag hat.",
+    "invalidDate": "Bitte ein gültiges Datum eingeben.",
+    "invalidAmount": "Bitte einen gültigen Betrag eingeben, z. B. 89,50."
   },
   "searchFilter": {
     "sortOptions": {
@@ -489,6 +498,34 @@
       "unreachable": "Der Server ist nicht erreichbar. Adresse, Netzwerk und HTTPS prüfen.",
       "notServer": "Unter dieser Adresse antwortet kein passender Server.",
       "unauthorized": "Der Server lehnt die Anmeldung ab (Zugangstoken fehlt oder ist falsch)."
+    }
+  },
+  "expenses": {
+    "heading": "Ausgaben",
+    "intro": "Summe der Beträge aller Dokumente, bei denen ein Betrag hinterlegt ist.",
+    "rangeLabel": "Zeitraum",
+    "from": "Von",
+    "to": "Bis",
+    "presets": {
+      "all": "Alle",
+      "thisYear": "Dieses Jahr",
+      "lastYear": "Letztes Jahr",
+      "last12Months": "Letzte 12 Monate"
+    },
+    "total": "Gesamt",
+    "documents": "{{count}} Dokumente",
+    "timeGrouping": "Zeitraum gruppieren",
+    "byMonth": "Pro Monat",
+    "byYear": "Pro Jahr",
+    "byCorrespondent": "Pro Absender",
+    "byDocumentType": "Pro Art des Dokuments",
+    "none": "Ohne Zuordnung",
+    "showDocuments": "Dokumente anzeigen: {{label}}",
+    "loading": "Ausgaben werden geladen…",
+    "loadFailed": "Ausgaben konnten nicht geladen werden.",
+    "empty": {
+      "title": "Keine Ausgaben im Zeitraum",
+      "description": "Tragen Sie bei Dokumenten einen Betrag ein oder übernehmen Sie einen KI-Vorschlag."
     }
   }
 }

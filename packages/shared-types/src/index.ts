@@ -1,3 +1,5 @@
+export { normalizeDate, parseAmount } from "./amount.js";
+
 export interface Tag {
   id: number;
   name: string;
@@ -28,7 +30,14 @@ export interface PaperlessDocument {
   correspondent: number | null;
   documentType: number | null;
   tags: number[];
+  /** Betrag in Euro (Paperless-Custom-Field "Betrag"); fehlt/null = kein Betrag erfasst. */
+  amount?: number | null;
 }
+
+/** Schlanke Dokumentsicht für die Ausgaben-Übersicht (nur Dokumente mit Betrag). */
+export type ExpenseDocument = Pick<PaperlessDocument, "id" | "title" | "created" | "correspondent" | "documentType"> & {
+  amount: number;
+};
 
 export interface MetadataSuggestion {
   documentId: number;
@@ -41,7 +50,7 @@ export interface MetadataSuggestion {
   confidence: number;
 }
 
-export type SuggestionField = "title" | "correspondent" | "documentType" | "tags";
+export type SuggestionField = "title" | "correspondent" | "documentType" | "tags" | "date" | "amount";
 
 /**
  * Body für POST /ai/documents/:id/apply. Ohne `fields` wird der ganze Vorschlag übernommen

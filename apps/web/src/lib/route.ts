@@ -1,6 +1,6 @@
 import type { DocumentSearchParams, DocumentSortField, SortOrder } from "@papaerless/shared-types";
 
-export type SimpleTab = "home" | "inbox" | "reminders" | "settings" | "help";
+export type SimpleTab = "home" | "inbox" | "reminders" | "expenses" | "settings" | "help";
 
 export type Route =
   | { tab: SimpleTab }
@@ -9,7 +9,7 @@ export type Route =
 
 export type Tab = Route["tab"];
 
-const SIMPLE_TABS: SimpleTab[] = ["inbox", "reminders", "settings", "help"];
+const SIMPLE_TABS: SimpleTab[] = ["inbox", "reminders", "expenses", "settings", "help"];
 const SORT_FIELDS: DocumentSortField[] = ["created", "added", "title", "score"];
 
 function toId(value: string | undefined): number | null {

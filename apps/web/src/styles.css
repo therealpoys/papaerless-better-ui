@@ -1282,3 +1282,82 @@ body {
   padding-inline: 1.25rem;
   font-size: 1.05rem;
 }
+
+/* Betrag/Datum und Ausgaben-Übersicht */
+.document-list__amount {
+  color: var(--color-text);
+}
+
+.document-detail__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3, 0.75rem);
+}
+
+.expenses {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 48rem;
+}
+
+.expenses__filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.expenses__filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: var(--font-size-xs);
+}
+
+.expenses__presets,
+.expenses__toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.expenses__total {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.expenses__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.expenses__table th,
+.expenses__table td {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid var(--color-border, #ddd);
+  text-align: left;
+  font-weight: normal;
+}
+
+.expenses__table .expenses__count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.expenses__table .expenses__amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.expenses__link {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

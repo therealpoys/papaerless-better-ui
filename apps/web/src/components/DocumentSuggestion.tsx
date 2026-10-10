@@ -1,7 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { Correspondent, DocumentType, MetadataSuggestion, PaperlessDocument, Tag } from "@papaerless/shared-types";
 import { Button, ConfidenceBadge, ErrorState } from "@papaerless/ui";
-import { buildSuggestionRows, missingTags, type SuggestionField } from "../lib/suggestionCompare";
+import { formatDate, formatEuro } from "../lib/format";
+import { buildExtraRows, buildSuggestionRows, missingTags, type SuggestionField } from "../lib/suggestionCompare";
 
 interface DocumentSuggestionProps {
   doc: PaperlessDocument;
@@ -26,7 +27,9 @@ export function DocumentSuggestion({
   onDismiss,
 }: DocumentSuggestionProps) {
   const { t } = useTranslation();
-  const rows = buildSuggestionRows(doc, suggestion, lists);
+  const rows = [...buildSuggestionRows(doc, suggestion, lists), ...buildExtraRows(doc, suggestion)];
+  const show = (field: SuggestionField, value: string) =>
+    field === "date" ? formatDate(value) : field === "amount" ? formatEuro(Number(value)) : value;
   const isNew = (names: string[], newNames: string[], name: string) => newNames.includes(name) && names.includes(name);
   const newBadge = <span className="suggestion-badge">{t("documentDetail.ai.newEntry")}</span>;
 
@@ -80,11 +83,11 @@ export function DocumentSuggestion({
             ) : (
               <div className="suggestion-item__row">
                 <div className="suggestion-item__value">
-                  <strong>{row.suggested[0]}</strong>
+                  <strong>{show(row.field, row.suggested[0])}</strong>
                   {isNew(row.suggested, row.newNames, row.suggested[0]) && newBadge}
                   {row.current.length > 0 && (
                     <span className="suggestion-item__current">
-                      {t("documentDetail.ai.currentColumn")}: {row.current.join(", ")}
+                      {t("documentDetail.ai.currentColumn")}: {row.current.map((v) => show(row.field, v)).join(", ")}
                     </span>
                   )}
                 </div>

@@ -8,6 +8,7 @@ import type {
   ReminderKind,
   Tag,
 } from "@papaerless/shared-types";
+import { normalizeDate, parseAmount } from "@papaerless/shared-types";
 import { Button, Combobox, ErrorState, Field } from "@papaerless/ui";
 import { TagCombobox } from "./TagCombobox";
 import { api } from "../lib/api";
@@ -17,6 +18,11 @@ import { DocumentSuggestion } from "./DocumentSuggestion";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 const SUGGESTION_POLL_MS = 4000;
+
+const toDateInput = (created: string) => normalizeDate(created) ?? "";
+/** 1234.5 -> "1234,50" (deutsches Eingabeformat ohne Tausenderpunkt). */
+const toAmountInput = (amount: number | null | undefined) =>
+  typeof amount === "number" ? amount.toFixed(2).replace(".", ",") : "";
 
 interface DocumentDetailProps {
   documentId: number;
@@ -112,6 +118,8 @@ export function DocumentDetail({
   const [correspondent, setCorrespondent] = useState<number | null>(null);
   const [documentType, setDocumentType] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [date, setDate] = useState("");
+  const [amountText, setAmountText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -147,6 +155,8 @@ export function DocumentDetail({
         setCorrespondent(loaded.correspondent);
         setDocumentType(loaded.documentType);
         setSelectedTags(loaded.tags);
+        setDate(toDateInput(loaded.created));
+        setAmountText(toAmountInput(loaded.amount));
       })
       .catch((err) => setLoadError(friendlyError(err, t, t("documentDetail.loadFailed"))));
   }
@@ -169,15 +179,27 @@ export function DocumentDetail({
   }, [generating, documentId]);
 
   async function handleSave() {
-    setIsSaving(true);
     setSaveError(null);
+    // Datum und Betrag nur senden, wenn sie sich geändert haben (so bleibt Paperless sonst unberührt).
+    const patch: Parameters<typeof api.updateDocument>[1] = { title, correspondent, documentType, tags: selectedTags };
+    if (date !== toDateInput(doc?.created ?? "")) {
+      if (!normalizeDate(date)) {
+        setSaveError(t("documentDetail.invalidDate"));
+        return;
+      }
+      patch.created = date;
+    }
+    if (amountText.trim() !== toAmountInput(doc?.amount)) {
+      const amount = amountText.trim() === "" ? null : parseAmount(amountText);
+      if (amountText.trim() !== "" && amount === null) {
+        setSaveError(t("documentDetail.invalidAmount"));
+        return;
+      }
+      patch.amount = amount;
+    }
+    setIsSaving(true);
     try {
-      await api.updateDocument(documentId, {
-        title,
-        correspondent,
-        documentType,
-        tags: selectedTags,
-      });
+      await api.updateDocument(documentId, patch);
       onSaved();
     } catch (err) {
       setSaveError(friendlyError(err, t, t("documentDetail.saveFailed")));
@@ -261,6 +283,8 @@ export function DocumentDetail({
       if (field === "title") setTitle(updated.title);
       if (field === "correspondent") setCorrespondent(updated.correspondent);
       if (field === "documentType") setDocumentType(updated.documentType);
+      if (field === "date") setDate(toDateInput(updated.created));
+      if (field === "amount") setAmountText(toAmountInput(updated.amount));
       if (field === "tags") setSelectedTags((prev) => [...new Set([...prev, ...updated.tags])]);
       setPending(withoutApplied(pending, [field], onlyTags ?? pending.tags ?? []));
       onMetadataChanged();
@@ -297,6 +321,27 @@ export function DocumentDetail({
       <Field label={t("documentDetail.titleLabel")}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
       </Field>
+
+      <div className="document-detail__facts">
+        <Field label={t("documentDetail.dateLabel")}>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label={t("documentDetail.dateAriaLabel")}
+          />
+        </Field>
+        <Field label={t("documentDetail.amountLabel")} hint={t("documentDetail.amountHint")}>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={amountText}
+            onChange={(e) => setAmountText(e.target.value)}
+            placeholder={t("documentDetail.amountPlaceholder")}
+            aria-label={t("documentDetail.amountAriaLabel")}
+          />
+        </Field>
+      </div>
 
       <Field label={t("documentDetail.correspondentLabel")}>
         <Combobox

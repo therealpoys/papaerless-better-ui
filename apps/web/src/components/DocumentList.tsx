@@ -10,6 +10,7 @@ import type {
 import { Button, EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
+import { formatEuro } from "../lib/format";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 interface DocumentListProps {
@@ -312,6 +313,12 @@ export function DocumentList({
                 </span>
                 <span className="document-list__meta">
                   {correspondentName(doc.correspondent)} · {new Date(doc.created).toLocaleDateString("de-DE")}
+                  {typeof doc.amount === "number" && (
+                    <>
+                      {" · "}
+                      <strong className="document-list__amount">{formatEuro(doc.amount)}</strong>
+                    </>
+                  )}
                 </span>
                 {excerpt && (
                   <span className="document-list__excerpt">

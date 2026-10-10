@@ -76,6 +76,11 @@ await app.register(pushRoutes, { prefix: "/api" });
 await app.register(backupRoutes, { prefix: "/api" });
 await app.register(settingsRoutes, { prefix: "/api" });
 
+// Custom Field "Betrag" sicherstellen; ist Paperless gerade nicht erreichbar, legt es der erste Schreibzugriff an.
+paperless
+  .ensureAmountField()
+  .catch((err) => app.log.warn({ err }, 'Custom Field "Betrag" konnte beim Start nicht sichergestellt werden'));
+
 const stopNotifier = startRemindersNotifier();
 const stopAutoSuggest = startAutoSuggest();
 

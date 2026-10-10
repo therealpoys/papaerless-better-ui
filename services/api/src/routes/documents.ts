@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import { normalizeDate, parseAmount } from "@papaerless/shared-types";
 import { paperless } from "../paperless.js";
 
 export async function documentRoutes(app: FastifyInstance) {
@@ -37,6 +38,15 @@ export async function documentRoutes(app: FastifyInstance) {
     });
   });
 
+  // Alle Dokumente mit Betrag (ggf. im Zeitraum) für die Ausgaben-Übersicht.
+  app.get("/expenses", async (request, reply) => {
+    const { dateFrom, dateTo } = request.query as { dateFrom?: string; dateTo?: string };
+    const from = dateFrom === undefined ? undefined : normalizeDate(dateFrom);
+    const to = dateTo === undefined ? undefined : normalizeDate(dateTo);
+    if (from === null || to === null) return reply.code(400).send({ error: "Ungültiger Zeitraum" });
+    return paperless.listExpenseDocuments({ dateFrom: from, dateTo: to });
+  });
+
   app.post("/documents/bulk-edit", async (request, reply) => {
     const { documentIds, action } = request.body as {
       documentIds: number[];
@@ -56,9 +66,20 @@ export async function documentRoutes(app: FastifyInstance) {
     return paperless.getDocument(Number(id));
   });
 
-  app.patch("/documents/:id", async (request) => {
+  app.patch("/documents/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    const patch = request.body as Parameters<typeof paperless.updateDocument>[1];
+    const patch = { ...(request.body as Parameters<typeof paperless.updateDocument>[1]) };
+    // Datum und Betrag werden geprüft, bevor sie an Paperless gehen (ungültig = 400, nichts geschrieben).
+    if (patch.created !== undefined) {
+      const created = normalizeDate(patch.created);
+      if (!created) return reply.code(400).send({ error: "Ungültiges Datum (erwartet YYYY-MM-DD)" });
+      patch.created = created;
+    }
+    if (patch.amount !== undefined && patch.amount !== null) {
+      const amount = parseAmount(patch.amount);
+      if (amount === null) return reply.code(400).send({ error: "Ungültiger Betrag" });
+      patch.amount = amount;
+    }
     return paperless.updateDocument(Number(id), patch);
   });
 

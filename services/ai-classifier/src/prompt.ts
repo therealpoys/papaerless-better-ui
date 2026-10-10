@@ -16,7 +16,7 @@ OCR-Text:
 ${content}
 """
 
-Beantworte diese drei Fragen zum Dokument:
+Beantworte diese fünf Fragen zum Dokument:
 
 1. Tags: Was für Tags könnte man diesem Dokument geben? Nenne 1-4 kurze, allgemein verwendbare Stichwörter (z.B. "Versicherung", "Steuer"). Lass ein Feld nur leer ([]), wenn der Text dazu nichts hergibt.
 
@@ -26,14 +26,18 @@ Beantworte diese drei Fragen zum Dokument:
 3. Art des Dokuments: Welche Art von Dokument ist das? Bekannte Dokumenttypen: ${documentTypeNames}
    Bevorzuge einen bekannten Typ, sonst eine neue kurze Bezeichnung (z.B. "Rechnung", "Vertrag").
 
+4. Dokumentdatum: Das Datum, an dem das Dokument ausgestellt wurde (Rechnungs-/Briefdatum, nicht Fälligkeit oder Leistungszeitraum). Gib es als YYYY-MM-DD an; null, wenn keines erkennbar ist.
+
+5. Betrag: Der Gesamtbetrag, der zu zahlen ist (Rechnungsbetrag brutto bzw. Zahlbetrag) in Euro als Zahl mit Punkt als Dezimaltrenner, z.B. 1234.56 für "1.234,56 €". Kein Betrag erkennbar oder kein Zahlungsdokument: null. Rate nie.
+
 Antworte ausschließlich mit einem JSON-Objekt (keine Erklärung, kein Markdown-Codeblock) mit exakt diesen Feldern:
 {
   "title": string,               // ein prägnanter Titel, z.B. "Stromrechnung Mai 2026 - EnBW"
   "tags": string[],              // Antwort auf Frage 1
   "correspondent": string|null,  // Antwort auf Frage 2: bekannter Absender oder neuer Vorschlag, möglichst nie null
   "documentType": string|null,   // Antwort auf Frage 3
-  "date": string|null,           // Dokumentdatum als YYYY-MM-DD, falls im Text erkennbar
-  "amount": number|null,         // Rechnungs-/Vertragsbetrag in Euro, falls erkennbar
+  "date": string|null,           // Antwort auf Frage 4: Dokumentdatum als YYYY-MM-DD
+  "amount": number|null,         // Antwort auf Frage 5: Gesamtbetrag in Euro
   "confidence": number           // 0.0-1.0, wie sicher du dir bei diesem Vorschlag insgesamt bist
 }`;
 }

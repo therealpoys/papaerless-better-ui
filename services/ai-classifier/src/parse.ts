@@ -1,4 +1,4 @@
-import type { MetadataSuggestion } from "@papaerless/shared-types";
+import { normalizeDate, parseAmount, type MetadataSuggestion } from "@papaerless/shared-types";
 
 interface RawSuggestion {
   title?: string | null;
@@ -6,7 +6,8 @@ interface RawSuggestion {
   documentType?: string | null;
   tags?: string[] | null;
   date?: string | null;
-  amount?: number | null;
+  /** Modelle liefern gern Text wie "1.234,56 €" statt einer Zahl. */
+  amount?: number | string | null;
   confidence?: number;
 }
 
@@ -25,8 +26,8 @@ export function parseSuggestion(documentId: number, text: string): MetadataSugge
     correspondent: raw.correspondent ?? undefined,
     documentType: raw.documentType ?? undefined,
     tags: raw.tags ?? undefined,
-    date: raw.date ?? undefined,
-    amount: raw.amount ?? undefined,
+    date: normalizeDate(raw.date) ?? undefined,
+    amount: parseAmount(raw.amount) ?? undefined,
     confidence: typeof raw.confidence === "number" ? raw.confidence : 0.5,
   };
 }

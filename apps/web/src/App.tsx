@@ -21,11 +21,12 @@ import { SearchFilter } from "./components/SearchFilter";
 import { ReviewInbox } from "./components/ReviewInbox";
 import { RemindersPanel } from "./components/RemindersPanel";
 import { FoldersPanel } from "./components/FoldersPanel";
+import { ExpensesPanel } from "./components/ExpensesPanel";
 import { HomePanel } from "./components/HomePanel";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { HelpPanel } from "./components/HelpPanel";
 
-const TABS: Tab[] = ["home", "documents", "folders", "inbox", "reminders", "settings", "help"];
+const TABS: Tab[] = ["home", "documents", "folders", "inbox", "reminders", "expenses", "settings", "help"];
 
 function emptyRoute(tab: Tab): Route {
   if (tab === "documents") return { tab, documentId: null, filters: {}, page: 1 };
@@ -241,6 +242,16 @@ export default function App() {
       {tab === "reminders" && (
         <main className="app__main app__main--full">
           <RemindersPanel />
+        </main>
+      )}
+
+      {tab === "expenses" && (
+        <main className="app__main app__main--full">
+          <ExpensesPanel
+            correspondents={correspondents}
+            documentTypes={documentTypes}
+            onOpenDocuments={(next) => navigate({ tab: "documents", documentId: null, filters: next, page: 1 })}
+          />
         </main>
       )}
 

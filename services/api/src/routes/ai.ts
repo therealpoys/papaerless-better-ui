@@ -1,5 +1,11 @@
 import type { FastifyInstance } from "fastify";
-import type { ApplySuggestionRequest, MetadataSuggestion, SuggestionField } from "@papaerless/shared-types";
+import {
+  normalizeDate,
+  parseAmount,
+  type ApplySuggestionRequest,
+  type MetadataSuggestion,
+  type SuggestionField,
+} from "@papaerless/shared-types";
 import { aiEnabled, classifier } from "../ai.js";
 import { aiStore } from "../ai-store.js";
 import { isSuggesting, suggestFor } from "../auto-suggest.js";
@@ -26,11 +32,14 @@ async function removeApplied(documentId: number, fields: SuggestionField[], appl
   if (fields.includes("title")) delete next.title;
   if (fields.includes("correspondent")) delete next.correspondent;
   if (fields.includes("documentType")) delete next.documentType;
+  if (fields.includes("date")) delete next.date;
+  if (fields.includes("amount")) delete next.amount;
   if (fields.includes("tags")) {
     const done = new Set(appliedTags.map((t) => t.toLowerCase()));
     next.tags = (next.tags ?? []).filter((t) => !done.has(t.toLowerCase()));
   }
-  const open = next.title || next.correspondent || next.documentType || next.tags?.length;
+  const open =
+    next.title || next.correspondent || next.documentType || next.tags?.length || next.date || next.amount != null;
   if (open) await aiStore.set(next);
   else await aiStore.delete(documentId);
 }
@@ -117,6 +126,12 @@ export async function aiRoutes(app: FastifyInstance) {
         ? [...new Set([...(await paperless.getDocument(documentId)).tags, ...tagIds])]
         : tagIds;
     }
+
+    // Datum/Betrag nur übernehmen, wenn sie gültig sind (ein kaputter Wert darf die Übernahme nicht kippen).
+    const date = normalizeDate(suggestion.date);
+    if (wants("date") && date) patch.created = date;
+    const amount = parseAmount(suggestion.amount);
+    if (wants("amount") && amount !== null) patch.amount = amount;
 
     const updated = await paperless.updateDocument(documentId, patch);
 
