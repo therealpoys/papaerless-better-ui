@@ -10,6 +10,7 @@ import type {
 import { Button, EmptyState, ErrorState } from "@papaerless/ui";
 import { api } from "../lib/api";
 import { friendlyError } from "../lib/errors";
+import { buildSnippet, highlightSegments, type SnippetSegment } from "../lib/snippet";
 import { ConfirmDialog } from "./ConfirmDialog";
 
 interface DocumentListProps {
@@ -25,40 +26,26 @@ interface DocumentListProps {
   pageCount: number;
   onPageChange: (page: number) => void;
   onBulkActionDone: (deletedIds?: number[]) => void;
+  /** Läuft gerade eine Anfrage? Dann kein Empty-State anzeigen. */
+  isLoading?: boolean;
+  /** Ist irgendein Suchbegriff/Filter aktiv? */
+  hasActiveFilters?: boolean;
+  onResetFilters?: () => void;
 }
 
 const MAX_LISTED_TITLES = 5;
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function highlight(text: string, query: string, keyPrefix: string): ReactNode {
-  const trimmed = query.trim();
-  if (!trimmed) return text;
-  // Split mit einer Capture-Group liefert abwechselnd Nicht-Treffer/Treffer zurück,
-  // das ist robuster als exec()/test() mit dem "g"-Flag und dessen lastIndex-Tücken.
-  const parts = text.split(new RegExp(`(${escapeRegExp(trimmed)})`, "gi"));
-  if (parts.length <= 1) return text;
-  return parts.map((part, i) =>
-    i % 2 === 1 ? (
+function renderSegments(segments: SnippetSegment[], keyPrefix: string): ReactNode {
+  // Nur React-Text und <mark>-Elemente – nie Roh-HTML.
+  return segments.map((seg, i) =>
+    seg.match ? (
       <mark key={`${keyPrefix}-${i}`} className="document-list__highlight">
-        {part}
+        {seg.text}
       </mark>
     ) : (
-      part
+      seg.text
     ),
   );
-}
-
-function excerptAround(content: string, query: string, context = 60): string | null {
-  const trimmed = query.trim();
-  if (!trimmed || !content) return null;
-  const idx = content.toLowerCase().indexOf(trimmed.toLowerCase());
-  if (idx === -1) return null;
-  const start = Math.max(0, idx - context);
-  const end = Math.min(content.length, idx + trimmed.length + context);
-  return `${start > 0 ? "…" : ""}${content.slice(start, end).trim()}${end < content.length ? "…" : ""}`;
 }
 
 export function DocumentList({
@@ -73,6 +60,9 @@ export function DocumentList({
   pageCount,
   onPageChange,
   onBulkActionDone,
+  isLoading = false,
+  hasActiveFilters = false,
+  onResetFilters,
 }: DocumentListProps) {
   const { t } = useTranslation();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -140,6 +130,23 @@ export function DocumentList({
   const selectedDocuments = documents.filter((d) => selectedIds.has(d.id));
 
   if (documents.length === 0) {
+    // Während des Ladens nicht kurz "leer" aufblitzen lassen.
+    if (isLoading) return <div className="document-list-wrap" aria-busy="true" />;
+    if (hasActiveFilters) {
+      return (
+        <EmptyState
+          title={t("documentList.noResults.title")}
+          description={t("documentList.noResults.description")}
+          action={
+            onResetFilters && (
+              <Button variant="secondary" onClick={onResetFilters}>
+                {t("documentList.noResults.reset")}
+              </Button>
+            )
+          }
+        />
+      );
+    }
     return (
       <EmptyState
         title={t("documentList.empty.title")}
@@ -287,7 +294,7 @@ export function DocumentList({
 
       <ul className="document-list">
         {documents.map((doc) => {
-          const excerpt = query ? excerptAround(doc.content, query) : null;
+          const excerpt = query ? buildSnippet(doc.content, query) : null;
           return (
             <li key={doc.id} className="document-list__row">
               <input
@@ -307,7 +314,10 @@ export function DocumentList({
               >
                 <span className="document-list__title">
                   {query
-                    ? highlight(doc.title || t("documentList.noTitle"), query, `title-${doc.id}`)
+                    ? renderSegments(
+                        highlightSegments(doc.title || t("documentList.noTitle"), query),
+                        `title-${doc.id}`,
+                      )
                     : doc.title || t("documentList.noTitle")}
                 </span>
                 <span className="document-list__meta">
@@ -315,7 +325,9 @@ export function DocumentList({
                 </span>
                 {excerpt && (
                   <span className="document-list__excerpt">
-                    {highlight(excerpt, query, `excerpt-${doc.id}`)}
+                    {excerpt.truncatedStart && "… "}
+                    {renderSegments(excerpt.segments, `excerpt-${doc.id}`)}
+                    {excerpt.truncatedEnd && " …"}
                   </span>
                 )}
               </button>
